@@ -8,10 +8,10 @@ public sealed record Account
 
     public Account(string name, AccountType type)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Account name cannot be empty.", nameof(name));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(type);
 
-        Name = name;
+        Name = name.Trim();
         Type = type;
     }
 

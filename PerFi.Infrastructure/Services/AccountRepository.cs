@@ -13,14 +13,16 @@ internal class AccountRepository(
     public async Task<IReadOnlyList<Account>> GetAllAccountsAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Accounts
+            .AsNoTracking()
             .Include(a => a.Type)
             .Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name)))
             .ToListAsync(cancellationToken);
     }
-            
+
     public async Task<Account?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var accountEntity = await dbContext.Accounts
+            .AsNoTracking()
             .Include(a => a.Type)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
@@ -32,12 +34,6 @@ internal class AccountRepository(
 
     public async Task<Result<int>> AddAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default)
     {
-        if (await dbContext.Accounts.AnyAsync(a => a.Id == account.Id, cancellationToken))
-            return Result<int>.Failure($"An account with ID '{account.Id}' already exists.");
-
-        if (await dbContext.Accounts.AnyAsync(a => a.Name == account.Name, cancellationToken))
-            return Result<int>.Failure($"An account with name '{account.Name}' already exists.");
-
         var institution = await dbContext.Institutions
             .FirstOrDefaultAsync(i => i.Id == institutionId, cancellationToken);
 
@@ -52,8 +48,9 @@ internal class AccountRepository(
 
         var newAccount = new AccountEntity
         {
-            Id = account.Id,
             Name = account.Name,
+            InstitutionId = institution.Id,
+            AccountTypeId = accountType.Id,
             Type = accountType
         };
 

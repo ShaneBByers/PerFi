@@ -3,7 +3,6 @@ bin/
 obj/
 
 # Editor / local tooling
-.vscode/
 .vs/
 .idea/
 

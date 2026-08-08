@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PerFi.API.Requests;
 using PerFi.API.Responses;
+using PerFi.API.Validation;
 using PerFi.Application.Commands;
 using PerFi.Application.Interfaces;
 
 namespace PerFi.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class InstitutionsController(
     IInstitutionService institutionService)
@@ -52,11 +55,20 @@ public class InstitutionsController(
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateInstitutionRequest request)
     {
+        var validationErrors = RequestValidator.ValidateCreateInstitutionRequest(request.InstitutionName);
+        if (validationErrors.Count > 0)
+            return BadRequest(validationErrors.ToValidationProblemDetails());
+
         var command = new CreateInstitutionCommand(request.InstitutionName);
         var result = await institutionService.CreateInstitutionAsync(command, HttpContext.RequestAborted);
 
         if (result.IsFailure)
-            return BadRequest(new { error = result.Error });
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Unable to create institution.",
+                Detail = result.Error
+            });
 
         return CreatedAtAction(nameof(Get), new { id = result.Value }, null);
     }

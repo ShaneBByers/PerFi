@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PerFi.API.Requests;
 using PerFi.API.Responses;
+using PerFi.API.Validation;
 using PerFi.Application.Commands;
 using PerFi.Application.Interfaces;
 
 namespace PerFi.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class AccountTypesController(
     IAccountTypeService accountTypeService)
@@ -35,11 +38,20 @@ public class AccountTypesController(
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAccountTypeRequest request)
     {
+        var validationErrors = RequestValidator.ValidateCreateAccountTypeRequest(request.Name);
+        if (validationErrors.Count > 0)
+            return BadRequest(validationErrors.ToValidationProblemDetails());
+
         var command = new CreateAccountTypeCommand(request.Name);
         var result = await accountTypeService.CreateAccountTypeAsync(command, HttpContext.RequestAborted);
 
         if (result.IsFailure)
-            return BadRequest(new { error = result.Error });
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Unable to create account type.",
+                Detail = result.Error
+            });
 
         return CreatedAtAction(nameof(Get), new { id = result.Value }, null);
     }

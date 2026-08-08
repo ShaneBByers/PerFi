@@ -3,14 +3,14 @@ namespace PerFi.Domain.Entities;
 public sealed record AccountBalance
 {
     public Account Account { get; }
-    public double Balance { get; }
+    public decimal Balance { get; }
 
-    public AccountBalance(Account account, double balance)
+    public AccountBalance(Account account, decimal balance)
     {
         ArgumentNullException.ThrowIfNull(account);
 
-        if (!double.IsFinite(balance))
-            throw new ArgumentException("Balance must be a finite number.", nameof(balance));
+        if (balance < 0)
+            throw new ArgumentOutOfRangeException(nameof(balance), "Balance cannot be negative.");
 
         Account = account;
         Balance = balance;

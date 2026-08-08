@@ -19,6 +19,9 @@ internal class FinanceSnapshotService(
 
     public async Task<Result<FinanceSnapshot>> CreateSnapshotAsync(CreateFinanceSnapshotCommand command, CancellationToken cancellationToken = default)
     {
+        if (command is null)
+            return Result<FinanceSnapshot>.Failure("Create snapshot command cannot be null.");
+
         if (command.AccountIdToBalanceMap is null || command.AccountIdToBalanceMap.Count == 0)
             return Result<FinanceSnapshot>.Failure("A snapshot must contain at least one account balance.");
 
@@ -26,7 +29,6 @@ internal class FinanceSnapshotService(
         foreach (var (accountId, balance) in command.AccountIdToBalanceMap)
         {
             var account = await accountRepository.GetAccountByIdAsync(accountId, cancellationToken);
-
             if (account is null)
                 return Result<FinanceSnapshot>.Failure($"Account with ID '{accountId}' does not exist.");
 
@@ -34,23 +36,26 @@ internal class FinanceSnapshotService(
             {
                 accountBalances.Add(new AccountBalance(account, balance));
             }
-            catch (ArgumentException ex) { return Result<FinanceSnapshot>.Failure(ex.Message); }
+            catch (ArgumentException ex)
+            {
+                return Result<FinanceSnapshot>.Failure(ex.Message);
+            }
         }
 
-        FinanceSnapshot snapshot;
         try
         {
-            snapshot = new FinanceSnapshot(command.SnapshotDate, accountBalances);
+            var snapshot = new FinanceSnapshot(command.SnapshotDate, accountBalances);
+            var result = await financeSnapshotRepository.AddSnapshotAsync(snapshot, cancellationToken);
+
+            if (!result.IsSuccess)
+                return Result<FinanceSnapshot>.Failure(result.Error);
+
+            snapshot.Id = result.Value;
+            return Result<FinanceSnapshot>.Success(snapshot);
         }
-        catch (ArgumentException ex) { return Result<FinanceSnapshot>.Failure(ex.Message); }
-
-        var result = await financeSnapshotRepository.AddSnapshotAsync(snapshot, cancellationToken);
-        
-        if (!result.IsSuccess)
-            return Result<FinanceSnapshot>.Failure(result.Error);
-
-        snapshot.Id = result.Value;
-
-        return Result<FinanceSnapshot>.Success(snapshot);
+        catch (ArgumentException ex)
+        {
+            return Result<FinanceSnapshot>.Failure(ex.Message);
+        }
     }
 }

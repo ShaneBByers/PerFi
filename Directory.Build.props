@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RunTestsOnBuild Condition="'$(RunTestsOnBuild)' == ''">true</RunTestsOnBuild>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <Target Name="RunTestsAfterBuild" AfterTargets="Build" Condition="'$(RunTestsOnBuild)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(MSBuildProjectName)' == 'PerFi.API'">
+    <Message Text="Running tests after build..." Importance="high" />
+    <Exec Command="dotnet test &quot;$(MSBuildThisFileDirectory)PerFi.slnx&quot; --no-build --verbosity minimal" />
+  </Target>
+</Project>

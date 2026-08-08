@@ -4,4 +4,5 @@
   <Project Path="PerFi.Bootstrapper/PerFi.Bootstrapper.csproj" />
   <Project Path="PerFi.Domain/PerFi.Domain.csproj" />
   <Project Path="PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
+  <Project Path="PerFi.Tests/PerFi.Tests.csproj" />
 </Solution>
