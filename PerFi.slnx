@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PerFi.Domain/PerFi.Domain.csproj" />
+  <Project Path="PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
+</Solution>
