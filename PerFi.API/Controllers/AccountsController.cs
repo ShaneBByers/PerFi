@@ -1,35 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
 using PerFi.API.Requests;
+using PerFi.Application.Commands;
+using PerFi.Application.Interfaces;
 
 namespace PerFi.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AccountsController : ControllerBase
+public class AccountsController(
+    IAccountService accountService)
+    : ControllerBase
 {
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        var accounts = new[]
-        {
-            new { Id = 1, Name = "Checking", Balance = 1000m },
-            new { Id = 2, Name = "Savings", Balance = 5000m }
-        };
-
+        var accounts = await accountService.GetAllAccountsAsync(HttpContext.RequestAborted);
         return Ok(accounts);
     }
 
-    [HttpGet("{id:int}")]
-    public IActionResult GetById(int id)
-    {
-        var account = new { Id = id, Name = "Checking", Balance = 1000m };
-        return Ok(account);
-    }
-
     [HttpPost]
-    public IActionResult Create([FromBody] AccountCreateRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateAccountRequest request)
     {
-        var created = new { Id = 3, request.Name, request.InitialBalance };
-        return CreatedAtAction(nameof(GetById), new { id = 3 }, created);
+        var command = new CreateAccountCommand(request.AccountName, request.InstitutionName, request.AccountType);
+        var created = await accountService.CreateAccountAsync(command, HttpContext.RequestAborted);
+        return Ok(created);
     }
 }

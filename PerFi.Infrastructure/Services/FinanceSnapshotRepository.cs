@@ -6,7 +6,7 @@ using PerFi.Infrastructure.Entities;
 
 namespace PerFi.Infrastructure.Services;
 
-public class FinanceSnapshotRepository(PerFiDbContext dbContext)
+internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
     : IFinanceSnapshotRepository
 {
     public async Task<IReadOnlyList<FinanceSnapshot>> GetAllSnapshotsAsync(CancellationToken cancellationToken = default)
@@ -26,15 +26,15 @@ public class FinanceSnapshotRepository(PerFiDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> AddSnapshotAsync(DateOnly date, IReadOnlyCollection<AccountBalance> accountBalances, CancellationToken cancellationToken = default)
+    public async Task<bool> AddSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default)
     {
         var existingAccounts = await dbContext.Accounts
             .ToListAsync(cancellationToken);
 
         var snapshotEntity = new FinanceSnapshotEntity
         {
-            Date = date,
-            AccountBalances = [.. accountBalances.Select(ab => new AccountBalanceEntity
+            Date = snapshot.Date,
+            AccountBalances = [.. snapshot.AccountBalances.Select(ab => new AccountBalanceEntity
             {
                 Account = existingAccounts.First(a => a.AccountName == ab.Account.AccountName),
                 Balance = (decimal)ab.Balance

@@ -6,7 +6,7 @@ using PerFi.Infrastructure.Entities;
 
 namespace PerFi.Infrastructure.Services;
 
-public class AccountRepository(PerFiDbContext dbContext) : IAccountRepository
+internal class AccountRepository(PerFiDbContext dbContext) : IAccountRepository
 {
     private readonly PerFiDbContext _dbContext = dbContext;
 
@@ -17,6 +17,19 @@ public class AccountRepository(PerFiDbContext dbContext) : IAccountRepository
             .Include(a => a.AccountType)
             .Select(a => new Account(a.AccountName, a.Institution.Name, Enum.Parse<AccountType>(a.AccountType.Name)))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Account?> GetAccountByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var accountEntity = await _dbContext.Accounts
+            .Include(a => a.Institution)
+            .Include(a => a.AccountType)
+            .FirstOrDefaultAsync(a => a.AccountName == name, cancellationToken);
+
+        if (accountEntity == null)
+            return null;
+
+        return new Account(accountEntity.AccountName, accountEntity.Institution.Name, Enum.Parse<AccountType>(accountEntity.AccountType.Name));
     }
 
     public async Task<bool> AddAccountAsync(Account account, CancellationToken cancellationToken = default)

@@ -11,7 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
+    <ProjectReference Include="../PerFi.Application/PerFi.Application.csproj" />
+    <ProjectReference Include="../PerFi.Bootstrapper/PerFi.Bootstrapper.csproj" />
+    <ProjectReference Include="../PerFi.Domain/PerFi.Domain.csproj" />
   </ItemGroup>
 
 </Project>
