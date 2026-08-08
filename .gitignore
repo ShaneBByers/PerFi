@@ -1,4 +1,28 @@
-bin
-obj
+# Build output
+bin/
+obj/
 
-.vscode
+# Editor / local tooling
+.vscode/
+.vs/
+.idea/
+
+# User / IDE State
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local config / secrets
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# Logs / temp
+*.log
+*.tmp
+*.cache
+
+# OS noise
+.DS_Store
+Thumbs.db
