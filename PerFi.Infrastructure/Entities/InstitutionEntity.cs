@@ -4,4 +4,5 @@ public class InstitutionEntity
 {
     public int Id { get; set; }
     public required string Name { get; set; }
+    public required ICollection<AccountEntity> Accounts { get; set; }
 }

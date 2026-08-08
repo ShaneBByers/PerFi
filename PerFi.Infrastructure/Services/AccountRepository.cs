@@ -1,67 +1,66 @@
 using Microsoft.EntityFrameworkCore;
 using PerFi.Domain.Entities;
-using PerFi.Domain.Entities.Enums;
 using PerFi.Domain.Interfaces;
+using PerFi.Domain.Results;
 using PerFi.Infrastructure.Entities;
 
 namespace PerFi.Infrastructure.Services;
 
-internal class AccountRepository(PerFiDbContext dbContext) : IAccountRepository
+internal class AccountRepository(
+    PerFiDbContext dbContext)
+    : IAccountRepository
 {
-    private readonly PerFiDbContext _dbContext = dbContext;
-
     public async Task<IReadOnlyList<Account>> GetAllAccountsAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Accounts
-            .Include(a => a.Institution)
-            .Include(a => a.AccountType)
-            .Select(a => new Account(a.AccountName, a.Institution.Name, Enum.Parse<AccountType>(a.AccountType.Name)))
+        return await dbContext.Accounts
+            .Include(a => a.Type)
+            .Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name)))
             .ToListAsync(cancellationToken);
     }
-
-    public async Task<Account?> GetAccountByNameAsync(string name, CancellationToken cancellationToken = default)
+            
+    public async Task<Account?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var accountEntity = await _dbContext.Accounts
-            .Include(a => a.Institution)
-            .Include(a => a.AccountType)
-            .FirstOrDefaultAsync(a => a.AccountName == name, cancellationToken);
+        var accountEntity = await dbContext.Accounts
+            .Include(a => a.Type)
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (accountEntity == null)
             return null;
 
-        return new Account(accountEntity.AccountName, accountEntity.Institution.Name, Enum.Parse<AccountType>(accountEntity.AccountType.Name));
+        return new Account(accountEntity.Id, accountEntity.Name, new AccountType(accountEntity.Type.Id, accountEntity.Type.Name));
     }
 
-    public async Task<bool> AddAccountAsync(Account account, CancellationToken cancellationToken = default)
+    public async Task<Result<int>> AddAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default)
     {
-        var institution = await _dbContext.Institutions
-            .FirstOrDefaultAsync(i => i.Name == account.InstitutionName, cancellationToken);
+        if (await dbContext.Accounts.AnyAsync(a => a.Id == account.Id, cancellationToken))
+            return Result<int>.Failure($"An account with ID '{account.Id}' already exists.");
+
+        if (await dbContext.Accounts.AnyAsync(a => a.Name == account.Name, cancellationToken))
+            return Result<int>.Failure($"An account with name '{account.Name}' already exists.");
+
+        var institution = await dbContext.Institutions
+            .FirstOrDefaultAsync(i => i.Id == institutionId, cancellationToken);
 
         if (institution == null)
-        {
-            institution = new InstitutionEntity { Name = account.InstitutionName };
-            _dbContext.Institutions.Add(institution);
-        }
+            return Result<int>.Failure($"Institution with ID '{institutionId}' does not exist.");
 
-        var accountType = await _dbContext.AccountTypes
-            .FirstOrDefaultAsync(at => at.Name == account.AccountType.ToString(), cancellationToken);
+        var accountType = await dbContext.AccountTypes
+            .FirstOrDefaultAsync(at => at.Id == account.Type.Id, cancellationToken);
 
         if (accountType == null)
-        {
-            accountType = new AccountTypeEntity { Name = account.AccountType.ToString() };
-            _dbContext.AccountTypes.Add(accountType);
-        }
+            return Result<int>.Failure($"Account type with ID '{account.Type.Id}' does not exist.");
 
         var newAccount = new AccountEntity
         {
-            AccountName = account.AccountName,
-            Institution = institution,
-            AccountType = accountType
+            Id = account.Id,
+            Name = account.Name,
+            Type = accountType
         };
 
-        _dbContext.Accounts.Add(newAccount);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        institution.Accounts.Add(newAccount);
 
-        return true;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result<int>.Success(newAccount.Id);
     }
 }

@@ -2,6 +2,7 @@ using PerFi.Application.Commands;
 using PerFi.Application.Interfaces;
 using PerFi.Domain.Entities;
 using PerFi.Domain.Interfaces;
+using PerFi.Domain.Results;
 
 namespace PerFi.Application.Services;
 
@@ -11,22 +12,45 @@ internal class FinanceSnapshotService(
     : IFinanceSnapshotService
 {
     public async Task<IReadOnlyList<FinanceSnapshot>> GetAllSnapshotsAsync(CancellationToken cancellationToken = default)
-    {
-        return await financeSnapshotRepository.GetAllSnapshotsAsync(cancellationToken);
-    }
+        => await financeSnapshotRepository.GetAllSnapshotsAsync(cancellationToken);
 
-    public async Task<bool> CreateSnapshotAsync(CreateFinanceSnapshotCommand command, CancellationToken cancellationToken = default)
+    public async Task<FinanceSnapshot?> GetSnapshotByIdAsync(int id, CancellationToken cancellationToken = default)
+        => await financeSnapshotRepository.GetSnapshotByIdAsync(id, cancellationToken);
+
+    public async Task<Result<FinanceSnapshot>> CreateSnapshotAsync(CreateFinanceSnapshotCommand command, CancellationToken cancellationToken = default)
     {
-        var accountBalances = command.AccountNameToBalanceMap.Select(async kvp =>
+        if (command.AccountIdToBalanceMap is null || command.AccountIdToBalanceMap.Count == 0)
+            return Result<FinanceSnapshot>.Failure("A snapshot must contain at least one account balance.");
+
+        var accountBalances = new List<AccountBalance>();
+        foreach (var (accountId, balance) in command.AccountIdToBalanceMap)
         {
-            var account = await accountRepository.GetAccountByNameAsync(kvp.Key, cancellationToken)
-                ?? throw new ArgumentException($"Account with name '{kvp.Key}' does not exist.");
+            var account = await accountRepository.GetAccountByIdAsync(accountId, cancellationToken);
 
-            return new AccountBalance(account, kvp.Value);
-        });
+            if (account is null)
+                return Result<FinanceSnapshot>.Failure($"Account with ID '{accountId}' does not exist.");
 
-        var snapshot = new FinanceSnapshot(command.SnapshotDate, await Task.WhenAll(accountBalances));
+            try
+            {
+                accountBalances.Add(new AccountBalance(account, balance));
+            }
+            catch (ArgumentException ex) { return Result<FinanceSnapshot>.Failure(ex.Message); }
+        }
 
-        return await financeSnapshotRepository.AddSnapshotAsync(snapshot, cancellationToken);
+        FinanceSnapshot snapshot;
+        try
+        {
+            snapshot = new FinanceSnapshot(command.SnapshotDate, accountBalances);
+        }
+        catch (ArgumentException ex) { return Result<FinanceSnapshot>.Failure(ex.Message); }
+
+        var result = await financeSnapshotRepository.AddSnapshotAsync(snapshot, cancellationToken);
+        
+        if (!result.IsSuccess)
+            return Result<FinanceSnapshot>.Failure(result.Error);
+
+        snapshot.Id = result.Value;
+
+        return Result<FinanceSnapshot>.Success(snapshot);
     }
 }
