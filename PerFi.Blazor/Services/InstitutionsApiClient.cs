@@ -20,4 +20,24 @@ public sealed class InstitutionsApiClient(HttpClient httpClient) : IInstitutions
 
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
+
+    public async Task<ApiResult> UpdateAsync(int id, string name, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"api/institutions/{id}", new UpdateInstitutionRequest(name), cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
+
+    public async Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"api/institutions/{id}", cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
 }

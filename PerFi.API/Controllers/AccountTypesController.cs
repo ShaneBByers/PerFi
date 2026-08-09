@@ -55,4 +55,38 @@ public class AccountTypesController(
 
         return CreatedAtAction(nameof(Get), new { id = result.Value }, null);
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateAccountTypeRequest request)
+    {
+        var validationErrors = RequestValidator.ValidateUpdateAccountTypeRequest(request.Name);
+        if (validationErrors.Count > 0)
+            return BadRequest(validationErrors.ToValidationProblemDetails());
+
+        var command = new UpdateAccountTypeCommand(id, request.Name);
+        var result = await accountTypeService.UpdateAccountTypeAsync(command, HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return IsNotFoundError(result.Error)
+                ? NotFound(new { error = result.Error })
+                : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete([FromRoute] int id)
+    {
+        var result = await accountTypeService.DeleteAccountTypeAsync(id, HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return IsNotFoundError(result.Error)
+                ? NotFound(new { error = result.Error })
+                : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    private static bool IsNotFoundError(string? error)
+        => !string.IsNullOrWhiteSpace(error) && error.Contains("not found", StringComparison.OrdinalIgnoreCase);
 }

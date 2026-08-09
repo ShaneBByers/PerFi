@@ -4,10 +4,12 @@ public sealed record LoginResponse(string Token);
 
 public sealed record AccountTypeResponse(int Id, string Name);
 
-public sealed record AccountResponse(int Id, string Name, AccountTypeResponse Type);
+public sealed record InstitutionIdentityResponse(int Id, string Name);
+
+public sealed record AccountResponse(int Id, string Name, InstitutionIdentityResponse Institution, AccountTypeResponse Type);
 
 public sealed record InstitutionResponse(int Id, string Name, IReadOnlyList<AccountResponse> Accounts);
 
-public sealed record AccountBalanceResponse(AccountResponse Account, decimal Balance);
+public sealed record AccountBalanceResponse(int SnapshotId, AccountResponse Account, decimal Balance);
 
-public sealed record FinanceSnapshotResponse(DateOnly Date, IReadOnlyList<AccountBalanceResponse> AccountBalances);
+public sealed record FinanceSnapshotResponse(int Id, DateOnly Date, IReadOnlyList<AccountBalanceResponse> AccountBalances);

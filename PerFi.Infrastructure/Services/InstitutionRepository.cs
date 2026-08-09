@@ -15,7 +15,7 @@ internal class InstitutionRepository(
         return await dbContext.Institutions
             .Include(i => i.Accounts)
                 .ThenInclude(a => a.Type)
-            .Select(i => new Institution(i.Id, i.Name, i.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name))).ToList()))
+            .Select(i => new Institution(i.Id, i.Name, i.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name), i.Id)).ToList()))
             .ToListAsync(cancellationToken);
     }
 
@@ -29,7 +29,7 @@ internal class InstitutionRepository(
         if (institutionEntity == null)
             return null;
 
-        return new Institution(institutionEntity.Id, institutionEntity.Name, [.. institutionEntity.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name)))]);
+        return new Institution(institutionEntity.Id, institutionEntity.Name, [.. institutionEntity.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name), institutionEntity.Id))]);
     }
 
     public async Task<Result<int>> AddInstitutionAsync(Institution institution, CancellationToken cancellationToken = default)
@@ -55,5 +55,45 @@ internal class InstitutionRepository(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(newInstitution.Id);
+    }
+
+    public async Task<Result> UpdateInstitutionAsync(Institution institution, CancellationToken cancellationToken = default)
+    {
+        var institutionEntity = await dbContext.Institutions
+            .FirstOrDefaultAsync(i => i.Id == institution.Id, cancellationToken);
+
+        if (institutionEntity is null)
+            return Result.Failure($"Institution with ID '{institution.Id}' not found.");
+
+        var hasDuplicateName = await dbContext.Institutions
+            .AnyAsync(i => i.Id != institution.Id && i.Name == institution.Name, cancellationToken);
+
+        if (hasDuplicateName)
+            return Result.Failure($"An institution with name '{institution.Name}' already exists.");
+
+        institutionEntity.Name = institution.Name;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default)
+    {
+        var institutionEntity = await dbContext.Institutions
+            .FirstOrDefaultAsync(i => i.Id == institutionId, cancellationToken);
+
+        if (institutionEntity is null)
+            return Result.Failure($"Institution with ID '{institutionId}' not found.");
+
+        var hasAccounts = await dbContext.Accounts
+            .AnyAsync(a => EF.Property<int?>(a, "InstitutionEntityId") == institutionId, cancellationToken);
+
+        if (hasAccounts)
+            return Result.Failure("Cannot delete institution because one or more accounts reference it.");
+
+        dbContext.Institutions.Remove(institutionEntity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 }

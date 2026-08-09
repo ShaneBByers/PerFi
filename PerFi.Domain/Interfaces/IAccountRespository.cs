@@ -8,4 +8,6 @@ public interface IAccountRepository
     Task<IReadOnlyList<Account>> GetAllAccountsAsync(CancellationToken cancellationToken = default);
     Task<Account?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Result<int>> AddAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default);
+    Task<Result> UpdateAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAccountAsync(int accountId, CancellationToken cancellationToken = default);
 }

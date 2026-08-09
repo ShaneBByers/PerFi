@@ -47,4 +47,32 @@ internal class AccountService(
             return Result<Account>.Failure(ex.Message);
         }
     }
+
+    public async Task<Result> UpdateAccountAsync(UpdateAccountCommand command, CancellationToken cancellationToken = default)
+    {
+        var existing = await accountRepository.GetAccountByIdAsync(command.AccountId, cancellationToken);
+        if (existing is null)
+            return Result.Failure($"Account with ID '{command.AccountId}' not found.");
+
+        var accountType = await accountTypeRepository.GetAccountTypeByIdAsync(command.AccountTypeId, cancellationToken);
+        if (accountType is null)
+            return Result.Failure($"Account type with ID '{command.AccountTypeId}' not found.");
+
+        var institution = await institutionRepository.GetInstitutionByIdAsync(command.InstitutionId, cancellationToken);
+        if (institution is null)
+            return Result.Failure($"Institution with ID '{command.InstitutionId}' not found.");
+
+        try
+        {
+            var account = new Account(command.AccountId, command.AccountName, accountType);
+            return await accountRepository.UpdateAccountAsync(account, command.InstitutionId, cancellationToken);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure(ex.Message);
+        }
+    }
+
+    public async Task<Result> DeleteAccountAsync(int accountId, CancellationToken cancellationToken = default)
+        => await accountRepository.DeleteAccountAsync(accountId, cancellationToken);
 }

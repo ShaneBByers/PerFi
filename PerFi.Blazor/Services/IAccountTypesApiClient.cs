@@ -7,4 +7,6 @@ public interface IAccountTypesApiClient
     Task<IReadOnlyList<AccountTypeResponse>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<AccountTypeResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<ApiResult> CreateAsync(string name, CancellationToken cancellationToken = default);
+    Task<ApiResult> UpdateAsync(int id, string name, CancellationToken cancellationToken = default);
+    Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

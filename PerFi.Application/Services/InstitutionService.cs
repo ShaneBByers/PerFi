@@ -37,4 +37,24 @@ internal class InstitutionService(
 
         return Result<Institution>.Success(institution);
     }
+
+    public async Task<Result> UpdateInstitutionAsync(UpdateInstitutionCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var existing = await institutionRepository.GetInstitutionByIdAsync(command.InstitutionId, cancellationToken);
+            if (existing is null)
+                return Result.Failure($"Institution with ID '{command.InstitutionId}' not found.");
+
+            var institution = new Institution(command.InstitutionId, command.InstitutionName, existing.Accounts);
+            return await institutionRepository.UpdateInstitutionAsync(institution, cancellationToken);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure(ex.Message);
+        }
+    }
+
+    public async Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default)
+        => await institutionRepository.DeleteInstitutionAsync(institutionId, cancellationToken);
 }

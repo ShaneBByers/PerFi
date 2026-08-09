@@ -21,4 +21,25 @@ public sealed class SnapshotsApiClient(HttpClient httpClient) : ISnapshotsApiCli
 
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
+
+    public async Task<ApiResult> UpdateAsync(int id, DateOnly snapshotDate, IReadOnlyDictionary<int, decimal> accountIdToBalanceMap, CancellationToken cancellationToken = default)
+    {
+        var request = new UpdateFinanceSnapshotRequest(snapshotDate, accountIdToBalanceMap);
+        var response = await httpClient.PutAsJsonAsync($"api/snapshots/{id}", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
+
+    public async Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"api/snapshots/{id}", cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
 }

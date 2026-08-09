@@ -44,4 +44,44 @@ internal class AccountTypeRepository(
 
         return Result<int>.Success(newAccountType.Id);
     }
+
+    public async Task<Result> UpdateAccountTypeAsync(AccountType accountType, CancellationToken cancellationToken = default)
+    {
+        var accountTypeEntity = await dbContext.AccountTypes
+            .FirstOrDefaultAsync(at => at.Id == accountType.Id, cancellationToken);
+
+        if (accountTypeEntity is null)
+            return Result.Failure($"Account type with ID '{accountType.Id}' not found.");
+
+        var hasDuplicateName = await dbContext.AccountTypes
+            .AnyAsync(at => at.Id != accountType.Id && at.Name == accountType.Name, cancellationToken);
+
+        if (hasDuplicateName)
+            return Result.Failure($"An account type with name '{accountType.Name}' already exists.");
+
+        accountTypeEntity.Name = accountType.Name;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteAccountTypeAsync(int accountTypeId, CancellationToken cancellationToken = default)
+    {
+        var accountTypeEntity = await dbContext.AccountTypes
+            .FirstOrDefaultAsync(at => at.Id == accountTypeId, cancellationToken);
+
+        if (accountTypeEntity is null)
+            return Result.Failure($"Account type with ID '{accountTypeId}' not found.");
+
+        var isReferenced = await dbContext.Accounts
+            .AnyAsync(a => EF.Property<int>(a, "TypeId") == accountTypeId, cancellationToken);
+
+        if (isReferenced)
+            return Result.Failure("Cannot delete account type because one or more accounts reference it.");
+
+        dbContext.AccountTypes.Remove(accountTypeEntity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
 }

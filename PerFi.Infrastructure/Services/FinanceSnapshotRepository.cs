@@ -20,7 +20,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
                 s.Id,
                 s.Date,
                 s.AccountBalances.Select(ab => new AccountBalance(
-                    new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name)),
+                    new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name), ab.Account.InstitutionId ?? 0),
                     ab.Balance)).ToList()))
             .ToListAsync(cancellationToken);
     }
@@ -41,7 +41,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
             snapshotEntity.Id,
             snapshotEntity.Date,
             [.. snapshotEntity.AccountBalances.Select(ab => new AccountBalance(
-                new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name)),
+                new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name), ab.Account.InstitutionId ?? 0),
                 ab.Balance))]);
     }
 
@@ -65,5 +65,52 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(snapshotEntity.Id);
+    }
+
+    public async Task<Result> UpdateSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default)
+    {
+        var snapshotEntity = await dbContext.FinanceSnapshots
+            .Include(s => s.AccountBalances)
+            .FirstOrDefaultAsync(s => s.Id == snapshot.Id, cancellationToken);
+
+        if (snapshotEntity is null)
+            return Result.Failure($"Snapshot with ID '{snapshot.Id}' not found.");
+
+        var accountIds = snapshot.AccountBalances.Select(ab => ab.Account.Id).Distinct().ToList();
+        var existingAccounts = await dbContext.Accounts
+            .Where(a => accountIds.Contains(a.Id))
+            .ToListAsync(cancellationToken);
+
+        if (existingAccounts.Count != accountIds.Count)
+            return Result.Failure("One or more accounts in the snapshot do not exist.");
+
+        dbContext.AccountBalances.RemoveRange(snapshotEntity.AccountBalances);
+
+        snapshotEntity.Date = snapshot.Date;
+        snapshotEntity.AccountBalances = [.. snapshot.AccountBalances.Select(ab => new AccountBalanceEntity
+        {
+            Account = existingAccounts.First(a => a.Id == ab.Account.Id),
+            Balance = ab.Balance
+        })];
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteSnapshotAsync(int snapshotId, CancellationToken cancellationToken = default)
+    {
+        var snapshotEntity = await dbContext.FinanceSnapshots
+            .Include(s => s.AccountBalances)
+            .FirstOrDefaultAsync(s => s.Id == snapshotId, cancellationToken);
+
+        if (snapshotEntity is null)
+            return Result.Failure($"Snapshot with ID '{snapshotId}' not found.");
+
+        dbContext.AccountBalances.RemoveRange(snapshotEntity.AccountBalances);
+        dbContext.FinanceSnapshots.Remove(snapshotEntity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 }

@@ -8,4 +8,6 @@ public interface IFinanceSnapshotRepository
     Task<IReadOnlyList<FinanceSnapshot>> GetAllSnapshotsAsync(CancellationToken cancellationToken = default);
     Task<FinanceSnapshot?> GetSnapshotByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Result<int>> AddSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default);
+    Task<Result> UpdateSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default);
+    Task<Result> DeleteSnapshotAsync(int snapshotId, CancellationToken cancellationToken = default);
 }

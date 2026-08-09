@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject ISnapshotsApiClient SnapshotsApiClient
 @inject IAccountsApiClient AccountsApiClient
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Snapshots</PageTitle>
 
@@ -52,6 +53,55 @@
 </section>
 
 <section class="mb-4">
+    <h2>Edit</h2>
+
+    @if (editModel is null)
+    {
+        <p><em>Select Edit from the list to modify a snapshot.</em></p>
+    }
+    else
+    {
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label" for="editSnapshotDate">Snapshot Date</label>
+                <InputDate id="editSnapshotDate" class="form-control" @bind-Value="editModel.SnapshotDate" />
+            </div>
+        </div>
+
+        <h3>Account Balances</h3>
+        @for (var i = 0; i < editModel.Balances.Count; i++)
+        {
+            var balance = editModel.Balances[i];
+            <div class="row g-2 mb-2 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Account</label>
+                    <InputSelect class="form-select" @bind-Value="balance.AccountId">
+                        <option value="0">Select account</option>
+                        @foreach (var account in accounts)
+                        {
+                            <option value="@account.Id">@account.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Balance</label>
+                    <InputNumber class="form-control" @bind-Value="balance.Balance" />
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveEditBalanceRow(i)" disabled="@(editModel.Balances.Count == 1)">Remove</button>
+                </div>
+            </div>
+        }
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" type="button" @onclick="AddEditBalanceRow">Add Row</button>
+            <button class="btn btn-primary" type="button" @onclick="UpdateAsync" disabled="@isSubmitting">Update Snapshot</button>
+            <button class="btn btn-outline-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+        </div>
+    }
+</section>
+
+<section class="mb-4">
     <h2>List</h2>
     <LoadingState IsVisible="@isLoading" />
     <EmptyState IsVisible="@(!isLoading && snapshots.Count == 0)" Message="No snapshots found." />
@@ -61,16 +111,24 @@
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Date</th>
                     <th>Account Balances</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var snapshot in snapshots)
                 {
                     <tr>
+                        <td>@snapshot.Id</td>
                         <td>@snapshot.Date</td>
                         <td>@snapshot.AccountBalances.Count</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(snapshot.Id)">View</button>
+                            <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEditAsync(snapshot.Id)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAsync(snapshot.Id)">Delete</button>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -80,7 +138,7 @@
 
 <section>
     <h2>Detail by ID</h2>
-    <p><em>Snapshots in the current response shape do not include snapshot ID, so load detail by entering a known snapshot ID.</em></p>
+    <p><em>Use View from the list, or enter an ID to load directly.</em></p>
 
     <div class="row g-2 align-items-end mb-3">
         <div class="col-md-4">
@@ -88,13 +146,15 @@
             <InputNumber id="snapshotId" class="form-control" @bind-Value="detailId" />
         </div>
         <div class="col-auto">
-            <button class="btn btn-outline-secondary" @onclick="LoadDetailAsync">Load Detail</button>
+            <button class="btn btn-outline-secondary" type="button" @onclick="LoadDetailAsync">Load Detail</button>
         </div>
     </div>
 
     @if (selectedSnapshot is not null)
     {
         <dl>
+            <dt>ID</dt>
+            <dd>@selectedSnapshot.Id</dd>
             <dt>Date</dt>
             <dd>@selectedSnapshot.Date</dd>
         </dl>
@@ -103,7 +163,9 @@
         <table class="table table-sm">
             <thead>
                 <tr>
+                    <th>Snapshot ID</th>
                     <th>Account</th>
+                    <th>Institution</th>
                     <th>Type</th>
                     <th>Balance</th>
                 </tr>
@@ -112,7 +174,9 @@
                 @foreach (var balance in selectedSnapshot.AccountBalances)
                 {
                     <tr>
+                        <td>@balance.SnapshotId</td>
                         <td>@balance.Account.Name</td>
+                        <td>@balance.Account.Institution.Name</td>
                         <td>@balance.Account.Type.Name</td>
                         <td>@balance.Balance</td>
                     </tr>
@@ -128,6 +192,7 @@
     private readonly List<FinanceSnapshotResponse> snapshots = [];
     private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private FinanceSnapshotResponse? selectedSnapshot;
+    private EditSnapshotModel? editModel;
     private int detailId;
     private bool isLoading = true;
     private bool isSubmitting;
@@ -185,6 +250,9 @@
         try
         {
             selectedSnapshot = await SnapshotsApiClient.GetByIdAsync(detailId);
+
+            if (selectedSnapshot is null)
+                errorMessage = $"No snapshot found with ID '{detailId}'.";
         }
         catch (Exception ex)
         {
@@ -220,7 +288,98 @@
         await LoadListAsync();
     }
 
+    private async Task LoadDetailAsync(int id)
+    {
+        detailId = id;
+        await LoadDetailAsync();
+    }
+
+    private async Task StartEditAsync(int id)
+    {
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var snapshot = await SnapshotsApiClient.GetByIdAsync(id);
+        if (snapshot is null)
+        {
+            errorMessage = $"No snapshot found with ID '{id}'.";
+            return;
+        }
+
+        selectedSnapshot = snapshot;
+        detailId = snapshot.Id;
+        editModel = EditSnapshotModel.From(snapshot);
+    }
+
+    private void CancelEdit() => editModel = null;
+
+    private async Task UpdateAsync()
+    {
+        if (editModel is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var map = BuildBalanceMap(editModel.Balances);
+        var result = await SnapshotsApiClient.UpdateAsync(
+            editModel.Id,
+            DateOnly.FromDateTime(editModel.SnapshotDate),
+            map);
+
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editModel = null;
+        await LoadListAsync();
+        await LoadDetailAsync(detailId);
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete snapshot #{id}?");
+        if (!confirmed)
+            return;
+
+        var result = await SnapshotsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        if (selectedSnapshot?.Id == id)
+            selectedSnapshot = null;
+
+        if (editModel?.Id == id)
+            editModel = null;
+
+        if (detailId == id)
+            detailId = 0;
+
+        await LoadListAsync();
+    }
+
     private void AddBalanceRow() => createModel.Balances.Add(new BalanceEntry());
+
+    private void AddEditBalanceRow()
+    {
+        if (editModel is null)
+            return;
+
+        editModel.Balances.Add(new BalanceEntry());
+    }
 
     private void RemoveBalanceRow(int index)
     {
@@ -228,6 +387,22 @@
             return;
 
         createModel.Balances.RemoveAt(index);
+    }
+
+    private void RemoveEditBalanceRow(int index)
+    {
+        if (editModel is null || editModel.Balances.Count <= 1)
+            return;
+
+        editModel.Balances.RemoveAt(index);
+    }
+
+    private static Dictionary<int, decimal> BuildBalanceMap(List<BalanceEntry> balances)
+    {
+        return balances
+            .Where(b => b.AccountId > 0)
+            .GroupBy(b => b.AccountId)
+            .ToDictionary(g => g.Key, g => g.Last().Balance);
     }
 
     private sealed class CreateSnapshotModel
@@ -247,5 +422,36 @@
     {
         public int AccountId { get; set; }
         public decimal Balance { get; set; }
+    }
+
+    private sealed class EditSnapshotModel
+    {
+        public int Id { get; set; }
+        public DateTime SnapshotDate { get; set; } = DateTime.Today;
+        public List<BalanceEntry> Balances { get; } = [new()];
+
+        public static EditSnapshotModel From(FinanceSnapshotResponse snapshot)
+        {
+            var model = new EditSnapshotModel
+            {
+                Id = snapshot.Id,
+                SnapshotDate = snapshot.Date.ToDateTime(TimeOnly.MinValue)
+            };
+
+            model.Balances.Clear();
+            foreach (var balance in snapshot.AccountBalances)
+            {
+                model.Balances.Add(new BalanceEntry
+                {
+                    AccountId = balance.Account.Id,
+                    Balance = balance.Balance
+                });
+            }
+
+            if (model.Balances.Count == 0)
+                model.Balances.Add(new BalanceEntry());
+
+            return model;
+        }
     }
 }

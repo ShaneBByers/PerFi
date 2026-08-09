@@ -1,6 +1,7 @@
 @page "/account-types"
 @attribute [Authorize]
 @inject IAccountTypesApiClient AccountTypesApiClient
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Account Types</PageTitle>
 
@@ -26,6 +27,30 @@
 </section>
 
 <section class="mb-4">
+    <h2>Edit</h2>
+    @if (editModel is null)
+    {
+        <p><em>Select Edit from the list to modify an account type.</em></p>
+    }
+    else
+    {
+        <EditForm Model="editModel" OnValidSubmit="UpdateAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label" for="editName">Name</label>
+                    <InputText id="editName" class="form-control" @bind-Value="editModel.Name" />
+                </div>
+                <div class="col-auto d-flex gap-2">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Update</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+</section>
+
+<section class="mb-4">
     <h2>List</h2>
     <LoadingState IsVisible="@isLoading" />
     <EmptyState IsVisible="@(!isLoading && accountTypes.Count == 0)" Message="No account types found." />
@@ -48,6 +73,8 @@
                         <td>@item.Name</td>
                         <td>
                             <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(item.Id)">View</button>
+                            <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEdit(item)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAsync(item.Id)">Delete</button>
                         </td>
                     </tr>
                 }
@@ -76,6 +103,7 @@
     private readonly List<AccountTypeResponse> accountTypes = [];
     private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private AccountTypeResponse? selectedAccountType;
+    private EditModel? editModel;
     private bool isLoading = true;
     private bool isSubmitting;
     private string? errorMessage;
@@ -136,8 +164,76 @@
         await LoadListAsync();
     }
 
+    private void StartEdit(AccountTypeResponse accountType)
+    {
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+        editModel = new EditModel
+        {
+            Id = accountType.Id,
+            Name = accountType.Name
+        };
+    }
+
+    private void CancelEdit() => editModel = null;
+
+    private async Task UpdateAsync()
+    {
+        if (editModel is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await AccountTypesApiClient.UpdateAsync(editModel.Id, editModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editModel = null;
+        await LoadListAsync();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete account type #{id}?");
+        if (!confirmed)
+            return;
+
+        var result = await AccountTypesApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        if (selectedAccountType?.Id == id)
+            selectedAccountType = null;
+
+        if (editModel?.Id == id)
+            editModel = null;
+
+        await LoadListAsync();
+    }
+
     private sealed class CreateModel
     {
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class EditModel
+    {
+        public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
     }
 }

@@ -9,4 +9,6 @@ public interface IInstitutionService
     Task<IReadOnlyList<Institution>> GetAllInstitutionsAsync(CancellationToken cancellationToken = default);
     Task<Institution?> GetInstitutionByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Result<Institution>> CreateInstitutionAsync(CreateInstitutionCommand command, CancellationToken cancellationToken = default);
+    Task<Result> UpdateInstitutionAsync(UpdateInstitutionCommand command, CancellationToken cancellationToken = default);
+    Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default);
 }

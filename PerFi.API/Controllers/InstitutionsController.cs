@@ -24,7 +24,8 @@ public class InstitutionsController(
             i.Name, 
             [.. i.Accounts.Select(a => new AccountResponse(
                 a.Id, 
-                a.Name, 
+                a.Name,
+                new InstitutionIdentityResponse(i.Id, i.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
                     a.Type.Name)))]));
@@ -45,7 +46,8 @@ public class InstitutionsController(
             institution.Name, 
             [.. institution.Accounts.Select(a => new AccountResponse(
                 a.Id, 
-                a.Name, 
+                a.Name,
+                new InstitutionIdentityResponse(institution.Id, institution.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
                     a.Type.Name)))]);
@@ -72,4 +74,38 @@ public class InstitutionsController(
 
         return CreatedAtAction(nameof(Get), new { id = result.Value }, null);
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateInstitutionRequest request)
+    {
+        var validationErrors = RequestValidator.ValidateUpdateInstitutionRequest(request.InstitutionName);
+        if (validationErrors.Count > 0)
+            return BadRequest(validationErrors.ToValidationProblemDetails());
+
+        var command = new UpdateInstitutionCommand(id, request.InstitutionName);
+        var result = await institutionService.UpdateInstitutionAsync(command, HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return IsNotFoundError(result.Error)
+                ? NotFound(new { error = result.Error })
+                : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete([FromRoute] int id)
+    {
+        var result = await institutionService.DeleteInstitutionAsync(id, HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return IsNotFoundError(result.Error)
+                ? NotFound(new { error = result.Error })
+                : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    private static bool IsNotFoundError(string? error)
+        => !string.IsNullOrWhiteSpace(error) && error.Contains("not found", StringComparison.OrdinalIgnoreCase);
 }

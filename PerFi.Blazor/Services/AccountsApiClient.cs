@@ -21,4 +21,25 @@ public sealed class AccountsApiClient(HttpClient httpClient) : IAccountsApiClien
 
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
+
+    public async Task<ApiResult> UpdateAsync(int id, string accountName, int institutionId, int accountTypeId, CancellationToken cancellationToken = default)
+    {
+        var request = new UpdateAccountRequest(accountName, institutionId, accountTypeId);
+        var response = await httpClient.PutAsJsonAsync($"api/accounts/{id}", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
+
+    public async Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"api/accounts/{id}", cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
 }

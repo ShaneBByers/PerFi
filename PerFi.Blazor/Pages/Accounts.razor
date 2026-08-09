@@ -3,6 +3,7 @@
 @inject IAccountsApiClient AccountsApiClient
 @inject IInstitutionsApiClient InstitutionsApiClient
 @inject IAccountTypesApiClient AccountTypesApiClient
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Accounts</PageTitle>
 
@@ -52,6 +53,54 @@
 </section>
 
 <section class="mb-4">
+    <h2>Edit</h2>
+    @if (editModel is null)
+    {
+        <p><em>Select Edit from the list to modify an account.</em></p>
+    }
+    else
+    {
+        <EditForm Model="editModel" OnValidSubmit="UpdateAsync">
+            <DataAnnotationsValidator />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="editAccountName">Account Name</label>
+                    <InputText id="editAccountName" class="form-control" @bind-Value="editModel.AccountName" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="editInstitution">Institution</label>
+                    <InputSelect id="editInstitution" class="form-select" @bind-Value="editModel.InstitutionId">
+                        <option value="0">Select institution</option>
+                        @foreach (var institution in institutions)
+                        {
+                            <option value="@institution.Id">@institution.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="editAccountType">Account Type</label>
+                    <InputSelect id="editAccountType" class="form-select" @bind-Value="editModel.AccountTypeId">
+                        <option value="0">Select account type</option>
+                        @foreach (var accountType in accountTypes)
+                        {
+                            <option value="@accountType.Id">@accountType.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Update</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </EditForm>
+    }
+</section>
+
+<section class="mb-4">
     <h2>List</h2>
     <LoadingState IsVisible="@isLoading" />
     <EmptyState IsVisible="@(!isLoading && accounts.Count == 0)" Message="No accounts found." />
@@ -63,6 +112,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>Institution</th>
                     <th>Type</th>
                     <th></th>
                 </tr>
@@ -73,9 +123,12 @@
                     <tr>
                         <td>@account.Id</td>
                         <td>@account.Name</td>
+                        <td>@GetInstitutionName(account.Institution.Id)</td>
                         <td>@account.Type.Name</td>
                         <td>
                             <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(account.Id)">View</button>
+                            <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEdit(account)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAsync(account.Id)">Delete</button>
                         </td>
                     </tr>
                 }
@@ -95,6 +148,8 @@
             <dd>@selectedAccount.Id</dd>
             <dt>Name</dt>
             <dd>@selectedAccount.Name</dd>
+            <dt>Institution</dt>
+            <dd>@GetInstitutionName(selectedAccount.Institution.Id)</dd>
             <dt>Type</dt>
             <dd>@selectedAccount.Type.Name</dd>
         </dl>
@@ -108,6 +163,7 @@
     private readonly List<InstitutionResponse> institutions = [];
     private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private AccountResponse? selectedAccount;
+    private EditModel? editModel;
     private bool isLoading = true;
     private bool isSubmitting;
     private string? errorMessage;
@@ -194,8 +250,91 @@
         await LoadListAsync();
     }
 
+    private void StartEdit(AccountResponse account)
+    {
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+        editModel = new EditModel
+        {
+            Id = account.Id,
+            AccountName = account.Name,
+            InstitutionId = account.Institution.Id,
+            AccountTypeId = account.Type.Id
+        };
+    }
+
+    private string GetInstitutionName(int institutionId)
+    {
+        var institution = institutions.FirstOrDefault(i => i.Id == institutionId);
+        return institution is null ? $"#{institutionId}" : institution.Name;
+    }
+
+    private void CancelEdit() => editModel = null;
+
+    private async Task UpdateAsync()
+    {
+        if (editModel is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await AccountsApiClient.UpdateAsync(
+            editModel.Id,
+            editModel.AccountName,
+            editModel.InstitutionId,
+            editModel.AccountTypeId);
+
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editModel = null;
+        await LoadListAsync();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete account #{id}?");
+        if (!confirmed)
+            return;
+
+        var result = await AccountsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        if (selectedAccount?.Id == id)
+            selectedAccount = null;
+
+        if (editModel?.Id == id)
+            editModel = null;
+
+        await LoadListAsync();
+    }
+
     private sealed class CreateModel
     {
+        public string AccountName { get; set; } = string.Empty;
+        public int InstitutionId { get; set; }
+        public int AccountTypeId { get; set; }
+    }
+
+    private sealed class EditModel
+    {
+        public int Id { get; set; }
         public string AccountName { get; set; } = string.Empty;
         public int InstitutionId { get; set; }
         public int AccountTypeId { get; set; }

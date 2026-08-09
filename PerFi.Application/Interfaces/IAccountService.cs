@@ -9,4 +9,6 @@ public interface IAccountService
     Task<IReadOnlyList<Account>> GetAllAccountsAsync(CancellationToken cancellationToken = default);
     Task<Account?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Result<Account>> CreateAccountAsync(CreateAccountCommand command, CancellationToken cancellationToken = default);
+    Task<Result> UpdateAccountAsync(UpdateAccountCommand command, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAccountAsync(int accountId, CancellationToken cancellationToken = default);
 }

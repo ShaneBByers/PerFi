@@ -20,4 +20,24 @@ public sealed class AccountTypesApiClient(HttpClient httpClient) : IAccountTypes
 
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
+
+    public async Task<ApiResult> UpdateAsync(int id, string name, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"api/accounttypes/{id}", new UpdateAccountTypeRequest(name), cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
+
+    public async Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"api/accounttypes/{id}", cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
 }

@@ -37,4 +37,20 @@ internal class AccountTypeService(
 
         return Result<AccountType>.Success(accountType);
     }
+
+    public async Task<Result> UpdateAccountTypeAsync(UpdateAccountTypeCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var accountType = new AccountType(command.AccountTypeId, command.AccountTypeName);
+            return await accountTypeRepository.UpdateAccountTypeAsync(accountType, cancellationToken);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure(ex.Message);
+        }
+    }
+
+    public async Task<Result> DeleteAccountTypeAsync(int accountTypeId, CancellationToken cancellationToken = default)
+        => await accountTypeRepository.DeleteAccountTypeAsync(accountTypeId, cancellationToken);
 }
