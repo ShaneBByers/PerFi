@@ -1,0 +1,14 @@
+@if (IsVisible)
+{
+    <div class="alert alert-light border" role="status">
+        @Message
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public string Message { get; set; } = "No data found.";
+}

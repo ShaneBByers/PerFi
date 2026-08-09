@@ -1,0 +1,251 @@
+@page "/snapshots"
+@attribute [Authorize]
+@inject ISnapshotsApiClient SnapshotsApiClient
+@inject IAccountsApiClient AccountsApiClient
+
+<PageTitle>Snapshots</PageTitle>
+
+<h1>Snapshots</h1>
+
+<ErrorState Message="@errorMessage" />
+<ValidationSummaryPanel Errors="@validationErrors" />
+
+<section class="mb-4">
+    <h2>Create</h2>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label" for="snapshotDate">Snapshot Date</label>
+            <InputDate id="snapshotDate" class="form-control" @bind-Value="createModel.SnapshotDate" />
+        </div>
+    </div>
+
+    <h3>Account Balances</h3>
+    @for (var i = 0; i < createModel.Balances.Count; i++)
+    {
+        var balance = createModel.Balances[i];
+        <div class="row g-2 mb-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label">Account</label>
+                <InputSelect class="form-select" @bind-Value="balance.AccountId">
+                    <option value="0">Select account</option>
+                    @foreach (var account in accounts)
+                    {
+                        <option value="@account.Id">@account.Name</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Balance</label>
+                <InputNumber class="form-control" @bind-Value="balance.Balance" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-danger" @onclick="() => RemoveBalanceRow(i)" disabled="@(createModel.Balances.Count == 1)">Remove</button>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" @onclick="AddBalanceRow">Add Row</button>
+        <button class="btn btn-primary" @onclick="CreateAsync" disabled="@isSubmitting">Create Snapshot</button>
+    </div>
+</section>
+
+<section class="mb-4">
+    <h2>List</h2>
+    <LoadingState IsVisible="@isLoading" />
+    <EmptyState IsVisible="@(!isLoading && snapshots.Count == 0)" Message="No snapshots found." />
+
+    @if (snapshots.Count > 0)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Account Balances</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var snapshot in snapshots)
+                {
+                    <tr>
+                        <td>@snapshot.Date</td>
+                        <td>@snapshot.AccountBalances.Count</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section>
+    <h2>Detail by ID</h2>
+    <p><em>Snapshots in the current response shape do not include snapshot ID, so load detail by entering a known snapshot ID.</em></p>
+
+    <div class="row g-2 align-items-end mb-3">
+        <div class="col-md-4">
+            <label class="form-label" for="snapshotId">Snapshot ID</label>
+            <InputNumber id="snapshotId" class="form-control" @bind-Value="detailId" />
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-secondary" @onclick="LoadDetailAsync">Load Detail</button>
+        </div>
+    </div>
+
+    @if (selectedSnapshot is not null)
+    {
+        <dl>
+            <dt>Date</dt>
+            <dd>@selectedSnapshot.Date</dd>
+        </dl>
+
+        <h3>Balances</h3>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th>Type</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var balance in selectedSnapshot.AccountBalances)
+                {
+                    <tr>
+                        <td>@balance.Account.Name</td>
+                        <td>@balance.Account.Type.Name</td>
+                        <td>@balance.Balance</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private readonly CreateSnapshotModel createModel = new();
+    private readonly List<AccountResponse> accounts = [];
+    private readonly List<FinanceSnapshotResponse> snapshots = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private FinanceSnapshotResponse? selectedSnapshot;
+    private int detailId;
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccountsAsync();
+        await LoadListAsync();
+    }
+
+    private async Task LoadAccountsAsync()
+    {
+        try
+        {
+            accounts.Clear();
+            accounts.AddRange(await AccountsApiClient.GetAllAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task LoadListAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            snapshots.Clear();
+            snapshots.AddRange(await SnapshotsApiClient.GetAllAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadDetailAsync()
+    {
+        if (detailId <= 0)
+        {
+            errorMessage = "Snapshot ID must be greater than zero.";
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            selectedSnapshot = await SnapshotsApiClient.GetByIdAsync(detailId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var map = createModel.Balances
+            .Where(b => b.AccountId > 0)
+            .GroupBy(b => b.AccountId)
+            .ToDictionary(g => g.Key, g => g.Last().Balance);
+
+        var result = await SnapshotsApiClient.CreateAsync(
+            DateOnly.FromDateTime(createModel.SnapshotDate),
+            map);
+
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createModel.Reset();
+        await LoadListAsync();
+    }
+
+    private void AddBalanceRow() => createModel.Balances.Add(new BalanceEntry());
+
+    private void RemoveBalanceRow(int index)
+    {
+        if (createModel.Balances.Count <= 1)
+            return;
+
+        createModel.Balances.RemoveAt(index);
+    }
+
+    private sealed class CreateSnapshotModel
+    {
+        public DateTime SnapshotDate { get; set; } = DateTime.Today;
+        public List<BalanceEntry> Balances { get; } = [new()];
+
+        public void Reset()
+        {
+            SnapshotDate = DateTime.Today;
+            Balances.Clear();
+            Balances.Add(new BalanceEntry());
+        }
+    }
+
+    private sealed class BalanceEntry
+    {
+        public int AccountId { get; set; }
+        public decimal Balance { get; set; }
+    }
+}

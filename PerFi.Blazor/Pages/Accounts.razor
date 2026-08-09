@@ -1,0 +1,203 @@
+@page "/accounts"
+@attribute [Authorize]
+@inject IAccountsApiClient AccountsApiClient
+@inject IInstitutionsApiClient InstitutionsApiClient
+@inject IAccountTypesApiClient AccountTypesApiClient
+
+<PageTitle>Accounts</PageTitle>
+
+<h1>Accounts</h1>
+
+<ErrorState Message="@errorMessage" />
+<ValidationSummaryPanel Errors="@validationErrors" />
+
+<section class="mb-4">
+    <h2>Create</h2>
+    <EditForm Model="createModel" OnValidSubmit="CreateAsync">
+        <DataAnnotationsValidator />
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label" for="accountName">Account Name</label>
+                <InputText id="accountName" class="form-control" @bind-Value="createModel.AccountName" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label" for="institution">Institution</label>
+                <InputSelect id="institution" class="form-select" @bind-Value="createModel.InstitutionId">
+                    <option value="0">Select institution</option>
+                    @foreach (var institution in institutions)
+                    {
+                        <option value="@institution.Id">@institution.Name</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label" for="accountType">Account Type</label>
+                <InputSelect id="accountType" class="form-select" @bind-Value="createModel.AccountTypeId">
+                    <option value="0">Select account type</option>
+                    @foreach (var accountType in accountTypes)
+                    {
+                        <option value="@accountType.Id">@accountType.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Create</button>
+        </div>
+    </EditForm>
+</section>
+
+<section class="mb-4">
+    <h2>List</h2>
+    <LoadingState IsVisible="@isLoading" />
+    <EmptyState IsVisible="@(!isLoading && accounts.Count == 0)" Message="No accounts found." />
+
+    @if (accounts.Count > 0)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var account in accounts)
+                {
+                    <tr>
+                        <td>@account.Id</td>
+                        <td>@account.Name</td>
+                        <td>@account.Type.Name</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(account.Id)">View</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section>
+    <h2>Detail</h2>
+    <p><em>Select View from the list to load detail from <code>GET /api/accounts/{id}</code>.</em></p>
+
+    @if (selectedAccount is not null)
+    {
+        <dl>
+            <dt>ID</dt>
+            <dd>@selectedAccount.Id</dd>
+            <dt>Name</dt>
+            <dd>@selectedAccount.Name</dd>
+            <dt>Type</dt>
+            <dd>@selectedAccount.Type.Name</dd>
+        </dl>
+    }
+</section>
+
+@code {
+    private readonly CreateModel createModel = new();
+    private readonly List<AccountResponse> accounts = [];
+    private readonly List<AccountTypeResponse> accountTypes = [];
+    private readonly List<InstitutionResponse> institutions = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private AccountResponse? selectedAccount;
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupsAsync();
+        await LoadListAsync();
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        try
+        {
+            institutions.Clear();
+            institutions.AddRange(await InstitutionsApiClient.GetAllAsync());
+
+            accountTypes.Clear();
+            accountTypes.AddRange(await AccountTypesApiClient.GetAllAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task LoadListAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            accounts.Clear();
+            accounts.AddRange(await AccountsApiClient.GetAllAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadDetailAsync(int id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            selectedAccount = await AccountsApiClient.GetByIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await AccountsApiClient.CreateAsync(
+            createModel.AccountName,
+            createModel.InstitutionId,
+            createModel.AccountTypeId);
+
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createModel.AccountName = string.Empty;
+        createModel.InstitutionId = 0;
+        createModel.AccountTypeId = 0;
+        await LoadListAsync();
+    }
+
+    private sealed class CreateModel
+    {
+        public string AccountName { get; set; } = string.Empty;
+        public int InstitutionId { get; set; }
+        public int AccountTypeId { get; set; }
+    }
+}

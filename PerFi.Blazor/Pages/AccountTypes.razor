@@ -1,0 +1,143 @@
+@page "/account-types"
+@attribute [Authorize]
+@inject IAccountTypesApiClient AccountTypesApiClient
+
+<PageTitle>Account Types</PageTitle>
+
+<h1>Account Types</h1>
+
+<ErrorState Message="@errorMessage" />
+<ValidationSummaryPanel Errors="@validationErrors" />
+
+<section class="mb-4">
+    <h2>Create</h2>
+    <EditForm Model="createModel" OnValidSubmit="CreateAsync">
+        <DataAnnotationsValidator />
+        <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label" for="name">Name</label>
+                <InputText id="name" class="form-control" @bind-Value="createModel.Name" />
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Create</button>
+            </div>
+        </div>
+    </EditForm>
+</section>
+
+<section class="mb-4">
+    <h2>List</h2>
+    <LoadingState IsVisible="@isLoading" />
+    <EmptyState IsVisible="@(!isLoading && accountTypes.Count == 0)" Message="No account types found." />
+
+    @if (accountTypes.Count > 0)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in accountTypes)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Name</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(item.Id)">View</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section>
+    <h2>Detail</h2>
+    <p><em>Select View from the list to load detail from <code>GET /api/accounttypes/{id}</code>.</em></p>
+
+    @if (selectedAccountType is not null)
+    {
+        <dl>
+            <dt>ID</dt>
+            <dd>@selectedAccountType.Id</dd>
+            <dt>Name</dt>
+            <dd>@selectedAccountType.Name</dd>
+        </dl>
+    }
+</section>
+
+@code {
+    private readonly CreateModel createModel = new();
+    private readonly List<AccountTypeResponse> accountTypes = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private AccountTypeResponse? selectedAccountType;
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadListAsync();
+
+    private async Task LoadListAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            accountTypes.Clear();
+            accountTypes.AddRange(await AccountTypesApiClient.GetAllAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadDetailAsync(int id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            selectedAccountType = await AccountTypesApiClient.GetByIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await AccountTypesApiClient.CreateAsync(createModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createModel.Name = string.Empty;
+        await LoadListAsync();
+    }
+
+    private sealed class CreateModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,151 @@
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+
+var builder = WebApplication.CreateBuilder(args);
+
+const string FrontendCorsPolicy = "PerFiBlazorFrontend";
+const string AccessTokenClaimType = "perfi:api_token";
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+	.AddCookie(options =>
+	{
+		options.Cookie.Name = "PerFi.Blazor.BFF.Auth";
+		options.Cookie.HttpOnly = true;
+		options.Cookie.SameSite = SameSiteMode.Lax;
+		options.SlidingExpiration = true;
+		options.ExpireTimeSpan = TimeSpan.FromHours(8);
+	});
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddHttpClient("PerFiApi", client =>
+{
+	var apiBaseUrl = builder.Configuration["PerFiApi:BaseUrl"];
+	if (string.IsNullOrWhiteSpace(apiBaseUrl))
+		apiBaseUrl = "http://localhost:5238";
+
+	client.BaseAddress = new Uri(apiBaseUrl);
+});
+
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy(FrontendCorsPolicy, policy =>
+	{
+		var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+		if (allowedOrigins.Length == 0)
+			return;
+
+		policy.WithOrigins(allowedOrigins)
+			.AllowAnyHeader()
+			.AllowAnyMethod()
+			.AllowCredentials();
+	});
+});
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseCors(FrontendCorsPolicy);
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapGet("/", () => Results.Ok(new { service = "PerFi.Blazor.BFF" }))
+	.AllowAnonymous();
+
+app.MapPost("/bff/login", async (
+	LoginRequest request,
+	IHttpClientFactory httpClientFactory,
+	HttpContext httpContext,
+	CancellationToken cancellationToken) =>
+{
+	var client = httpClientFactory.CreateClient("PerFiApi");
+	using var response = await client.PostAsJsonAsync("api/auth/login", request, cancellationToken);
+
+	if (!response.IsSuccessStatusCode)
+	{
+		var failedBody = await response.Content.ReadAsStringAsync(cancellationToken);
+		var failedContentType = response.Content.Headers.ContentType?.ToString() ?? "application/json";
+		return Results.Content(failedBody, failedContentType, Encoding.UTF8, (int)response.StatusCode);
+	}
+
+	var loginPayload = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken: cancellationToken);
+	if (loginPayload is null || string.IsNullOrWhiteSpace(loginPayload.Token))
+		return Results.Problem("The upstream login response did not include a token.", statusCode: StatusCodes.Status502BadGateway);
+
+	var claims = new List<Claim>
+	{
+		new(ClaimTypes.Name, request.Username),
+		new(AccessTokenClaimType, loginPayload.Token)
+	};
+
+	var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+	var principal = new ClaimsPrincipal(identity);
+	await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+	return Results.Ok(new SessionResponse(true, request.Username));
+}).AllowAnonymous();
+
+app.MapPost("/bff/logout", async (HttpContext httpContext) =>
+{
+	await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+	return Results.Ok(new SessionResponse(false, null));
+}).RequireAuthorization();
+
+app.MapGet("/bff/session", (HttpContext httpContext) =>
+{
+	var isAuthenticated = httpContext.User.Identity?.IsAuthenticated ?? false;
+	var userName = isAuthenticated ? httpContext.User.Identity?.Name : null;
+	return Results.Ok(new SessionResponse(isAuthenticated, userName));
+}).AllowAnonymous();
+
+app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "DELETE", "PATCH"], async (
+	HttpContext httpContext,
+	IHttpClientFactory httpClientFactory,
+	string path,
+	CancellationToken cancellationToken) =>
+{
+	var accessToken = httpContext.User.FindFirst(AccessTokenClaimType)?.Value;
+	if (string.IsNullOrWhiteSpace(accessToken))
+		return Results.Unauthorized();
+
+	var client = httpClientFactory.CreateClient("PerFiApi");
+	var query = httpContext.Request.QueryString.HasValue ? httpContext.Request.QueryString.Value : string.Empty;
+	var upstreamPath = $"api/{path}{query}";
+
+	using var proxyRequest = new HttpRequestMessage(new HttpMethod(httpContext.Request.Method), upstreamPath);
+	proxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+	if (httpContext.Request.ContentLength is > 0)
+	{
+		using var bodyReader = new StreamReader(httpContext.Request.Body);
+		var body = await bodyReader.ReadToEndAsync(cancellationToken);
+		if (!string.IsNullOrWhiteSpace(body))
+		{
+			var contentType = string.IsNullOrWhiteSpace(httpContext.Request.ContentType)
+				? "application/json"
+				: httpContext.Request.ContentType;
+			var proxyContent = new StringContent(body, Encoding.UTF8);
+			proxyContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+			proxyRequest.Content = proxyContent;
+		}
+	}
+
+	using var proxyResponse = await client.SendAsync(proxyRequest, cancellationToken);
+	var responseBody = await proxyResponse.Content.ReadAsStringAsync(cancellationToken);
+	var responseContentType = proxyResponse.Content.Headers.ContentType?.ToString() ?? "application/json";
+
+	return Results.Content(responseBody, responseContentType, Encoding.UTF8, (int)proxyResponse.StatusCode);
+}).RequireAuthorization();
+
+app.Run();
+
+public sealed record LoginRequest(string Username, string Password);
+
+public sealed record LoginResponse(string Token);
+
+public sealed record SessionResponse(bool IsAuthenticated, string? UserName);

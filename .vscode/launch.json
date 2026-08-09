@@ -1,11 +1,22 @@
 {
   "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "All",
+      "preLaunchTask": "build-all-services",
+      "configurations": [
+        "API",
+        "BFF",
+        "Blazor"
+      ],
+      "stopAll": true
+    }
+  ],
   "configurations": [
     {
-      "name": "http",
+      "name": "API",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build",
       "program": "${workspaceFolder}/PerFi.API/bin/Debug/net10.0/PerFi.API.dll",
       "args": [],
       "cwd": "${workspaceFolder}/PerFi.API",
@@ -14,6 +25,28 @@
         "ASPNETCORE_URLS": "http://localhost:5238"
       },
       "stopAtEntry": false
+    },
+    {
+      "name": "BFF",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/PerFi.Blazor.BFF/bin/Debug/net10.0/PerFi.Blazor.BFF.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/PerFi.Blazor.BFF",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5239"
+      },
+      "stopAtEntry": false
+    },
+    {
+      "name": "Blazor",
+      "type": "blazorwasm",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/PerFi.Blazor",
+      "url": "http://localhost:5240",
+      "webRoot": "${workspaceFolder}/PerFi.Blazor",
+      "timeout": 60000
     }
   ]
 }

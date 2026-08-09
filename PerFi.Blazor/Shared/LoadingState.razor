@@ -1,0 +1,12 @@
+@if (IsVisible)
+{
+    <p><em>@Message</em></p>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public string Message { get; set; } = "Loading...";
+}

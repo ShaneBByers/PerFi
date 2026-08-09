@@ -1,0 +1,33 @@
+﻿@inject IAuthService AuthService
+
+<CascadingAuthenticationState>
+    @if (!isAuthStateResolved)
+    {
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p>Loading...</p>
+        </LayoutView>
+    }
+    else
+    {
+        <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </Found>
+        </Router>
+    }
+</CascadingAuthenticationState>
+
+@code {
+    private bool isAuthStateResolved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.IsAuthenticatedAsync();
+        isAuthStateResolved = true;
+    }
+}

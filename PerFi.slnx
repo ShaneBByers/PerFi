@@ -1,6 +1,8 @@
 <Solution>
   <Project Path="PerFi.API/PerFi.API.csproj" />
   <Project Path="PerFi.Application/PerFi.Application.csproj" />
+  <Project Path="PerFi.Blazor.BFF/PerFi.Blazor.BFF.csproj" />
+  <Project Path="PerFi.Blazor/PerFi.Blazor.csproj" />
   <Project Path="PerFi.Bootstrapper/PerFi.Bootstrapper.csproj" />
   <Project Path="PerFi.Domain/PerFi.Domain.csproj" />
   <Project Path="PerFi.Infrastructure/PerFi.Infrastructure.csproj" />

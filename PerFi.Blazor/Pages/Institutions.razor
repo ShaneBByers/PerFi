@@ -1,0 +1,157 @@
+@page "/institutions"
+@attribute [Authorize]
+@inject IInstitutionsApiClient InstitutionsApiClient
+
+<PageTitle>Institutions</PageTitle>
+
+<h1>Institutions</h1>
+
+<ErrorState Message="@errorMessage" />
+<ValidationSummaryPanel Errors="@validationErrors" />
+
+<section class="mb-4">
+    <h2>Create</h2>
+    <EditForm Model="createModel" OnValidSubmit="CreateAsync">
+        <DataAnnotationsValidator />
+        <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label" for="institutionName">Institution Name</label>
+                <InputText id="institutionName" class="form-control" @bind-Value="createModel.InstitutionName" />
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Create</button>
+            </div>
+        </div>
+    </EditForm>
+</section>
+
+<section class="mb-4">
+    <h2>List</h2>
+    <LoadingState IsVisible="@isLoading" />
+    <EmptyState IsVisible="@(!isLoading && institutions.Count == 0)" Message="No institutions found." />
+
+    @if (institutions.Count > 0)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Accounts</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in institutions)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Name</td>
+                        <td>@item.Accounts.Count</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(item.Id)">View</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section>
+    <h2>Detail</h2>
+    <p><em>Select View from the list to load detail from <code>GET /api/institutions/{id}</code>.</em></p>
+
+    @if (selectedInstitution is not null)
+    {
+        <dl>
+            <dt>ID</dt>
+            <dd>@selectedInstitution.Id</dd>
+            <dt>Name</dt>
+            <dd>@selectedInstitution.Name</dd>
+        </dl>
+
+        <h3>Accounts</h3>
+        <EmptyState IsVisible="@(selectedInstitution.Accounts.Count == 0)" Message="This institution has no accounts yet." />
+        @if (selectedInstitution.Accounts.Count > 0)
+        {
+            <ul>
+                @foreach (var account in selectedInstitution.Accounts)
+                {
+                    <li>@account.Name (@account.Type.Name)</li>
+                }
+            </ul>
+        }
+    }
+</section>
+
+@code {
+    private readonly CreateModel createModel = new();
+    private readonly List<InstitutionResponse> institutions = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private InstitutionResponse? selectedInstitution;
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadListAsync();
+
+    private async Task LoadListAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            institutions.Clear();
+            institutions.AddRange(await InstitutionsApiClient.GetAllAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadDetailAsync(int id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            selectedInstitution = await InstitutionsApiClient.GetByIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await InstitutionsApiClient.CreateAsync(createModel.InstitutionName);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createModel.InstitutionName = string.Empty;
+        await LoadListAsync();
+    }
+
+    private sealed class CreateModel
+    {
+        public string InstitutionName { get; set; } = string.Empty;
+    }
+}
