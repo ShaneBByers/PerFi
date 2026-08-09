@@ -1,15 +1,10 @@
 ﻿@page "/"
 @attribute [Authorize]
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
-
-<h1>PerFi Frontend</h1>
-
-<p>This Blazor app connects to the PerFi API and supports create/read flows for the existing controllers.</p>
-
-<ul>
-	<li><a href="/account-types">Account Types</a></li>
-	<li><a href="/institutions">Institutions</a></li>
-	<li><a href="/accounts">Accounts</a></li>
-	<li><a href="/snapshots">Snapshots</a></li>
-</ul>
+@code {
+	protected override void OnInitialized()
+	{
+		NavigationManager.NavigateTo("/snapshots", replace: true);
+	}
+}

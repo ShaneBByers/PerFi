@@ -1,54 +1,30 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">PerFi.Blazor</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+﻿<nav class="primary-nav" aria-label="Primary">
+    <div class="brand-group">
+        <a class="brand-mark" href="">PerFi</a>
+        <span class="brand-caption">Personal Finance</span>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="login">
-                <span class="bi bi-door-open-fill-nav-menu" aria-hidden="true"></span> Login
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="account-types">
-                <span class="bi bi-list-check-nav-menu" aria-hidden="true"></span> Account Types
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="institutions">
-                <span class="bi bi-bank-nav-menu" aria-hidden="true"></span> Institutions
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="accounts">
-                <span class="bi bi-credit-card-2-front-fill-nav-menu" aria-hidden="true"></span> Accounts
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="snapshots">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Snapshots
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <button type="button" class="menu-toggle" title="Navigation menu" @onclick="ToggleNavMenu" aria-expanded="@(!collapseNavMenu)">
+        Menu
+    </button>
+
+    <div class="link-cluster @NavMenuCssClass">
+        <NavLink class="nav-pill" href="snapshots" @onclick="CloseNavMenu">Net Worth</NavLink>
+    </div>
+</nav>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapsed" : null;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void CloseNavMenu()
+    {
+        collapseNavMenu = true;
     }
 }

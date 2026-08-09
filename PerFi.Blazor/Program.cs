@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using ApexCharts;
 using PerFi.Blazor.Auth;
 using PerFi.Blazor.Configuration;
 using PerFi.Blazor;
@@ -18,6 +19,7 @@ if (string.IsNullOrWhiteSpace(apiBaseUrl))
 	apiBaseUrl = "http://localhost:5239";
 
 builder.Services.AddAuthorizationCore();
+builder.Services.AddApexCharts();
 builder.Services.AddScoped<PerFiAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<PerFiAuthenticationStateProvider>());
 builder.Services.AddScoped<IAuthService, AuthService>();

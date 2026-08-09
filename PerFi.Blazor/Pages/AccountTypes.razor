@@ -5,98 +5,121 @@
 
 <PageTitle>Account Types</PageTitle>
 
-<h1>Account Types</h1>
-
-<ErrorState Message="@errorMessage" />
-<ValidationSummaryPanel Errors="@validationErrors" />
-
-<section class="mb-4">
-    <h2>Create</h2>
-    <EditForm Model="createModel" OnValidSubmit="CreateAsync">
-        <DataAnnotationsValidator />
-        <div class="row g-2 align-items-end">
-            <div class="col-md-6">
-                <label class="form-label" for="name">Name</label>
-                <InputText id="name" class="form-control" @bind-Value="createModel.Name" />
-            </div>
-            <div class="col-auto">
-                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Create</button>
-            </div>
+<div class="crud-page">
+    <header class="page-hero">
+        <div>
+            <h1>Account Types</h1>
+            <p>Define clear categories for each account in your financial model.</p>
         </div>
-    </EditForm>
-</section>
+        <div class="hero-actions">
+            <button class="btn btn-outline-secondary" type="button" @onclick="LoadListAsync" disabled="@isLoading">Refresh</button>
+            <button class="btn btn-primary" type="button" @onclick="StartCreate">New Type</button>
+        </div>
+    </header>
 
-<section class="mb-4">
-    <h2>Edit</h2>
-    @if (editModel is null)
+    <ErrorState Message="@errorMessage" />
+    <ValidationSummaryPanel Errors="@validationErrors" />
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
     {
-        <p><em>Select Edit from the list to modify an account type.</em></p>
+        <div class="alert alert-success" role="status">@successMessage</div>
     }
-    else
+
+    @if (showEditor)
     {
-        <EditForm Model="editModel" OnValidSubmit="UpdateAsync">
-            <DataAnnotationsValidator />
-            <div class="row g-2 align-items-end">
-                <div class="col-md-6">
-                    <label class="form-label" for="editName">Name</label>
-                    <InputText id="editName" class="form-control" @bind-Value="editModel.Name" />
-                </div>
-                <div class="col-auto d-flex gap-2">
-                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Update</button>
-                    <button class="btn btn-outline-secondary" type="button" @onclick="CancelEdit">Cancel</button>
-                </div>
+        <section class="panel">
+            <div class="section-header">
+                <h2>@(editModel is null ? "Add Account Type" : "Edit Account Type")</h2>
+                <p>@(editModel is null ? "Use short, recognizable names like Checking, Credit, or Investment." : $"Updating type #{editModel.Id}.")</p>
             </div>
-        </EditForm>
+
+            @if (editModel is null)
+            {
+                <EditForm Model="createModel" OnValidSubmit="CreateAsync">
+                    <DataAnnotationsValidator />
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label" for="name">Name</label>
+                            <InputText id="name" class="form-control" @bind-Value="createModel.Name" />
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Type</button>
+                            <button class="btn btn-outline-secondary" type="button" @onclick="CloseEditor">Close</button>
+                        </div>
+                    </div>
+                </EditForm>
+            }
+            else
+            {
+                <EditForm Model="editModel" OnValidSubmit="UpdateAsync">
+                    <DataAnnotationsValidator />
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label" for="editName">Name</label>
+                            <InputText id="editName" class="form-control" @bind-Value="editModel.Name" />
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                            <button class="btn btn-outline-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+                        </div>
+                    </div>
+                </EditForm>
+            }
+        </section>
     }
-</section>
 
-<section class="mb-4">
-    <h2>List</h2>
-    <LoadingState IsVisible="@isLoading" />
-    <EmptyState IsVisible="@(!isLoading && accountTypes.Count == 0)" Message="No account types found." />
+    <section class="panel">
+        <div class="section-header">
+            <h2>Catalog</h2>
+            <p>Manage all available account type labels.</p>
+        </div>
 
-    @if (accountTypes.Count > 0)
-    {
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in accountTypes)
-                {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td>@item.Name</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(item.Id)">View</button>
-                            <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEdit(item)">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAsync(item.Id)">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</section>
+        <LoadingState IsVisible="@isLoading" />
+        <EmptyState IsVisible="@(!isLoading && accountTypes.Count == 0)" Message="No account types yet." />
 
-<section>
-    <h2>Detail</h2>
-    <p><em>Select View from the list to load detail from <code>GET /api/accounttypes/{id}</code>.</em></p>
+        @if (accountTypes.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in accountTypes.OrderBy(a => a.Name))
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(item.Id)">Open</button>
+                                    <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEdit(item)">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAsync(item.Id)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
 
     @if (selectedAccountType is not null)
     {
-        <dl>
-            <dt>ID</dt>
-            <dd>@selectedAccountType.Id</dd>
-            <dt>Name</dt>
-            <dd>@selectedAccountType.Name</dd>
-        </dl>
+        <section class="panel detail-panel">
+            <div class="section-header">
+                <h2>Type Details</h2>
+                <p>Selected account type information.</p>
+            </div>
+
+            <dl>
+                <dt>Name</dt>
+                <dd>@selectedAccountType.Name</dd>
+            </dl>
+        </section>
     }
-</section>
+</div>
 
 @code {
     private readonly CreateModel createModel = new();
@@ -106,7 +129,9 @@
     private EditModel? editModel;
     private bool isLoading = true;
     private bool isSubmitting;
+    private bool showEditor;
     private string? errorMessage;
+    private string? successMessage;
 
     protected override async Task OnInitializedAsync() => await LoadListAsync();
 
@@ -114,6 +139,7 @@
     {
         isLoading = true;
         errorMessage = null;
+        successMessage = null;
 
         try
         {
@@ -148,6 +174,7 @@
     {
         isSubmitting = true;
         errorMessage = null;
+        successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
 
         var result = await AccountTypesApiClient.CreateAsync(createModel.Name);
@@ -161,21 +188,40 @@
         }
 
         createModel.Name = string.Empty;
+        showEditor = false;
+        successMessage = "Account type saved.";
         await LoadListAsync();
+    }
+
+    private void StartCreate()
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+        editModel = null;
+        showEditor = true;
+    }
+
+    private void CloseEditor()
+    {
+        showEditor = false;
+        editModel = null;
     }
 
     private void StartEdit(AccountTypeResponse accountType)
     {
         errorMessage = null;
+        successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
         editModel = new EditModel
         {
             Id = accountType.Id,
             Name = accountType.Name
         };
+        showEditor = true;
     }
 
-    private void CancelEdit() => editModel = null;
+    private void CancelEdit() => CloseEditor();
 
     private async Task UpdateAsync()
     {
@@ -184,6 +230,7 @@
 
         isSubmitting = true;
         errorMessage = null;
+        successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
 
         var result = await AccountTypesApiClient.UpdateAsync(editModel.Id, editModel.Name);
@@ -197,15 +244,18 @@
         }
 
         editModel = null;
+        showEditor = false;
+        successMessage = "Account type updated.";
         await LoadListAsync();
     }
 
     private async Task DeleteAsync(int id)
     {
         errorMessage = null;
+        successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
 
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete account type #{id}?");
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this account type? (ID {id})");
         if (!confirmed)
             return;
 
@@ -222,6 +272,8 @@
 
         if (editModel?.Id == id)
             editModel = null;
+
+        successMessage = "Account type deleted.";
 
         await LoadListAsync();
     }

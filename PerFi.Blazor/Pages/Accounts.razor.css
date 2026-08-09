@@ -1,0 +1,54 @@
+.crud-page {
+    display: grid;
+    gap: 1rem;
+}
+
+.page-hero {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.page-hero h1 {
+    margin: 0;
+}
+
+.page-hero p {
+    margin: 0.25rem 0 0;
+    color: var(--pf-text-secondary);
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.panel {
+    border: 1px solid var(--pf-border-soft);
+    background: var(--pf-bg-elevated);
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.section-header p {
+    margin: 0.2rem 0 0.8rem;
+    color: var(--pf-text-secondary);
+}
+
+.detail-panel dl {
+    margin-bottom: 0;
+}
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--pf-text-primary);
+    --bs-table-border-color: var(--pf-border-soft);
+}
