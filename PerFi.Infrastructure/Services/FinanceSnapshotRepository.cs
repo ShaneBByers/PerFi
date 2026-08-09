@@ -16,11 +16,12 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
             .Include(s => s.AccountBalances)
                 .ThenInclude(ab => ab.Account)
                     .ThenInclude(a => a.Type)
+                        .ThenInclude(t => t.AccountTypeGroup)
             .Select(s => new FinanceSnapshot(
                 s.Id,
                 s.Date,
                 s.AccountBalances.Select(ab => new AccountBalance(
-                    new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name), ab.Account.InstitutionId ?? 0),
+                    new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name, new AccountTypeGroup(ab.Account.Type.AccountTypeGroup.Id, ab.Account.Type.AccountTypeGroup.Name)), ab.Account.InstitutionId ?? 0),
                     ab.Balance)).ToList()))
             .ToListAsync(cancellationToken);
     }
@@ -32,6 +33,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
             .Include(s => s.AccountBalances)
                 .ThenInclude(ab => ab.Account)
                     .ThenInclude(a => a.Type)
+                        .ThenInclude(t => t.AccountTypeGroup)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
         if (snapshotEntity == null)
@@ -41,7 +43,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
             snapshotEntity.Id,
             snapshotEntity.Date,
             [.. snapshotEntity.AccountBalances.Select(ab => new AccountBalance(
-                new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name), ab.Account.InstitutionId ?? 0),
+                new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.Type.Id, ab.Account.Type.Name, new AccountTypeGroup(ab.Account.Type.AccountTypeGroup.Id, ab.Account.Type.AccountTypeGroup.Name)), ab.Account.InstitutionId ?? 0),
                 ab.Balance))]);
     }
 

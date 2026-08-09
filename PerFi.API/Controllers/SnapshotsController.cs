@@ -36,7 +36,8 @@ public class SnapshotsController(
                         institutionNameById.GetValueOrDefault(ab.Account.InstitutionId, "Unknown Institution")),
                     new AccountTypeResponse(
                         ab.Account.Type.Id,
-                        ab.Account.Type.Name)),
+                        ab.Account.Type.Name,
+                        new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name))),
                 ab.Balance))]));
 
         return Ok(response);
@@ -66,7 +67,8 @@ public class SnapshotsController(
                         institutionNameById.GetValueOrDefault(ab.Account.InstitutionId, "Unknown Institution")),
                     new AccountTypeResponse(
                         ab.Account.Type.Id,
-                        ab.Account.Type.Name)),
+                        ab.Account.Type.Name,
+                        new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name))),
                 ab.Balance))]);
 
         return Ok(response);

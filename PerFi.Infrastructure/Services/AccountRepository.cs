@@ -15,7 +15,8 @@ internal class AccountRepository(
         return await dbContext.Accounts
             .AsNoTracking()
             .Include(a => a.Type)
-            .Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name), a.InstitutionId ?? 0))
+                .ThenInclude(t => t.AccountTypeGroup)
+            .Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name, new AccountTypeGroup(a.Type.AccountTypeGroup.Id, a.Type.AccountTypeGroup.Name)), a.InstitutionId ?? 0))
             .ToListAsync(cancellationToken);
     }
 
@@ -24,12 +25,13 @@ internal class AccountRepository(
         var accountEntity = await dbContext.Accounts
             .AsNoTracking()
             .Include(a => a.Type)
+                .ThenInclude(t => t.AccountTypeGroup)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (accountEntity == null)
             return null;
 
-        return new Account(accountEntity.Id, accountEntity.Name, new AccountType(accountEntity.Type.Id, accountEntity.Type.Name), accountEntity.InstitutionId ?? 0);
+        return new Account(accountEntity.Id, accountEntity.Name, new AccountType(accountEntity.Type.Id, accountEntity.Type.Name, new AccountTypeGroup(accountEntity.Type.AccountTypeGroup.Id, accountEntity.Type.AccountTypeGroup.Name)), accountEntity.InstitutionId ?? 0);
     }
 
     public async Task<Result<int>> AddAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default)

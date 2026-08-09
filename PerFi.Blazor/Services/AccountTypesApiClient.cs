@@ -11,9 +11,9 @@ public sealed class AccountTypesApiClient(HttpClient httpClient) : IAccountTypes
     public Task<AccountTypeResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         httpClient.GetFromJsonAsync<AccountTypeResponse>($"api/accounttypes/{id}", cancellationToken);
 
-    public async Task<ApiResult> CreateAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<ApiResult> CreateAsync(string name, int accountTypeGroupId, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync("api/accounttypes", new CreateAccountTypeRequest(name), cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("api/accounttypes", new CreateAccountTypeRequest(name, accountTypeGroupId), cancellationToken);
 
         if (response.IsSuccessStatusCode)
             return ApiResult.Success();
@@ -21,9 +21,9 @@ public sealed class AccountTypesApiClient(HttpClient httpClient) : IAccountTypes
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
 
-    public async Task<ApiResult> UpdateAsync(int id, string name, CancellationToken cancellationToken = default)
+    public async Task<ApiResult> UpdateAsync(int id, string name, int accountTypeGroupId, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PutAsJsonAsync($"api/accounttypes/{id}", new UpdateAccountTypeRequest(name), cancellationToken);
+        var response = await httpClient.PutAsJsonAsync($"api/accounttypes/{id}", new UpdateAccountTypeRequest(name, accountTypeGroupId), cancellationToken);
 
         if (response.IsSuccessStatusCode)
             return ApiResult.Success();

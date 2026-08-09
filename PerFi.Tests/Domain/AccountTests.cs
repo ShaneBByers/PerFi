@@ -5,10 +5,12 @@ namespace PerFi.Tests.Domain;
 
 public class AccountTests
 {
+    private static readonly AccountTypeGroup TestGroup = new("Assets");
+
     [Fact]
     public void CreatingAccount_WithWhitespaceName_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new Account("   ", new AccountType("Checking")));
+        Assert.Throws<ArgumentException>(() => new Account("   ", new AccountType("Checking", TestGroup)));
     }
 
     [Fact]

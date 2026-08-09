@@ -43,6 +43,12 @@ builder.Services.AddHttpClient<IAccountTypesApiClient, AccountTypesApiClient>(cl
 }).AddHttpMessageHandler<CookieRequestHandler>()
 	.AddHttpMessageHandler<AuthMessageHandler>();
 
+builder.Services.AddHttpClient<IAccountTypeGroupsApiClient, AccountTypeGroupsApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
 builder.Services.AddHttpClient<IInstitutionsApiClient, InstitutionsApiClient>(client =>
 {
 	client.BaseAddress = new Uri(apiBaseUrl);

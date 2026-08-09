@@ -2,4 +2,5 @@ namespace PerFi.Application.Commands;
 
 public record UpdateAccountTypeCommand(
     int AccountTypeId,
-    string AccountTypeName);
+    string AccountTypeName,
+    int AccountTypeGroupId);

@@ -22,14 +22,24 @@ public static class RequestValidator
         return ValidateInstitutionName(institutionName);
     }
 
-    public static IReadOnlyDictionary<string, string[]> ValidateCreateAccountTypeRequest(string? name)
+    public static IReadOnlyDictionary<string, string[]> ValidateCreateAccountTypeRequest(string? name, int accountTypeGroupId)
     {
-        return ValidateAccountTypeName(name);
+        return ValidateAccountTypeFields(name, accountTypeGroupId);
     }
 
-    public static IReadOnlyDictionary<string, string[]> ValidateUpdateAccountTypeRequest(string? name)
+    public static IReadOnlyDictionary<string, string[]> ValidateUpdateAccountTypeRequest(string? name, int accountTypeGroupId)
     {
-        return ValidateAccountTypeName(name);
+        return ValidateAccountTypeFields(name, accountTypeGroupId);
+    }
+
+    public static IReadOnlyDictionary<string, string[]> ValidateCreateAccountTypeGroupRequest(string? name)
+    {
+        return ValidateAccountTypeGroupName(name);
+    }
+
+    public static IReadOnlyDictionary<string, string[]> ValidateUpdateAccountTypeGroupRequest(string? name)
+    {
+        return ValidateAccountTypeGroupName(name);
     }
 
     public static IReadOnlyDictionary<string, string[]> ValidateCreateFinanceSnapshotRequest(DateOnly snapshotDate, IReadOnlyDictionary<int, decimal>? accountIdToBalanceMap)
@@ -68,12 +78,25 @@ public static class RequestValidator
         return errors;
     }
 
-    private static IReadOnlyDictionary<string, string[]> ValidateAccountTypeName(string? name)
+    private static IReadOnlyDictionary<string, string[]> ValidateAccountTypeFields(string? name, int accountTypeGroupId)
     {
         var errors = new Dictionary<string, string[]>();
 
         if (string.IsNullOrWhiteSpace(name))
             errors[nameof(name)] = ["Account type name is required."];
+
+        if (accountTypeGroupId <= 0)
+            errors[nameof(accountTypeGroupId)] = ["Account type group ID must be greater than zero."];
+
+        return errors;
+    }
+
+    private static IReadOnlyDictionary<string, string[]> ValidateAccountTypeGroupName(string? name)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (string.IsNullOrWhiteSpace(name))
+            errors[nameof(name)] = ["Account type group name is required."];
 
         return errors;
     }

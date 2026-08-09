@@ -255,6 +255,7 @@
                                 <th>Account</th>
                                 <th>Institution</th>
                                 <th>Type</th>
+                                <th>Group</th>
                                 <th class="text-end">Balance</th>
                             </tr>
                         </thead>
@@ -266,6 +267,7 @@
                                     <td>@balance.AccountName</td>
                                     <td>@balance.InstitutionName</td>
                                     <td>@balance.AccountTypeName</td>
+                                    <td>@balance.AccountTypeGroupName</td>
                                     <td class="text-end" style="min-width: 12rem;">
                                         <InputNumber class="form-control text-end" @bind-Value="balance.Balance" />
                                     </td>
@@ -337,6 +339,7 @@
                             <th>Account</th>
                             <th>Institution</th>
                             <th>Type</th>
+                            <th>Group</th>
                             <th class="text-end">Balance</th>
                         </tr>
                     </thead>
@@ -347,6 +350,7 @@
                                 <td>@balance.Account.Name</td>
                                 <td>@balance.Account.Institution.Name</td>
                                 <td>@balance.Account.Type.Name</td>
+                                <td>@balance.Account.Type.Group.Name</td>
                                 <td class="text-end">@FormatCurrency(balance.Balance)</td>
                             </tr>
                         }
@@ -705,7 +709,7 @@
             return;
 
         var byType = latestSnapshot.AccountBalances
-            .GroupBy(b => b.Account.Type.Name)
+            .GroupBy(b => b.Account.Type.Group.Name)
             .Select(group => new SnapshotCompositionPoint(group.Key, group.Sum(x => x.Balance)))
             .OrderByDescending(item => item.Total)
             .ToList();
@@ -813,6 +817,7 @@
                     AccountName = account.Name,
                     InstitutionName = account.Institution.Name,
                     AccountTypeName = account.Type.Name,
+                    AccountTypeGroupName = account.Type.Group.Name,
                     Balance = null
                 });
             }
@@ -825,6 +830,7 @@
         public string AccountName { get; set; } = string.Empty;
         public string InstitutionName { get; set; } = string.Empty;
         public string AccountTypeName { get; set; } = string.Empty;
+        public string AccountTypeGroupName { get; set; } = string.Empty;
         public decimal? Balance { get; set; }
     }
 

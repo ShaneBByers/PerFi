@@ -31,7 +31,8 @@ public class AccountsController(
                 institutionNameById.GetValueOrDefault(a.InstitutionId, "Unknown Institution")),
             new AccountTypeResponse(
                 a.Type.Id,
-                a.Type.Name)));
+                a.Type.Name,
+                new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name))));
         return Ok(response);
     }
 
@@ -53,7 +54,8 @@ public class AccountsController(
             new InstitutionIdentityResponse(account.InstitutionId, institution.Name),
             new AccountTypeResponse(
                 account.Type.Id,
-                account.Type.Name));
+                account.Type.Name,
+                new AccountTypeGroupIdentityResponse(account.Type.Group.Id, account.Type.Group.Name)));
         return Ok(response);
     }
 

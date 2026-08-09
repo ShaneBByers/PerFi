@@ -28,7 +28,8 @@ public class InstitutionsController(
                 new InstitutionIdentityResponse(i.Id, i.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
-                    a.Type.Name)))]));
+                    a.Type.Name,
+                    new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name))))]));
 
         return Ok(response);
     }
@@ -50,7 +51,8 @@ public class InstitutionsController(
                 new InstitutionIdentityResponse(institution.Id, institution.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
-                    a.Type.Name)))]);
+                    a.Type.Name,
+                    new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name))))]);
         return Ok(response);
     }
 

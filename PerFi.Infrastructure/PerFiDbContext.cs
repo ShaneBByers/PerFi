@@ -6,6 +6,7 @@ namespace PerFi.Infrastructure;
 public class PerFiDbContext(DbContextOptions<PerFiDbContext> options)
    : DbContext(options)
 {
+    public DbSet<AccountTypeGroupEntity> AccountTypeGroups { get; set; }
     public DbSet<InstitutionEntity> Institutions { get; set; }
     public DbSet<AccountTypeEntity> AccountTypes { get; set; }
     public DbSet<AccountEntity> Accounts { get; set; }

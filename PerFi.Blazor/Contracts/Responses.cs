@@ -2,7 +2,9 @@ namespace PerFi.Blazor.Contracts;
 
 public sealed record LoginResponse(string Token);
 
-public sealed record AccountTypeResponse(int Id, string Name);
+public sealed record AccountTypeGroupResponse(int Id, string Name);
+
+public sealed record AccountTypeResponse(int Id, string Name, AccountTypeGroupResponse Group);
 
 public sealed record InstitutionIdentityResponse(int Id, string Name);
 

@@ -15,7 +15,8 @@ internal class InstitutionRepository(
         return await dbContext.Institutions
             .Include(i => i.Accounts)
                 .ThenInclude(a => a.Type)
-            .Select(i => new Institution(i.Id, i.Name, i.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name), i.Id)).ToList()))
+                    .ThenInclude(t => t.AccountTypeGroup)
+            .Select(i => new Institution(i.Id, i.Name, i.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name, new AccountTypeGroup(a.Type.AccountTypeGroup.Id, a.Type.AccountTypeGroup.Name)), i.Id)).ToList()))
             .ToListAsync(cancellationToken);
     }
 
@@ -24,12 +25,13 @@ internal class InstitutionRepository(
         var institutionEntity = await dbContext.Institutions
             .Include(i => i.Accounts)
                 .ThenInclude(a => a.Type)
+                    .ThenInclude(t => t.AccountTypeGroup)
             .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
 
         if (institutionEntity == null)
             return null;
 
-        return new Institution(institutionEntity.Id, institutionEntity.Name, [.. institutionEntity.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name), institutionEntity.Id))]);
+        return new Institution(institutionEntity.Id, institutionEntity.Name, [.. institutionEntity.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name, new AccountTypeGroup(a.Type.AccountTypeGroup.Id, a.Type.AccountTypeGroup.Name)), institutionEntity.Id))]);
     }
 
     public async Task<Result<int>> AddInstitutionAsync(Institution institution, CancellationToken cancellationToken = default)
@@ -45,7 +47,12 @@ internal class InstitutionRepository(
                 Name = a.Name,
                 Type = new AccountTypeEntity
                 {
-                    Name = a.Type.Name
+                    Name = a.Type.Name,
+                    AccountTypeGroup = new AccountTypeGroupEntity
+                    {
+                        Name = a.Type.Group.Name,
+                        AccountTypes = []
+                    }
                 }
             })]
         };

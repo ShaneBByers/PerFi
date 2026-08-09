@@ -8,7 +8,7 @@ public class AccountBalanceTests
     [Fact]
     public void CreatingAccountBalance_WithNegativeValue_AllowsBalance()
     {
-        var account = new Account("Credit Card", new AccountType("Credit"));
+        var account = new Account("Credit Card", new AccountType("Credit", new AccountTypeGroup("Liabilities")));
 
         var accountBalance = new AccountBalance(account, -125.50m);
 

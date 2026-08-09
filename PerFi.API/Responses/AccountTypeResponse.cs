@@ -2,4 +2,5 @@ namespace PerFi.API.Responses;
 
 public sealed record AccountTypeResponse(
     int Id,
-    string Name);
+    string Name,
+    AccountTypeGroupIdentityResponse Group);

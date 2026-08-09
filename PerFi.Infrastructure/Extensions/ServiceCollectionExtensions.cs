@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IAccountTypeGroupRepository, AccountTypeGroupRepository>();
         services.AddScoped<IAccountTypeRepository, AccountTypeRepository>();
         services.AddScoped<IInstitutionRepository, InstitutionRepository>();
         services.AddScoped<IFinanceSnapshotRepository, FinanceSnapshotRepository>();

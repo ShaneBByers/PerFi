@@ -63,7 +63,7 @@
                                 <option value="0">Select account type</option>
                                 @foreach (var accountType in accountTypes.OrderBy(t => t.Name))
                                 {
-                                    <option value="@accountType.Id">@accountType.Name</option>
+                                    <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
                                 }
                             </InputSelect>
                         </div>
@@ -103,7 +103,7 @@
                                 <option value="0">Select account type</option>
                                 @foreach (var accountType in accountTypes.OrderBy(t => t.Name))
                                 {
-                                    <option value="@accountType.Id">@accountType.Name</option>
+                                    <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
                                 }
                             </InputSelect>
                         </div>
@@ -136,6 +136,7 @@
                             <th>Name</th>
                             <th>Institution</th>
                             <th>Type</th>
+                            <th>Group</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -146,6 +147,7 @@
                                 <td>@account.Name</td>
                                 <td>@GetInstitutionName(account.Institution.Id)</td>
                                 <td>@account.Type.Name</td>
+                                <td>@account.Type.Group.Name</td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(account.Id)">Open</button>
                                     <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEdit(account)">Edit</button>
@@ -174,6 +176,8 @@
                 <dd>@GetInstitutionName(selectedAccount.Institution.Id)</dd>
                 <dt>Type</dt>
                 <dd>@selectedAccount.Type.Name</dd>
+                <dt>Group</dt>
+                <dd>@selectedAccount.Type.Group.Name</dd>
             </dl>
         </section>
     }

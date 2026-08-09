@@ -65,7 +65,7 @@ public sealed class SnapshotsControllerTests
         {
             var accountId = accountIdToBalanceMap.Keys.First();
             var balance = accountIdToBalanceMap[accountId];
-            var account = new Account(accountId, "Test Account", new AccountType("Test Type"), 1);
+            var account = new Account(accountId, "Test Account", new AccountType("Test Type", new AccountTypeGroup("Investments")), 1);
 
             return new AccountBalance(account, balance);
         }

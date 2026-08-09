@@ -19,7 +19,10 @@ public class AccountTypesController(
     public async Task<IActionResult> GetAll()
     {
         var accountTypes = await accountTypeService.GetAllAccountTypesAsync(HttpContext.RequestAborted);
-        var response = accountTypes.Select(at => new AccountTypeResponse(at.Id, at.Name));
+        var response = accountTypes.Select(at => new AccountTypeResponse(
+            at.Id,
+            at.Name,
+            new AccountTypeGroupIdentityResponse(at.Group.Id, at.Group.Name)));
         return Ok(response);
     }
 
@@ -31,18 +34,21 @@ public class AccountTypesController(
         if (accountType is null)
             return NotFound(new { error = $"No account type found with ID '{id}'." });
 
-        var response = new AccountTypeResponse(accountType.Id, accountType.Name);
+        var response = new AccountTypeResponse(
+            accountType.Id,
+            accountType.Name,
+            new AccountTypeGroupIdentityResponse(accountType.Group.Id, accountType.Group.Name));
         return Ok(response);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAccountTypeRequest request)
     {
-        var validationErrors = RequestValidator.ValidateCreateAccountTypeRequest(request.Name);
+        var validationErrors = RequestValidator.ValidateCreateAccountTypeRequest(request.Name, request.AccountTypeGroupId);
         if (validationErrors.Count > 0)
             return BadRequest(validationErrors.ToValidationProblemDetails());
 
-        var command = new CreateAccountTypeCommand(request.Name);
+        var command = new CreateAccountTypeCommand(request.Name, request.AccountTypeGroupId);
         var result = await accountTypeService.CreateAccountTypeAsync(command, HttpContext.RequestAborted);
 
         if (result.IsFailure)
@@ -59,11 +65,11 @@ public class AccountTypesController(
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateAccountTypeRequest request)
     {
-        var validationErrors = RequestValidator.ValidateUpdateAccountTypeRequest(request.Name);
+        var validationErrors = RequestValidator.ValidateUpdateAccountTypeRequest(request.Name, request.AccountTypeGroupId);
         if (validationErrors.Count > 0)
             return BadRequest(validationErrors.ToValidationProblemDetails());
 
-        var command = new UpdateAccountTypeCommand(id, request.Name);
+        var command = new UpdateAccountTypeCommand(id, request.Name, request.AccountTypeGroupId);
         var result = await accountTypeService.UpdateAccountTypeAsync(command, HttpContext.RequestAborted);
 
         if (result.IsFailure)

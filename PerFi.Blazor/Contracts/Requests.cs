@@ -2,8 +2,11 @@ namespace PerFi.Blazor.Contracts;
 
 public sealed record LoginRequest(string Username, string Password);
 
-public sealed record CreateAccountTypeRequest(string Name);
-public sealed record UpdateAccountTypeRequest(string Name);
+public sealed record CreateAccountTypeGroupRequest(string Name);
+public sealed record UpdateAccountTypeGroupRequest(string Name);
+
+public sealed record CreateAccountTypeRequest(string Name, int AccountTypeGroupId);
+public sealed record UpdateAccountTypeRequest(string Name, int AccountTypeGroupId);
 
 public sealed record CreateInstitutionRequest(string InstitutionName);
 public sealed record UpdateInstitutionRequest(string InstitutionName);

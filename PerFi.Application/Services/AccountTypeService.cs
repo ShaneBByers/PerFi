@@ -7,7 +7,8 @@ using PerFi.Domain.Results;
 namespace PerFi.Application.Services;
 
 internal class AccountTypeService(
-    IAccountTypeRepository accountTypeRepository)
+    IAccountTypeRepository accountTypeRepository,
+    IAccountTypeGroupRepository accountTypeGroupRepository)
     : IAccountTypeService
 {
     public async Task<IReadOnlyList<AccountType>> GetAllAccountTypesAsync(CancellationToken cancellationToken = default)
@@ -18,16 +19,21 @@ internal class AccountTypeService(
 
     public async Task<Result<AccountType>> CreateAccountTypeAsync(CreateAccountTypeCommand command, CancellationToken cancellationToken = default)
     {
+        var accountTypeGroup = await accountTypeGroupRepository.GetAccountTypeGroupByIdAsync(command.AccountTypeGroupId, cancellationToken);
+        if (accountTypeGroup is null)
+            return Result<AccountType>.Failure($"Account type group with ID '{command.AccountTypeGroupId}' not found.");
+
         AccountType accountType;
 
         try
         {
-            accountType = new AccountType(command.AccountTypeName);
+            accountType = new AccountType(command.AccountTypeName, accountTypeGroup);
         }
         catch (ArgumentException ex) { return Result<AccountType>.Failure(ex.Message); }
 
         Result<int> result = await accountTypeRepository.AddAccountTypeAsync(
             accountType,
+            command.AccountTypeGroupId,
             cancellationToken);
 
         if (!result.IsSuccess)
@@ -40,10 +46,14 @@ internal class AccountTypeService(
 
     public async Task<Result> UpdateAccountTypeAsync(UpdateAccountTypeCommand command, CancellationToken cancellationToken = default)
     {
+        var accountTypeGroup = await accountTypeGroupRepository.GetAccountTypeGroupByIdAsync(command.AccountTypeGroupId, cancellationToken);
+        if (accountTypeGroup is null)
+            return Result.Failure($"Account type group with ID '{command.AccountTypeGroupId}' not found.");
+
         try
         {
-            var accountType = new AccountType(command.AccountTypeId, command.AccountTypeName);
-            return await accountTypeRepository.UpdateAccountTypeAsync(accountType, cancellationToken);
+            var accountType = new AccountType(command.AccountTypeId, command.AccountTypeName, accountTypeGroup);
+            return await accountTypeRepository.UpdateAccountTypeAsync(accountType, command.AccountTypeGroupId, cancellationToken);
         }
         catch (ArgumentException ex)
         {
