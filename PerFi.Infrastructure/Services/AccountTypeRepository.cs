@@ -94,7 +94,7 @@ internal class AccountTypeRepository(
             return Result.Failure($"Account type with ID '{accountTypeId}' not found.");
 
         var isReferenced = await dbContext.Accounts
-            .AnyAsync(a => EF.Property<int>(a, "TypeId") == accountTypeId, cancellationToken);
+            .AnyAsync(a => a.AccountTypeId == accountTypeId, cancellationToken);
 
         if (isReferenced)
             return Result.Failure("Cannot delete account type because one or more accounts reference it.");

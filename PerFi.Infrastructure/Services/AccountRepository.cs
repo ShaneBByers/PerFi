@@ -14,9 +14,9 @@ internal class AccountRepository(
     {
         return await dbContext.Accounts
             .AsNoTracking()
-            .Include(a => a.Type)
+            .Include(a => a.AccountType)
                 .ThenInclude(t => t.AccountTypeGroup)
-            .Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name, new AccountTypeGroup(a.Type.AccountTypeGroup.Id, a.Type.AccountTypeGroup.Name)), a.InstitutionId ?? 0))
+            .Select(a => new Account(a.Id, a.Name, new AccountType(a.AccountType.Id, a.AccountType.Name, new AccountTypeGroup(a.AccountType.AccountTypeGroup.Id, a.AccountType.AccountTypeGroup.Name)), a.InstitutionId))
             .ToListAsync(cancellationToken);
     }
 
@@ -24,14 +24,14 @@ internal class AccountRepository(
     {
         var accountEntity = await dbContext.Accounts
             .AsNoTracking()
-            .Include(a => a.Type)
+            .Include(a => a.AccountType)
                 .ThenInclude(t => t.AccountTypeGroup)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (accountEntity == null)
             return null;
 
-        return new Account(accountEntity.Id, accountEntity.Name, new AccountType(accountEntity.Type.Id, accountEntity.Type.Name, new AccountTypeGroup(accountEntity.Type.AccountTypeGroup.Id, accountEntity.Type.AccountTypeGroup.Name)), accountEntity.InstitutionId ?? 0);
+        return new Account(accountEntity.Id, accountEntity.Name, new AccountType(accountEntity.AccountType.Id, accountEntity.AccountType.Name, new AccountTypeGroup(accountEntity.AccountType.AccountTypeGroup.Id, accountEntity.AccountType.AccountTypeGroup.Name)), accountEntity.InstitutionId);
     }
 
     public async Task<Result<int>> AddAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default)
@@ -53,7 +53,7 @@ internal class AccountRepository(
             Name = account.Name,
             InstitutionId = institution.Id,
             AccountTypeId = accountType.Id,
-            Type = accountType
+            AccountType = accountType
         };
 
         institution.Accounts.Add(newAccount);
@@ -66,7 +66,7 @@ internal class AccountRepository(
     public async Task<Result> UpdateAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default)
     {
         var accountEntity = await dbContext.Accounts
-            .Include(a => a.Type)
+            .Include(a => a.AccountType)
             .FirstOrDefaultAsync(a => a.Id == account.Id, cancellationToken);
 
         if (accountEntity is null)
@@ -85,11 +85,9 @@ internal class AccountRepository(
             return Result.Failure($"Account type with ID '{account.Type.Id}' does not exist.");
 
         accountEntity.Name = account.Name;
-        accountEntity.Type = accountType;
+        accountEntity.AccountType = accountType;
         accountEntity.AccountTypeId = accountType.Id;
         accountEntity.InstitutionId = institution.Id;
-        dbContext.Entry(accountEntity).Property("TypeId").CurrentValue = accountType.Id;
-        dbContext.Entry(accountEntity).Property("InstitutionEntityId").CurrentValue = institution.Id;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -105,7 +103,7 @@ internal class AccountRepository(
             return Result.Failure($"Account with ID '{accountId}' not found.");
 
         var hasBalances = await dbContext.AccountBalances
-            .AnyAsync(ab => EF.Property<int>(ab, "AccountId") == accountId, cancellationToken);
+            .AnyAsync(ab => ab.AccountId == accountId, cancellationToken);
 
         if (hasBalances)
             return Result.Failure("Cannot delete account because it is referenced by one or more snapshot balances.");

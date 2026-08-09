@@ -14,9 +14,9 @@ internal class InstitutionRepository(
     {
         return await dbContext.Institutions
             .Include(i => i.Accounts)
-                .ThenInclude(a => a.Type)
+                .ThenInclude(a => a.AccountType)
                     .ThenInclude(t => t.AccountTypeGroup)
-            .Select(i => new Institution(i.Id, i.Name, i.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name, new AccountTypeGroup(a.Type.AccountTypeGroup.Id, a.Type.AccountTypeGroup.Name)), i.Id)).ToList()))
+            .Select(i => new Institution(i.Id, i.Name, i.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.AccountType.Id, a.AccountType.Name, new AccountTypeGroup(a.AccountType.AccountTypeGroup.Id, a.AccountType.AccountTypeGroup.Name)), i.Id)).ToList()))
             .ToListAsync(cancellationToken);
     }
 
@@ -24,14 +24,14 @@ internal class InstitutionRepository(
     {
         var institutionEntity = await dbContext.Institutions
             .Include(i => i.Accounts)
-                .ThenInclude(a => a.Type)
+                .ThenInclude(a => a.AccountType)
                     .ThenInclude(t => t.AccountTypeGroup)
             .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
 
         if (institutionEntity == null)
             return null;
 
-        return new Institution(institutionEntity.Id, institutionEntity.Name, [.. institutionEntity.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.Type.Id, a.Type.Name, new AccountTypeGroup(a.Type.AccountTypeGroup.Id, a.Type.AccountTypeGroup.Name)), institutionEntity.Id))]);
+        return new Institution(institutionEntity.Id, institutionEntity.Name, [.. institutionEntity.Accounts.Select(a => new Account(a.Id, a.Name, new AccountType(a.AccountType.Id, a.AccountType.Name, new AccountTypeGroup(a.AccountType.AccountTypeGroup.Id, a.AccountType.AccountTypeGroup.Name)), institutionEntity.Id))]);
     }
 
     public async Task<Result<int>> AddInstitutionAsync(Institution institution, CancellationToken cancellationToken = default)
@@ -45,7 +45,7 @@ internal class InstitutionRepository(
             Accounts = [.. institution.Accounts.Select(a => new AccountEntity
             {
                 Name = a.Name,
-                Type = new AccountTypeEntity
+                AccountType = new AccountTypeEntity
                 {
                     Name = a.Type.Name,
                     AccountTypeGroup = new AccountTypeGroupEntity
@@ -93,7 +93,7 @@ internal class InstitutionRepository(
             return Result.Failure($"Institution with ID '{institutionId}' not found.");
 
         var hasAccounts = await dbContext.Accounts
-            .AnyAsync(a => EF.Property<int?>(a, "InstitutionEntityId") == institutionId, cancellationToken);
+            .AnyAsync(a => a.InstitutionId == institutionId, cancellationToken);
 
         if (hasAccounts)
             return Result.Failure("Cannot delete institution because one or more accounts reference it.");
