@@ -139,7 +139,11 @@
                                 @foreach (var column in visibleSnapshots)
                                 {
                                     var groupTotal = GetGroupTotal(group, column.Id);
-                                    <th class="text-end @GetAmountClass(groupTotal)">@FormatCurrency(groupTotal)</th>
+                                    var groupDeltaDisplay = GetGroupDeltaDisplay(group, column.Id);
+                                    <th class="text-end @GetAmountClass(groupTotal)">
+                                        <div>@FormatCurrency(groupTotal)</div>
+                                        <div class="matrix-cell-delta @groupDeltaDisplay.CssClass">@groupDeltaDisplay.Text</div>
+                                    </th>
                                 }
                             </tr>
 
@@ -168,7 +172,9 @@
                                                 var displayedValue = GetDisplayedCellValue(column.Id, row.AccountId);
                                                 @if (displayedValue.HasValue)
                                                 {
+                                                    var deltaDisplay = GetCellDeltaDisplay(column.Id, row.AccountId);
                                                     <div class="text-end @GetAmountClass(displayedValue.Value)">@FormatCurrency(displayedValue.Value)</div>
+                                                    <div class="text-end matrix-cell-delta @deltaDisplay.CssClass">@deltaDisplay.Text</div>
                                                 }
                                                 else
                                                 {
@@ -852,12 +858,65 @@
         return group.Rows.Sum(row => GetDisplayedCellValue(snapshotId, row.AccountId) ?? 0m);
     }
 
+    private CellDeltaDisplay GetGroupDeltaDisplay(AccountMatrixGroup group, int snapshotId)
+    {
+        var previousSnapshotId = GetPreviousSnapshotId(snapshotId);
+        if (!previousSnapshotId.HasValue)
+            return new CellDeltaDisplay("-", "amount-muted");
+
+        var delta = GetGroupTotal(group, snapshotId) - GetGroupTotal(group, previousSnapshotId.Value);
+        if (delta == 0m)
+            return new CellDeltaDisplay("0", "amount-muted");
+
+        return new CellDeltaDisplay(FormatDeltaCurrency(delta), GetDeltaClass(delta));
+    }
+
     private decimal? GetDisplayedCellValue(int snapshotId, int accountId)
     {
         if (matrixCellEdits.TryGetValue((snapshotId, accountId), out var edited))
             return edited;
 
         return GetOriginalCellValue(snapshotId, accountId);
+    }
+
+    private decimal? GetDisplayedCellDelta(int snapshotId, int accountId)
+    {
+        var previousSnapshotId = GetPreviousSnapshotId(snapshotId);
+        if (!previousSnapshotId.HasValue)
+            return null;
+
+        var currentValue = GetDisplayedCellValue(snapshotId, accountId);
+        var previousValue = GetDisplayedCellValue(previousSnapshotId.Value, accountId);
+        if (!currentValue.HasValue || !previousValue.HasValue)
+            return null;
+
+        return currentValue.Value - previousValue.Value;
+    }
+
+    private CellDeltaDisplay GetCellDeltaDisplay(int snapshotId, int accountId)
+    {
+        var delta = GetDisplayedCellDelta(snapshotId, accountId);
+        if (!delta.HasValue)
+            return new CellDeltaDisplay("-", "amount-muted");
+
+        if (delta.Value == 0m)
+            return new CellDeltaDisplay("0", "amount-muted");
+
+        return new CellDeltaDisplay(FormatDeltaCurrency(delta.Value), GetDeltaClass(delta.Value));
+    }
+
+    private int? GetPreviousSnapshotId(int snapshotId)
+    {
+        if (snapshotId == PendingMatrixSnapshotId)
+            return filteredSnapshots.Count > 0 ? filteredSnapshots[^1].Id : null;
+
+        for (var index = 1; index < filteredSnapshots.Count; index++)
+        {
+            if (filteredSnapshots[index].Id == snapshotId)
+                return filteredSnapshots[index - 1].Id;
+        }
+
+        return null;
     }
 
     private decimal? GetOriginalCellValue(int snapshotId, int accountId)
@@ -947,6 +1006,28 @@
             return "amount-negative";
 
         return "amount-muted";
+    }
+
+    private static string GetDeltaClass(decimal value)
+    {
+        if (value > 0m)
+            return "matrix-cell-delta-positive";
+
+        if (value < 0m)
+            return "matrix-cell-delta-negative";
+
+        return "amount-muted";
+    }
+
+    private static string FormatDeltaCurrency(decimal value)
+    {
+        if (value > 0m)
+            return $"+{value.ToString("C")}";
+
+        if (value < 0m)
+            return $"-{Math.Abs(value).ToString("C")}";
+
+        return FormatCurrency(0m);
     }
 
     private void OnMatrixCellChanged(int snapshotId, int accountId, string? rawValue)
@@ -1081,6 +1162,8 @@
     private sealed record SnapshotTrendPoint(string Label, decimal Total);
 
     private sealed record MatrixSnapshotColumn(int Id, DateOnly Date, bool IsDraft);
+
+    private sealed record CellDeltaDisplay(string Text, string CssClass);
 
     private sealed record AccountTypeGroupTrendChart(
         string GroupName,
