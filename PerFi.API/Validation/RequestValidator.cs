@@ -52,6 +52,25 @@ public static class RequestValidator
         return ValidateSnapshotFields(snapshotDate, accountIdToBalanceMap);
     }
 
+    public static IReadOnlyDictionary<string, string[]> ValidateBulkUpdateFinanceSnapshotCellsRequest(IReadOnlyList<Requests.SnapshotCellUpdateRequest>? updates)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (updates is null || updates.Count == 0)
+        {
+            errors[nameof(updates)] = ["At least one cell update is required."];
+            return errors;
+        }
+
+        if (updates.Any(update => update.SnapshotId <= 0))
+            errors[nameof(updates)] = ["All snapshot IDs must be greater than zero."];
+
+        if (updates.Any(update => update.AccountId <= 0))
+            errors[nameof(updates)] = ["All account IDs must be greater than zero."];
+
+        return errors;
+    }
+
     private static IReadOnlyDictionary<string, string[]> ValidateAccountFields(string? accountName, int institutionId, int accountTypeId)
     {
         var errors = new Dictionary<string, string[]>();

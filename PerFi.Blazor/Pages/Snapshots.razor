@@ -1,5 +1,6 @@
 @page "/snapshots"
 @attribute [Authorize]
+@using System.Globalization
 @inject ISnapshotsApiClient SnapshotsApiClient
 @inject IAccountsApiClient AccountsApiClient
 @inject IJSRuntime JSRuntime
@@ -10,11 +11,39 @@
     <header class="page-hero">
         <div>
             <h1>Net Worth</h1>
-            <p class="hero-copy">Track every account over time in one central view.</p>
         </div>
         <div class="hero-actions">
+            <div class="range-control">
+                <button class="btn btn-outline-secondary" type="button" @onclick="ToggleRangePicker">@GetRangeButtonLabel()</button>
+
+                @if (showRangePicker)
+                {
+                    <div class="range-popover" role="dialog" aria-label="Date range options">
+                        <div class="filter-presets" role="toolbar" aria-label="Net Worth range presets">
+                            <button class='@GetRangeClass("ytd")' @onclick='() => SetRangePreset("ytd")'>YTD</button>
+                            <button class='@GetRangeClass("3m")' @onclick='() => SetRangePreset("3m")'>3M</button>
+                            <button class='@GetRangeClass("6m")' @onclick='() => SetRangePreset("6m")'>6M</button>
+                            <button class='@GetRangeClass("12m")' @onclick='() => SetRangePreset("12m")'>12M</button>
+                            <button class='@GetRangeClass("all")' @onclick='() => SetRangePreset("all")'>All</button>
+                        </div>
+                        <div class="custom-range row g-2 align-items-end mt-1">
+                            <div class="col-md-4">
+                                <label class="form-label" for="customStart">Start</label>
+                                <InputDate id="customStart" class="form-control" @bind-Value="customStartDate" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="customEnd">End</label>
+                                <InputDate id="customEnd" class="form-control" @bind-Value="customEndDate" />
+                            </div>
+                            <div class="col-md-4 d-flex gap-2">
+                                <button class="btn btn-outline-secondary" type="button" @onclick="ApplyCustomRange">Apply</button>
+                                <button class="btn btn-outline-secondary" type="button" @onclick="ToggleRangePicker">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
             <button class="btn btn-outline-secondary" type="button" @onclick="LoadListAsync" disabled="@isLoading">Refresh</button>
-            <button class="btn btn-primary" type="button" @onclick="StartCreate">New Entry</button>
         </div>
     </header>
 
@@ -25,28 +54,6 @@
     {
         <div class="alert alert-success" role="status">@successMessage</div>
     }
-
-    <section class="filter-panel">
-        <div class="filter-presets" role="toolbar" aria-label="Net Worth range presets">
-            <button class='@GetRangeClass("3m")' @onclick='() => SetRangePreset("3m")'>3M</button>
-            <button class='@GetRangeClass("6m")' @onclick='() => SetRangePreset("6m")'>6M</button>
-            <button class='@GetRangeClass("12m")' @onclick='() => SetRangePreset("12m")'>12M</button>
-            <button class='@GetRangeClass("all")' @onclick='() => SetRangePreset("all")'>All</button>
-        </div>
-        <div class="custom-range row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label" for="customStart">Start</label>
-                <InputDate id="customStart" class="form-control" @bind-Value="customStartDate" />
-            </div>
-            <div class="col-md-4">
-                <label class="form-label" for="customEnd">End</label>
-                <InputDate id="customEnd" class="form-control" @bind-Value="customEndDate" />
-            </div>
-            <div class="col-md-4">
-                <button class="btn btn-outline-secondary" type="button" @onclick="ApplyCustomRange">Apply Custom Range</button>
-            </div>
-        </div>
-    </section>
 
     <section class="summary-grid" aria-label="Net Worth highlights">
         <article class="summary-card">
@@ -69,124 +76,118 @@
         </article>
     </section>
 
-    <section class="chart-panel">
-        <div class="section-header">
-            <h2>Net Worth Trend</h2>
-            <p>Visual trend for the currently selected date range.</p>
-        </div>
-
-        <EmptyState IsVisible="@(filteredSnapshots.Count == 0)" Message="Add net worth entries to render this trend chart." />
-
-        @if (filteredSnapshots.Count > 0)
-        {
-            <ApexChart TItem="SnapshotTrendPoint" Title="Net Worth Over Time" Height="320">
-                <ApexPointSeries TItem="SnapshotTrendPoint"
-                                 Items="trendPoints"
-                                 Name="Net Worth"
-                                 SeriesType="SeriesType.Line"
-                                 XValue="point => point.Label"
-                                 YValue="point => point.Total" />
-            </ApexChart>
-        }
-    </section>
-
-    <section class="chart-grid">
-        <section class="chart-panel">
-            <div class="section-header">
-                <h2>Institution Trend</h2>
-                <p>Stacked view of balances by institution over time.</p>
-            </div>
-
-            <EmptyState IsVisible="@(institutionTrendNames.Count == 0)" Message="No institution data available in this range." />
-
-            @if (institutionTrendNames.Count > 0)
-            {
-                <ApexChart TItem="InstitutionTrendPoint" Title="Institution Trend" Height="320">
-                    @foreach (var institutionName in institutionTrendNames)
-                    {
-                        <ApexPointSeries TItem="InstitutionTrendPoint"
-                                         Items="GetInstitutionTrend(institutionName)"
-                                         Name="@institutionName"
-                                         SeriesType="SeriesType.Bar"
-                                         XValue="point => point.Label"
-                                         YValue="point => point.Total" />
-                    }
-                </ApexChart>
-            }
-        </section>
-
-        <section class="chart-panel">
-            <div class="section-header">
-                <h2>Latest Breakdown</h2>
-                <p>Balance distribution for the most recent entry in the selected range.</p>
-            </div>
-
-            <EmptyState IsVisible="@(latestCompositionPoints.Count == 0)" Message="No latest net worth breakdown to display." />
-
-            @if (latestCompositionPoints.Count > 0)
-            {
-                <ApexChart TItem="SnapshotCompositionPoint" Title="Latest Net Worth Composition" Height="320">
-                    <ApexPointSeries TItem="SnapshotCompositionPoint"
-                                     Items="latestCompositionPoints"
-                                     Name="Balance"
-                                     SeriesType="SeriesType.Bar"
-                                     XValue="point => point.Label"
-                                     YValue="point => point.Total" />
-                </ApexChart>
-            }
-        </section>
-    </section>
-
     <section class="matrix-panel">
-        <div class="section-header">
-            <h2>Net Worth Matrix</h2>
-            <p>Rows are accounts, columns are entry dates.</p>
+        <div class="section-header matrix-header">
+            <div>
+                <h2>Net Worth Matrix</h2>
+            </div>
+            <div class="matrix-nav-actions">
+                @if (!isMatrixEditMode)
+                {
+                    <button class="btn btn-sm btn-primary" type="button" @onclick="StartNewMatrixEntry">New Entry</button>
+                    @if (filteredSnapshots.Count > 0)
+                    {
+                        <button class="btn btn-sm btn-primary" type="button" @onclick="EnterMatrixEditMode">Edit</button>
+                    }
+                }
+                else
+                {
+                    <span class="matrix-staged-chip @(HasPendingMatrixEdits ? string.Empty : "matrix-staged-chip-hidden")">@GetMatrixStagedChangesText()</span>
+                    <button class="btn btn-sm btn-primary" type="button" @onclick="SaveMatrixEditsAsync" disabled="@(isSubmitting || HasMatrixValidationErrors || !HasPendingMatrixEdits)">Save Changes</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="CancelMatrixEditMode" disabled="@isSubmitting">Discard Changes</button>
+                }
+
+                @if (filteredSnapshots.Count > 0)
+                {
+                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="PreviousMatrixPage" disabled="@(!CanGoToPreviousMatrixPage())">Prev</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="NextMatrixPage" disabled="@(!CanGoToNextMatrixPage())">Next</button>
+                }
+            </div>
         </div>
+
+        @if (isMatrixEditMode && HasMatrixValidationErrors)
+        {
+            <div class="alert alert-warning matrix-validation-banner" role="alert">
+                Fix invalid cell values before saving table edits.
+            </div>
+        }
 
         <LoadingState IsVisible="@isLoading" />
         <EmptyState IsVisible="@(!isLoading && filteredSnapshots.Count == 0)" Message="No net worth entries in this period." />
 
         @if (!isLoading && filteredSnapshots.Count > 0)
         {
-            <div class="table-responsive matrix-wrap">
+            var visibleSnapshots = GetVisibleMatrixSnapshots();
+            <div class="matrix-wrap">
                 <table class="table table-sm snapshot-matrix">
                     <thead>
                         <tr>
                             <th>Account</th>
-                            @foreach (var snapshot in filteredSnapshots)
+                            @foreach (var column in visibleSnapshots)
                             {
-                                <th class="text-end">@snapshot.Date.ToString("MMM dd, yyyy")</th>
+                                <th class="text-end @(column.IsDraft ? "new-entry-column-header" : string.Empty)">
+                                    <span>@column.Date.ToString("MMM dd, yyyy")</span>
+                                </th>
                             }
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var row in matrixRows)
+                        @foreach (var group in matrixGroups)
                         {
-                            <tr>
-                                <th>
-                                    <div class="account-name">@row.AccountName</div>
-                                    <div class="account-meta">@row.InstitutionName</div>
-                                </th>
-                                @foreach (var snapshot in filteredSnapshots)
+                            <tr class="group-header-row">
+                                <th>@group.AccountTypeGroupName</th>
+                                @foreach (var column in visibleSnapshots)
                                 {
-                                    if (row.BalancesBySnapshotId.TryGetValue(snapshot.Id, out var amount))
-                                    {
-                                        <td class="text-end">@FormatCurrency(amount)</td>
-                                    }
-                                    else
-                                    {
-                                        <td class="text-end text-muted">-</td>
-                                    }
+                                    var groupTotal = GetGroupTotal(group, column.Id);
+                                    <th class="text-end @GetAmountClass(groupTotal)">@FormatCurrency(groupTotal)</th>
                                 }
                             </tr>
+
+                            @foreach (var row in group.Rows)
+                            {
+                                <tr>
+                                    <th>
+                                        <div class="account-name">@row.AccountName</div>
+                                        <div class="account-meta">@row.InstitutionName</div>
+                                    </th>
+                                    @foreach (var column in visibleSnapshots)
+                                    {
+                                        <td class="@GetCellClass(column.Id, row.AccountId)">
+                                            @if (isMatrixEditMode)
+                                            {
+                                                <input class="form-control form-control-sm text-end matrix-cell-input @GetCellInputClass(column.Id, row.AccountId)"
+                                                       value="@GetCellInputValue(column.Id, row.AccountId)"
+                                                       @onchange='eventArgs => OnMatrixCellChanged(column.Id, row.AccountId, eventArgs.Value?.ToString())' />
+                                                @if (TryGetMatrixCellValidationError(column.Id, row.AccountId, out var validationError))
+                                                {
+                                                    <div class="matrix-cell-error">@validationError</div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                var displayedValue = GetDisplayedCellValue(column.Id, row.AccountId);
+                                                @if (displayedValue.HasValue)
+                                                {
+                                                    <div class="text-end @GetAmountClass(displayedValue.Value)">@FormatCurrency(displayedValue.Value)</div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="text-end amount-muted">-</div>
+                                                }
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
                         }
                     </tbody>
                     <tfoot>
                         <tr>
                             <th>Total</th>
-                            @foreach (var snapshot in filteredSnapshots)
+                            @foreach (var column in visibleSnapshots)
                             {
-                                <th class="text-end">@FormatCurrency(GetSnapshotTotal(snapshot.Id))</th>
+                                var total = GetSnapshotTotal(column.Id);
+                                <th class="text-end @GetAmountClass(total)">@FormatCurrency(total)</th>
                             }
                         </tr>
                     </tfoot>
@@ -195,132 +196,82 @@
         }
     </section>
 
-    <section class="timeline-panel">
+    <section class="chart-panel">
         <div class="section-header">
-            <h2>History</h2>
-            <p>Quickly open, edit, or remove a specific entry.</p>
+            <h2>Total Net Worth Trend</h2>
         </div>
 
-        <EmptyState IsVisible="@(!isLoading && filteredSnapshots.Count == 0)" Message="Create your first entry to begin tracking progress." />
+        <EmptyState IsVisible="@(filteredSnapshots.Count == 0)" Message="Add net worth entries to render trend charts." />
 
         @if (filteredSnapshots.Count > 0)
         {
-            <div class="timeline-grid">
-                @foreach (var snapshot in filteredSnapshots.OrderByDescending(s => s.Date))
-                {
-                    <article class="timeline-card @(selectedSnapshot?.Id == snapshot.Id ? "selected" : null)">
-                        <div>
-                            <h3>@snapshot.Date.ToString("MMM dd, yyyy")</h3>
-                            <p>@snapshot.AccountBalances.Count account entries</p>
-                            <strong>@FormatCurrency(GetSnapshotTotal(snapshot.Id))</strong>
-                        </div>
-                        <div class="timeline-actions">
-                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadDetailAsync(snapshot.Id)">Open</button>
-                            <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEditAsync(snapshot.Id)">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteAsync(snapshot.Id)">Delete</button>
-                        </div>
-                    </article>
-                }
+            <div class="chart-grid">
+                <section class="chart-surface">
+                    <div class="section-header">
+                        <h3>@GetSelectedRangeChartTitle()</h3>
+                    </div>
+                    <ApexChart TItem="SnapshotTrendPoint" Title="@($"Total Net Worth ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateCurrencyChartOptions()">
+                        <ApexPointSeries TItem="SnapshotTrendPoint"
+                                         Items="rangeTrendPoints"
+                                         Name="Net Worth"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="point => point.Label"
+                                         YValue="point => point.Total" />
+                    </ApexChart>
+                </section>
+
+                <section class="chart-surface">
+                    <div class="section-header">
+                        <h3>All-Time</h3>
+                    </div>
+                    <ApexChart TItem="SnapshotTrendPoint" Title="Total Net Worth (All-Time)" Height="320" Options="@CreateCurrencyChartOptions()">
+                        <ApexPointSeries TItem="SnapshotTrendPoint"
+                                         Items="allTimeTrendPoints"
+                                         Name="Net Worth"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="point => point.Label"
+                                         YValue="point => point.Total" />
+                    </ApexChart>
+                </section>
             </div>
         }
     </section>
 
-    @if (showComposer)
+    @foreach (var groupChart in accountTypeGroupCharts)
     {
-        <section class="composer-panel">
+        <section class="chart-panel">
             <div class="section-header">
-                <h2>@(editModel is null ? "Record Net Worth" : "Edit Net Worth Entry")</h2>
-                <p>@(editModel is null ? "Capture today’s balances in account order." : $"Updating entry #{editModel.Id}.")</p>
+                <h2>@groupChart.GroupName</h2>
             </div>
-
-            @if (editModel is null)
-            {
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <span class="badge text-bg-secondary">Date locked to today</span>
-                    <span>@DateTime.Today.ToString("MMMM dd, yyyy")</span>
-                </div>
-
-                <div class="composer-summary mb-3">
-                    <div>
-                        <strong>@createModel.Balances.Count accounts</strong>
-                        <div class="small text-muted">Rows stay in the same order every week.</div>
+            <div class="chart-grid">
+                <section class="chart-surface">
+                    <div class="section-header">
+                        <h3>@GetSelectedRangeChartTitle()</h3>
                     </div>
-                    <div class="small text-muted">Negative balances are expected for credit cards and loans.</div>
-                </div>
+                    <ApexChart TItem="SnapshotTrendPoint" Title="@($"{groupChart.GroupName} ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateCurrencyChartOptions()">
+                        <ApexPointSeries TItem="SnapshotTrendPoint"
+                                         Items="groupChart.RangePoints"
+                                         Name="@groupChart.GroupName"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="point => point.Label"
+                                         YValue="point => point.Total" />
+                    </ApexChart>
+                </section>
 
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle">
-                        <thead>
-                            <tr>
-                                <th>Account</th>
-                                <th>Institution</th>
-                                <th>Type</th>
-                                <th>Group</th>
-                                <th class="text-end">Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (var i = 0; i < createModel.Balances.Count; i++)
-                            {
-                                var balance = createModel.Balances[i];
-                                <tr>
-                                    <td>@balance.AccountName</td>
-                                    <td>@balance.InstitutionName</td>
-                                    <td>@balance.AccountTypeName</td>
-                                    <td>@balance.AccountTypeGroupName</td>
-                                    <td class="text-end" style="min-width: 12rem;">
-                                        <InputNumber class="form-control text-end" @bind-Value="balance.Balance" />
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="d-flex flex-wrap gap-2 mt-3">
-                    <button class="btn btn-primary" type="button" @onclick="CreateAsync" disabled="@isSubmitting">Save Net Worth</button>
-                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseComposer">Close</button>
-                </div>
-            }
-            else
-            {
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label" for="editSnapshotDate">Entry Date</label>
-                        <InputDate id="editSnapshotDate" class="form-control" @bind-Value="editModel.SnapshotDate" />
+                <section class="chart-surface">
+                    <div class="section-header">
+                        <h3>All-Time</h3>
                     </div>
-                </div>
-
-                @for (var i = 0; i < editModel.Balances.Count; i++)
-                {
-                    var balance = editModel.Balances[i];
-                    <div class="row g-2 mb-2 align-items-end">
-                        <div class="col-md-6">
-                            <label class="form-label">Account</label>
-                            <InputSelect class="form-select" @bind-Value="balance.AccountId">
-                                <option value="0">Select account</option>
-                                @foreach (var account in accounts)
-                                {
-                                    <option value="@account.Id">@account.Name</option>
-                                }
-                            </InputSelect>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Balance</label>
-                            <InputNumber class="form-control" @bind-Value="balance.Balance" />
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveEditBalanceRow(i)" disabled="@(editModel.Balances.Count == 1)">Remove</button>
-                        </div>
-                    </div>
-                }
-
-                <div class="d-flex flex-wrap gap-2 mt-3">
-                    <button class="btn btn-outline-secondary" type="button" @onclick="AddEditBalanceRow">Add Row</button>
-                    <button class="btn btn-primary" type="button" @onclick="UpdateAsync" disabled="@isSubmitting">Save Changes</button>
-                    <button class="btn btn-outline-secondary" type="button" @onclick="CancelEdit">Cancel</button>
-                </div>
-            }
+                    <ApexChart TItem="SnapshotTrendPoint" Title="@($"{groupChart.GroupName} (All-Time)")" Height="320" Options="@CreateCurrencyChartOptions()">
+                        <ApexPointSeries TItem="SnapshotTrendPoint"
+                                         Items="groupChart.AllTimePoints"
+                                         Name="@groupChart.GroupName"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="point => point.Label"
+                                         YValue="point => point.Total" />
+                    </ApexChart>
+                </section>
+            </div>
         </section>
     }
 
@@ -329,7 +280,6 @@
         <section class="detail-panel">
             <div class="section-header">
                 <h2>Net Worth Entry Detail</h2>
-                <p>@selectedSnapshot.Date.ToString("MMMM dd, yyyy")</p>
             </div>
 
             <div class="table-responsive">
@@ -362,30 +312,38 @@
 </div>
 
 @code {
-    private readonly CreateSnapshotModel createModel = new();
     private readonly List<AccountResponse> accounts = [];
     private readonly List<FinanceSnapshotResponse> snapshots = [];
     private readonly List<FinanceSnapshotResponse> filteredSnapshots = [];
-    private readonly List<AccountMatrixRow> matrixRows = [];
-    private readonly List<SnapshotTrendPoint> trendPoints = [];
-    private readonly List<InstitutionTrendPoint> institutionTrendPoints = [];
-    private readonly List<string> institutionTrendNames = [];
-    private readonly List<SnapshotCompositionPoint> latestCompositionPoints = [];
+    private readonly List<AccountMatrixGroup> matrixGroups = [];
+    private readonly List<SnapshotTrendPoint> rangeTrendPoints = [];
+    private readonly List<SnapshotTrendPoint> allTimeTrendPoints = [];
+    private readonly List<AccountTypeGroupTrendChart> accountTypeGroupCharts = [];
     private readonly Dictionary<int, decimal> totalsBySnapshotId = [];
+    private readonly Dictionary<(int SnapshotId, int AccountId), decimal> matrixCellEdits = [];
+    private readonly Dictionary<(int SnapshotId, int AccountId), string> matrixCellInputOverrides = [];
+    private readonly Dictionary<(int SnapshotId, int AccountId), string> matrixCellValidationErrors = [];
     private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private FinanceSnapshotResponse? selectedSnapshot;
-    private EditSnapshotModel? editModel;
     private bool isLoading = true;
     private bool isSubmitting;
-    private bool showComposer;
+    private bool hasPendingMatrixEntry;
+    private bool showRangePicker;
+    private bool isMatrixEditMode;
     private string? errorMessage;
     private string? successMessage;
-    private string selectedRangePreset = "12m";
-    private DateTime customStartDate = DateTime.Today.AddMonths(-6);
+    private string selectedRangePreset = "ytd";
+    private DateTime customStartDate = new(DateTime.Today.Year, 1, 1);
     private DateTime customEndDate = DateTime.Today;
     private decimal latestTotal;
     private decimal previousTotal;
     private int activeAccountCount;
+    private int matrixStartColumnIndex;
+    private const int MatrixColumnPageSize = 8;
+    private const int PendingMatrixSnapshotId = -1;
+
+    private bool HasPendingMatrixEdits => matrixCellEdits.Count > 0;
+    private bool HasMatrixValidationErrors => matrixCellValidationErrors.Count > 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -416,6 +374,10 @@
         {
             snapshots.Clear();
             snapshots.AddRange(await SnapshotsApiClient.GetAllAsync());
+            matrixCellEdits.Clear();
+            matrixCellInputOverrides.Clear();
+            matrixCellValidationErrors.Clear();
+            isMatrixEditMode = false;
             RebuildSnapshotView();
         }
         catch (Exception ex)
@@ -426,47 +388,6 @@
         {
             isLoading = false;
         }
-    }
-
-    private async Task CreateAsync()
-    {
-        isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
-
-        if (createModel.Balances.Any(b => !b.Balance.HasValue))
-        {
-            isSubmitting = false;
-            errorMessage = "Enter a balance for every account before saving.";
-            return;
-        }
-
-        var map = BuildBalanceMap(createModel.Balances);
-        if (map.Count == 0)
-        {
-            isSubmitting = false;
-            errorMessage = "Add at least one account balance before saving an entry.";
-            return;
-        }
-
-        var result = await SnapshotsApiClient.CreateAsync(
-            DateOnly.FromDateTime(DateTime.Today),
-            map);
-
-        isSubmitting = false;
-
-        if (!result.IsSuccess)
-        {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
-            return;
-        }
-
-        createModel.Reset(accounts);
-        showComposer = false;
-        successMessage = "Net worth entry saved.";
-        await LoadListAsync();
     }
 
     private async Task LoadDetailAsync(int id)
@@ -486,80 +407,18 @@
         }
     }
 
-    private async Task StartEditAsync(int id)
+    private void StartNewMatrixEntry()
     {
         errorMessage = null;
         successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
 
-        var snapshot = await SnapshotsApiClient.GetByIdAsync(id);
-        if (snapshot is null)
-        {
-                errorMessage = $"Net worth entry #{id} was not found.";
-            return;
-        }
-
-        selectedSnapshot = snapshot;
-        editModel = EditSnapshotModel.From(snapshot);
-        showComposer = true;
-    }
-
-    private void StartCreate()
-    {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
-        editModel = null;
-        createModel.Reset(accounts);
-        showComposer = true;
-    }
-
-    private void CloseComposer()
-    {
-        showComposer = false;
-        editModel = null;
-    }
-
-    private void CancelEdit() => CloseComposer();
-
-    private async Task UpdateAsync()
-    {
-        if (editModel is null)
-            return;
-
-        isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
-
-        var map = BuildBalanceMap(editModel.Balances);
-        if (map.Count == 0)
-        {
-            isSubmitting = false;
-            errorMessage = "Add at least one account balance before saving changes.";
-            return;
-        }
-
-        var result = await SnapshotsApiClient.UpdateAsync(
-            editModel.Id,
-            DateOnly.FromDateTime(editModel.SnapshotDate),
-            map);
-
-        isSubmitting = false;
-
-        if (!result.IsSuccess)
-        {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
-            return;
-        }
-
-        var updatedSnapshotId = editModel.Id;
-        editModel = null;
-        showComposer = false;
-        successMessage = "Net worth entry updated.";
-        await LoadListAsync();
-        await LoadDetailAsync(updatedSnapshotId);
+        hasPendingMatrixEntry = true;
+        isMatrixEditMode = true;
+        RemoveWhere(matrixCellValidationErrors, key => key.SnapshotId == PendingMatrixSnapshotId);
+        RemoveWhere(matrixCellInputOverrides, key => key.SnapshotId == PendingMatrixSnapshotId);
+        RemoveWhere(matrixCellEdits, key => key.SnapshotId == PendingMatrixSnapshotId);
+        ResetMatrixPagingToLatest();
     }
 
     private async Task DeleteAsync(int id)
@@ -583,9 +442,6 @@
         if (selectedSnapshot?.Id == id)
             selectedSnapshot = null;
 
-        if (editModel?.Id == id)
-            editModel = null;
-
         successMessage = "Net worth entry deleted.";
 
         await LoadListAsync();
@@ -594,6 +450,7 @@
     private void SetRangePreset(string preset)
     {
         selectedRangePreset = preset;
+        showRangePicker = false;
         RebuildSnapshotView();
     }
 
@@ -603,7 +460,82 @@
             (customStartDate, customEndDate) = (customEndDate, customStartDate);
 
         selectedRangePreset = "custom";
+        showRangePicker = false;
         RebuildSnapshotView();
+    }
+
+    private void ToggleRangePicker()
+    {
+        showRangePicker = !showRangePicker;
+    }
+
+    private void EnterMatrixEditMode()
+    {
+        isMatrixEditMode = true;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private void CancelMatrixEditMode()
+    {
+        hasPendingMatrixEntry = false;
+        RemoveWhere(matrixCellEdits, key => key.SnapshotId == PendingMatrixSnapshotId);
+        RemoveWhere(matrixCellInputOverrides, key => key.SnapshotId == PendingMatrixSnapshotId);
+        RemoveWhere(matrixCellValidationErrors, key => key.SnapshotId == PendingMatrixSnapshotId);
+        DiscardMatrixEdits();
+        isMatrixEditMode = false;
+    }
+
+    private string GetRangeButtonLabel()
+    {
+        return selectedRangePreset switch
+        {
+            "ytd" => "Range: YTD",
+            "3m" => "Range: 3M",
+            "6m" => "Range: 6M",
+            "12m" => "Range: 12M",
+            "all" => "Range: All",
+            "custom" => $"Range: {customStartDate:MMM d} - {customEndDate:MMM d}",
+            _ => "Range"
+        };
+    }
+
+    private string GetRangeLabel()
+    {
+        return selectedRangePreset switch
+        {
+            "ytd" => $"YTD ({new DateTime(customEndDate.Year, 1, 1):MMM d} - {customEndDate:MMM d})",
+            "3m" => "Last 3 months",
+            "6m" => "Last 6 months",
+            "12m" => "Last 12 months",
+            "all" => "All time",
+            "custom" => $"{customStartDate:MMM d, yyyy} - {customEndDate:MMM d, yyyy}",
+            _ => "Custom"
+        };
+    }
+
+    private string GetSelectedRangeChartLabel()
+    {
+        return selectedRangePreset switch
+        {
+            "ytd" => "YTD",
+            "3m" => "Last 3 Months",
+            "6m" => "Last 6 Months",
+            "12m" => "Last 12 Months",
+            "all" => "All Time",
+            "custom" => $"Custom: {customStartDate:MMM d, yyyy} to {customEndDate:MMM d, yyyy}",
+            _ => "Selected Range"
+        };
+    }
+
+    private string GetSelectedRangeChartTitle()
+    {
+        return selectedRangePreset switch
+        {
+            "ytd" => "YTD",
+            "all" => "All Time",
+            _ => GetSelectedRangeChartLabel()
+        };
     }
 
     private string GetRangeClass(string preset)
@@ -616,11 +548,10 @@
     private void RebuildSnapshotView()
     {
         filteredSnapshots.Clear();
-        matrixRows.Clear();
-        trendPoints.Clear();
-        institutionTrendPoints.Clear();
-        institutionTrendNames.Clear();
-        latestCompositionPoints.Clear();
+        matrixGroups.Clear();
+        rangeTrendPoints.Clear();
+        allTimeTrendPoints.Clear();
+        accountTypeGroupCharts.Clear();
         totalsBySnapshotId.Clear();
 
         var orderedSnapshots = snapshots
@@ -632,38 +563,30 @@
             latestTotal = 0m;
             previousTotal = 0m;
             activeAccountCount = 0;
+            matrixStartColumnIndex = 0;
             return;
         }
 
         var visibleSnapshots = FilterSnapshotsBySelectedRange(orderedSnapshots);
         filteredSnapshots.AddRange(visibleSnapshots);
 
+        var allTimeTotalsBySnapshotId = new Dictionary<int, decimal>();
+
+        foreach (var snapshot in orderedSnapshots)
+        {
+            allTimeTotalsBySnapshotId[snapshot.Id] = snapshot.AccountBalances.Sum(b => b.Balance);
+            allTimeTrendPoints.Add(new SnapshotTrendPoint(
+                snapshot.Date.ToString("MMM dd, yyyy"),
+                allTimeTotalsBySnapshotId[snapshot.Id]));
+        }
+
         foreach (var snapshot in filteredSnapshots)
         {
             totalsBySnapshotId[snapshot.Id] = snapshot.AccountBalances.Sum(b => b.Balance);
-            trendPoints.Add(new SnapshotTrendPoint(
-                snapshot.Date.ToString("MMM dd"),
+            rangeTrendPoints.Add(new SnapshotTrendPoint(
+                snapshot.Date.ToString("MMM dd, yyyy"),
                 totalsBySnapshotId[snapshot.Id]));
-
-            var byInstitution = snapshot.AccountBalances
-                .GroupBy(b => b.Account.Institution.Name)
-                .ToDictionary(g => g.Key, g => g.Sum(item => item.Balance));
-
-            foreach (var item in byInstitution)
-            {
-                institutionTrendPoints.Add(new InstitutionTrendPoint(
-                    snapshot.Date,
-                    snapshot.Date.ToString("MMM dd"),
-                    item.Key,
-                    item.Value));
-            }
         }
-
-        institutionTrendNames.AddRange(
-            institutionTrendPoints
-                .Select(point => point.InstitutionName)
-                .Distinct()
-                .OrderBy(name => name));
 
         latestTotal = filteredSnapshots.Count > 0
             ? totalsBySnapshotId[filteredSnapshots[^1].Id]
@@ -695,26 +618,37 @@
                     .ToDictionary(item => item.Key, item => item.Last().Balance);
 
                 return new AccountMatrixRow(
+                    sourceAccount.Id,
                     sourceAccount.Name,
                     sourceAccount.Institution.Name,
+                    sourceAccount.Type.Group.Name,
                     bySnapshot);
             })
-            .OrderBy(row => row.AccountName)
+            .OrderBy(row => row.AccountTypeGroupName)
+            .ThenBy(row => row.AccountName)
             .ToList();
 
-        matrixRows.AddRange(rows);
-
-        var latestSnapshot = filteredSnapshots.LastOrDefault();
-        if (latestSnapshot is null)
-            return;
-
-        var byType = latestSnapshot.AccountBalances
-            .GroupBy(b => b.Account.Type.Group.Name)
-            .Select(group => new SnapshotCompositionPoint(group.Key, group.Sum(x => x.Balance)))
-            .OrderByDescending(item => item.Total)
+        var groupedRows = rows
+            .GroupBy(row => row.AccountTypeGroupName)
+            .OrderBy(group => group.Key)
+            .Select(group => new AccountMatrixGroup(group.Key, [.. group.OrderBy(row => row.AccountName)]))
             .ToList();
 
-        latestCompositionPoints.AddRange(byType);
+        matrixGroups.AddRange(groupedRows);
+        ResetMatrixPagingToLatest();
+
+        var groupNames = matrixGroups
+            .Select(group => group.AccountTypeGroupName)
+            .Distinct()
+            .OrderBy(name => name)
+            .ToList();
+
+        foreach (var groupName in groupNames)
+        {
+            var rangePoints = BuildGroupTrendPoints(filteredSnapshots, groupName);
+            var allTimePoints = BuildGroupTrendPoints(orderedSnapshots, groupName);
+            accountTypeGroupCharts.Add(new AccountTypeGroupTrendChart(groupName, rangePoints, allTimePoints));
+        }
     }
 
     private IReadOnlyList<FinanceSnapshotResponse> FilterSnapshotsBySelectedRange(List<FinanceSnapshotResponse> orderedSnapshots)
@@ -729,6 +663,16 @@
 
             return orderedSnapshots
                 .Where(s => s.Date >= customStart && s.Date <= customEnd)
+                .ToList();
+        }
+
+        if (selectedRangePreset == "ytd")
+        {
+            var latestDate = orderedSnapshots[^1].Date;
+            var startOfYear = new DateOnly(latestDate.Year, 1, 1);
+
+            return orderedSnapshots
+                .Where(s => s.Date >= startOfYear && s.Date <= latestDate)
                 .ToList();
         }
 
@@ -749,9 +693,21 @@
 
     private decimal GetSnapshotTotal(int snapshotId)
     {
-        return totalsBySnapshotId.TryGetValue(snapshotId, out var total)
-            ? total
+        var total = totalsBySnapshotId.TryGetValue(snapshotId, out var existingTotal)
+            ? existingTotal
             : 0m;
+
+        foreach (var ((editedSnapshotId, editedAccountId), editedAmount) in matrixCellEdits)
+        {
+            if (editedSnapshotId != snapshotId)
+                continue;
+
+            var original = GetOriginalCellValue(snapshotId, editedAccountId);
+            total -= original ?? 0m;
+            total += editedAmount;
+        }
+
+        return total;
     }
 
     private static string FormatCurrency(decimal value)
@@ -759,109 +715,365 @@
         return value.ToString("C");
     }
 
-    private IEnumerable<InstitutionTrendPoint> GetInstitutionTrend(string institutionName)
+    private static ApexChartOptions<SnapshotTrendPoint> CreateCurrencyChartOptions()
     {
-        return institutionTrendPoints
-            .Where(point => point.InstitutionName == institutionName)
-            .OrderBy(point => point.Date);
+        const string currencyFormatter = "function (value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value); }";
+
+        return new ApexChartOptions<SnapshotTrendPoint>
+        {
+            Chart = new Chart
+            {
+                Toolbar = new Toolbar
+                {
+                    Show = false
+                },
+                Zoom = new Zoom
+                {
+                    Enabled = false
+                },
+                Selection = new Selection
+                {
+                    Enabled = false
+                }
+            },
+            Xaxis = new XAxis
+            {
+                TickAmount = 6,
+                TickPlacement = TickPlacement.On
+            },
+            Yaxis = new List<YAxis>
+            {
+                new()
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Formatter = currencyFormatter
+                    }
+                }
+            },
+            Tooltip = new Tooltip
+            {
+                Y = new TooltipY
+                {
+                    Formatter = currencyFormatter
+                }
+            }
+        };
     }
 
-    private void AddEditBalanceRow()
+    private static List<SnapshotTrendPoint> BuildGroupTrendPoints(IEnumerable<FinanceSnapshotResponse> sourceSnapshots, string groupName)
     {
-        if (editModel is null)
+        return sourceSnapshots
+            .Select(snapshot => new SnapshotTrendPoint(
+                snapshot.Date.ToString("MMM dd, yyyy"),
+                snapshot.AccountBalances
+                    .Where(balance => string.Equals(balance.Account.Type.Group.Name, groupName, StringComparison.OrdinalIgnoreCase))
+                    .Sum(balance => balance.Balance)))
+            .ToList();
+    }
+
+    private IReadOnlyList<MatrixSnapshotColumn> GetVisibleMatrixSnapshots()
+    {
+        var columns = BuildMatrixColumns();
+        if (columns.Count == 0)
+            return [];
+
+        var start = Math.Clamp(matrixStartColumnIndex, 0, Math.Max(0, columns.Count - 1));
+        var count = Math.Min(MatrixColumnPageSize, columns.Count - start);
+        return columns.GetRange(start, count);
+    }
+
+    private void ResetMatrixPagingToLatest()
+    {
+        var columnCount = GetMatrixColumnCount();
+        matrixStartColumnIndex = columnCount <= MatrixColumnPageSize
+            ? 0
+            : columnCount - MatrixColumnPageSize;
+    }
+
+    private bool CanGoToPreviousMatrixPage()
+        => matrixStartColumnIndex > 0;
+
+    private bool CanGoToNextMatrixPage()
+        => GetMatrixColumnCount() > 0 && matrixStartColumnIndex + MatrixColumnPageSize < GetMatrixColumnCount();
+
+    private void PreviousMatrixPage()
+    {
+        if (!CanGoToPreviousMatrixPage())
             return;
 
-        editModel.Balances.Add(new BalanceEntry());
+        matrixStartColumnIndex = Math.Max(0, matrixStartColumnIndex - MatrixColumnPageSize);
     }
 
-    private void RemoveEditBalanceRow(int index)
+    private void NextMatrixPage()
     {
-        if (editModel is null || editModel.Balances.Count <= 1)
+        if (!CanGoToNextMatrixPage())
             return;
 
-        editModel.Balances.RemoveAt(index);
+        matrixStartColumnIndex = Math.Min(Math.Max(0, GetMatrixColumnCount() - MatrixColumnPageSize), matrixStartColumnIndex + MatrixColumnPageSize);
     }
 
-    private static Dictionary<int, decimal> BuildBalanceMap(List<BalanceEntry> balances)
+    private int GetMatrixColumnCount()
+        => filteredSnapshots.Count + (hasPendingMatrixEntry ? 1 : 0);
+
+    private List<MatrixSnapshotColumn> BuildMatrixColumns()
     {
-        return balances
-            .Where(b => b.AccountId > 0 && b.Balance.HasValue)
-            .GroupBy(b => b.AccountId)
-            .ToDictionary(g => g.Key, g => g.Last().Balance!.Value);
+        var columns = filteredSnapshots
+            .Select(snapshot => new MatrixSnapshotColumn(snapshot.Id, snapshot.Date, false))
+            .ToList();
+
+        if (hasPendingMatrixEntry)
+            columns.Add(new MatrixSnapshotColumn(PendingMatrixSnapshotId, DateOnly.FromDateTime(DateTime.Today), true));
+
+        return columns;
     }
+
+    private decimal GetGroupTotal(AccountMatrixGroup group, int snapshotId)
+    {
+        return group.Rows.Sum(row => GetDisplayedCellValue(snapshotId, row.AccountId) ?? 0m);
+    }
+
+    private decimal? GetDisplayedCellValue(int snapshotId, int accountId)
+    {
+        if (matrixCellEdits.TryGetValue((snapshotId, accountId), out var edited))
+            return edited;
+
+        return GetOriginalCellValue(snapshotId, accountId);
+    }
+
+    private decimal? GetOriginalCellValue(int snapshotId, int accountId)
+    {
+        if (snapshotId == PendingMatrixSnapshotId)
+            return null;
+
+        foreach (var group in matrixGroups)
+        {
+            var row = group.Rows.FirstOrDefault(item => item.AccountId == accountId);
+            if (row is null)
+                continue;
+
+            if (row.BalancesBySnapshotId.TryGetValue(snapshotId, out var value))
+                return value;
+
+            return null;
+        }
+
+        return null;
+    }
+
+    private string GetCellInputValue(int snapshotId, int accountId)
+    {
+        if (matrixCellInputOverrides.TryGetValue((snapshotId, accountId), out var overrideValue))
+            return overrideValue;
+
+        var value = GetDisplayedCellValue(snapshotId, accountId);
+        return value?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
+    }
+
+    private string GetCellInputClass(int snapshotId, int accountId)
+    {
+        var classes = new List<string>();
+
+        if (IsCellEdited(snapshotId, accountId))
+            classes.Add("matrix-cell-input-edited");
+
+        if (matrixCellValidationErrors.ContainsKey((snapshotId, accountId)))
+            classes.Add("is-invalid");
+
+        var value = GetDisplayedCellValue(snapshotId, accountId);
+        classes.Add(value.HasValue ? GetAmountClass(value.Value) : "amount-muted");
+        return string.Join(' ', classes);
+    }
+
+    private string GetCellClass(int snapshotId, int accountId)
+    {
+        if (!isMatrixEditMode)
+            return string.Empty;
+
+        if (matrixCellValidationErrors.ContainsKey((snapshotId, accountId)))
+            return "matrix-cell matrix-cell-invalid";
+
+        return IsCellEdited(snapshotId, accountId)
+            ? "matrix-cell matrix-cell-edited"
+            : "matrix-cell";
+    }
+
+    private bool IsCellEdited(int snapshotId, int accountId)
+    {
+        return matrixCellEdits.ContainsKey((snapshotId, accountId));
+    }
+
+    private string GetMatrixStagedChangesText()
+    {
+        var count = matrixCellEdits.Count;
+        if (count == 0)
+            return "0 changes staged";
+
+        return count == 1
+            ? "1 change staged"
+            : $"{count} changes staged";
+    }
+
+    private bool TryGetMatrixCellValidationError(int snapshotId, int accountId, out string error)
+    {
+        return matrixCellValidationErrors.TryGetValue((snapshotId, accountId), out error!);
+    }
+
+    private static string GetAmountClass(decimal value)
+    {
+        if (value > 0m)
+            return "amount-positive";
+
+        if (value < 0m)
+            return "amount-negative";
+
+        return "amount-muted";
+    }
+
+    private void OnMatrixCellChanged(int snapshotId, int accountId, string? rawValue)
+    {
+        matrixCellInputOverrides[(snapshotId, accountId)] = rawValue ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            matrixCellEdits.Remove((snapshotId, accountId));
+            matrixCellInputOverrides.Remove((snapshotId, accountId));
+            matrixCellValidationErrors.Remove((snapshotId, accountId));
+            return;
+        }
+
+        if (!decimal.TryParse(rawValue, NumberStyles.Number | NumberStyles.AllowCurrencySymbol, CultureInfo.CurrentCulture, out var parsed))
+        {
+            matrixCellEdits.Remove((snapshotId, accountId));
+            matrixCellValidationErrors[(snapshotId, accountId)] = "Enter a valid dollar amount.";
+            return;
+        }
+
+        matrixCellValidationErrors.Remove((snapshotId, accountId));
+        matrixCellInputOverrides.Remove((snapshotId, accountId));
+
+        var original = GetOriginalCellValue(snapshotId, accountId);
+        if (original.HasValue && original.Value == parsed)
+        {
+            matrixCellEdits.Remove((snapshotId, accountId));
+            return;
+        }
+
+        matrixCellEdits[(snapshotId, accountId)] = parsed;
+    }
+
+    private void DiscardMatrixEdits()
+    {
+        matrixCellEdits.Clear();
+        matrixCellInputOverrides.Clear();
+        matrixCellValidationErrors.Clear();
+    }
+
+    private async Task SaveMatrixEditsAsync()
+    {
+        if (!HasPendingMatrixEdits || HasMatrixValidationErrors)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        if (hasPendingMatrixEntry)
+        {
+            foreach (var accountId in matrixGroups.SelectMany(group => group.Rows).Select(row => row.AccountId).Distinct())
+            {
+                if (matrixCellEdits.ContainsKey((PendingMatrixSnapshotId, accountId)))
+                    continue;
+
+                matrixCellValidationErrors[(PendingMatrixSnapshotId, accountId)] = "Enter a value for this account.";
+            }
+
+            if (HasMatrixValidationErrors)
+            {
+                isSubmitting = false;
+                errorMessage = "Enter a value for every account in the new entry column before saving.";
+                return;
+            }
+
+            var createResult = await SnapshotsApiClient.CreateAsync(
+                DateOnly.FromDateTime(DateTime.Today),
+                matrixCellEdits
+                    .Where(item => item.Key.SnapshotId == PendingMatrixSnapshotId)
+                    .ToDictionary(item => item.Key.AccountId, item => item.Value));
+
+            if (!createResult.IsSuccess)
+            {
+                isSubmitting = false;
+                errorMessage = createResult.ErrorMessage;
+                validationErrors = createResult.ValidationErrors ?? new Dictionary<string, string[]>();
+                return;
+            }
+
+            hasPendingMatrixEntry = false;
+            RemoveWhere(matrixCellEdits, key => key.SnapshotId == PendingMatrixSnapshotId);
+            RemoveWhere(matrixCellInputOverrides, key => key.SnapshotId == PendingMatrixSnapshotId);
+            RemoveWhere(matrixCellValidationErrors, key => key.SnapshotId == PendingMatrixSnapshotId);
+        }
+
+        var updates = matrixCellEdits
+            .Where(item => item.Key.SnapshotId > 0)
+            .Select(item => new SnapshotCellUpdateRequest(item.Key.SnapshotId, item.Key.AccountId, item.Value))
+            .ToList();
+
+        ApiResult result = updates.Count == 0
+            ? ApiResult.Success()
+            : await SnapshotsApiClient.BulkUpdateCellsAsync(updates);
+
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        matrixCellEdits.Clear();
+        matrixCellInputOverrides.Clear();
+        matrixCellValidationErrors.Clear();
+        isMatrixEditMode = false;
+        successMessage = "Table edits saved.";
+        await LoadListAsync();
+    }
+
+    private sealed record AccountMatrixGroup(
+        string AccountTypeGroupName,
+        List<AccountMatrixRow> Rows);
 
     private sealed record AccountMatrixRow(
+        int AccountId,
         string AccountName,
         string InstitutionName,
+        string AccountTypeGroupName,
         Dictionary<int, decimal> BalancesBySnapshotId);
 
     private sealed record SnapshotTrendPoint(string Label, decimal Total);
 
-    private sealed record InstitutionTrendPoint(DateOnly Date, string Label, string InstitutionName, decimal Total);
+    private sealed record MatrixSnapshotColumn(int Id, DateOnly Date, bool IsDraft);
 
-    private sealed record SnapshotCompositionPoint(string Label, decimal Total);
+    private sealed record AccountTypeGroupTrendChart(
+        string GroupName,
+        IReadOnlyList<SnapshotTrendPoint> RangePoints,
+        IReadOnlyList<SnapshotTrendPoint> AllTimePoints);
 
-    private sealed class CreateSnapshotModel
+
+    private static void RemoveWhere(Dictionary<(int SnapshotId, int AccountId), decimal> source, Func<(int SnapshotId, int AccountId), bool> predicate)
     {
-        public List<BalanceEntry> Balances { get; } = [];
-
-        public void Reset(IEnumerable<AccountResponse> accounts)
-        {
-            Balances.Clear();
-
-            foreach (var account in accounts.OrderBy(account => account.Name))
-            {
-                Balances.Add(new BalanceEntry
-                {
-                    AccountId = account.Id,
-                    AccountName = account.Name,
-                    InstitutionName = account.Institution.Name,
-                    AccountTypeName = account.Type.Name,
-                    AccountTypeGroupName = account.Type.Group.Name,
-                    Balance = null
-                });
-            }
-        }
+        var keys = source.Keys.Where(predicate).ToList();
+        foreach (var key in keys)
+            source.Remove(key);
     }
 
-    private sealed class BalanceEntry
+    private static void RemoveWhere(Dictionary<(int SnapshotId, int AccountId), string> source, Func<(int SnapshotId, int AccountId), bool> predicate)
     {
-        public int AccountId { get; set; }
-        public string AccountName { get; set; } = string.Empty;
-        public string InstitutionName { get; set; } = string.Empty;
-        public string AccountTypeName { get; set; } = string.Empty;
-        public string AccountTypeGroupName { get; set; } = string.Empty;
-        public decimal? Balance { get; set; }
-    }
-
-    private sealed class EditSnapshotModel
-    {
-        public int Id { get; set; }
-        public DateTime SnapshotDate { get; set; } = DateTime.Today;
-        public List<BalanceEntry> Balances { get; } = [new()];
-
-        public static EditSnapshotModel From(FinanceSnapshotResponse snapshot)
-        {
-            var model = new EditSnapshotModel
-            {
-                Id = snapshot.Id,
-                SnapshotDate = snapshot.Date.ToDateTime(TimeOnly.MinValue)
-            };
-
-            model.Balances.Clear();
-            foreach (var balance in snapshot.AccountBalances)
-            {
-                model.Balances.Add(new BalanceEntry
-                {
-                    AccountId = balance.Account.Id,
-                    Balance = balance.Balance
-                });
-            }
-
-            if (model.Balances.Count == 0)
-                model.Balances.Add(new BalanceEntry());
-
-            return model;
-        }
+        var keys = source.Keys.Where(predicate).ToList();
+        foreach (var key in keys)
+            source.Remove(key);
     }
 }

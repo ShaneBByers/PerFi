@@ -33,6 +33,17 @@ public sealed class SnapshotsApiClient(HttpClient httpClient) : ISnapshotsApiCli
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
 
+    public async Task<ApiResult> BulkUpdateCellsAsync(IReadOnlyList<SnapshotCellUpdateRequest> updates, CancellationToken cancellationToken = default)
+    {
+        var request = new BulkUpdateFinanceSnapshotCellsRequest(updates);
+        var response = await httpClient.PostAsJsonAsync("api/snapshots/bulk-update-cells", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
+
     public async Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.DeleteAsync($"api/snapshots/{id}", cancellationToken);

@@ -64,6 +64,32 @@ internal class FinanceSnapshotService(
         }
     }
 
+    public async Task<Result> UpdateSnapshotCellsAsync(BulkUpdateFinanceSnapshotCellsCommand command, CancellationToken cancellationToken = default)
+    {
+        if (command is null)
+            return Result.Failure("Bulk update command cannot be null.");
+
+        if (command.Updates.Count == 0)
+            return Result.Failure("At least one cell update is required.");
+
+        if (command.Updates.Any(update => update.SnapshotId <= 0))
+            return Result.Failure("All snapshot IDs must be greater than zero.");
+
+        if (command.Updates.Any(update => update.AccountId <= 0))
+            return Result.Failure("All account IDs must be greater than zero.");
+
+        var normalizedUpdates = command.Updates
+            .GroupBy(update => (update.SnapshotId, update.AccountId))
+            .Select(group => group.Last())
+            .Select(update => new SnapshotCellUpdate(
+                update.SnapshotId,
+                update.AccountId,
+                update.Balance))
+            .ToList();
+
+        return await financeSnapshotRepository.UpdateSnapshotCellsAsync(normalizedUpdates, cancellationToken);
+    }
+
     public async Task<Result> DeleteSnapshotAsync(int snapshotId, CancellationToken cancellationToken = default)
         => await financeSnapshotRepository.DeleteSnapshotAsync(snapshotId, cancellationToken);
 

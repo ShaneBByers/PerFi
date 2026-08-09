@@ -16,3 +16,5 @@ public sealed record UpdateAccountRequest(string AccountName, int InstitutionId,
 
 public sealed record CreateFinanceSnapshotRequest(DateOnly SnapshotDate, IReadOnlyDictionary<int, decimal> AccountIdToBalanceMap);
 public sealed record UpdateFinanceSnapshotRequest(DateOnly SnapshotDate, IReadOnlyDictionary<int, decimal> AccountIdToBalanceMap);
+public sealed record BulkUpdateFinanceSnapshotCellsRequest(IReadOnlyList<SnapshotCellUpdateRequest> Updates);
+public sealed record SnapshotCellUpdateRequest(int SnapshotId, int AccountId, decimal Balance);

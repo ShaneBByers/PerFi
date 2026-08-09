@@ -9,5 +9,6 @@ public interface IFinanceSnapshotRepository
     Task<FinanceSnapshot?> GetSnapshotByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Result<int>> AddSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default);
     Task<Result> UpdateSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default);
+    Task<Result> UpdateSnapshotCellsAsync(IReadOnlyList<SnapshotCellUpdate> updates, CancellationToken cancellationToken = default);
     Task<Result> DeleteSnapshotAsync(int snapshotId, CancellationToken cancellationToken = default);
 }

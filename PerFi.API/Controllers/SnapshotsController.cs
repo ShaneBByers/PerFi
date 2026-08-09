@@ -113,6 +113,29 @@ public class SnapshotsController(
         return NoContent();
     }
 
+    [HttpPost("bulk-update-cells")]
+    public async Task<IActionResult> BulkUpdateCells([FromBody] BulkUpdateFinanceSnapshotCellsRequest request)
+    {
+        var validationErrors = RequestValidator.ValidateBulkUpdateFinanceSnapshotCellsRequest(request.Updates);
+        if (validationErrors.Count > 0)
+            return BadRequest(validationErrors.ToValidationProblemDetails());
+
+        var command = new BulkUpdateFinanceSnapshotCellsCommand(
+            [.. request.Updates.Select(update => new SnapshotCellUpdateCommand(
+                update.SnapshotId,
+                update.AccountId,
+                update.Balance))]);
+
+        var result = await financeSnapshotService.UpdateSnapshotCellsAsync(command, HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return IsNotFoundError(result.Error)
+                ? NotFound(new { error = result.Error })
+                : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {

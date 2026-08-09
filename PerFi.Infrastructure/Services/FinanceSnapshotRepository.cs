@@ -103,6 +103,83 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
         return Result.Success();
     }
 
+    public async Task<Result> UpdateSnapshotCellsAsync(IReadOnlyList<SnapshotCellUpdate> updates, CancellationToken cancellationToken = default)
+    {
+        if (updates.Count == 0)
+            return Result.Failure("At least one cell update is required.");
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            var snapshotIds = updates
+                .Select(update => update.SnapshotId)
+                .Distinct()
+                .ToList();
+
+            var accountIds = updates
+                .Select(update => update.AccountId)
+                .Distinct()
+                .ToList();
+
+            var snapshotEntities = await dbContext.FinanceSnapshots
+                .Include(snapshot => snapshot.AccountBalances)
+                .Where(snapshot => snapshotIds.Contains(snapshot.Id))
+                .ToListAsync(cancellationToken);
+
+            if (snapshotEntities.Count != snapshotIds.Count)
+            {
+                var foundSnapshotIds = snapshotEntities.Select(snapshot => snapshot.Id).ToHashSet();
+                var missingSnapshotId = snapshotIds.First(id => !foundSnapshotIds.Contains(id));
+                await transaction.RollbackAsync(cancellationToken);
+                return Result.Failure($"Snapshot with ID '{missingSnapshotId}' not found.");
+            }
+
+            var existingAccounts = await dbContext.Accounts
+                .Where(account => accountIds.Contains(account.Id))
+                .ToDictionaryAsync(account => account.Id, cancellationToken);
+
+            if (existingAccounts.Count != accountIds.Count)
+            {
+                var missingAccountId = accountIds.First(id => !existingAccounts.ContainsKey(id));
+                await transaction.RollbackAsync(cancellationToken);
+                return Result.Failure($"Account with ID '{missingAccountId}' does not exist.");
+            }
+
+            var snapshotsById = snapshotEntities.ToDictionary(snapshot => snapshot.Id);
+
+            foreach (var update in updates)
+            {
+                var snapshot = snapshotsById[update.SnapshotId];
+                var existingBalance = snapshot.AccountBalances.FirstOrDefault(balance => balance.AccountId == update.AccountId);
+
+                if (existingBalance is not null)
+                {
+                    existingBalance.Balance = update.Balance;
+                    continue;
+                }
+
+                snapshot.AccountBalances.Add(new AccountBalanceEntity
+                {
+                    AccountId = update.AccountId,
+                    Account = existingAccounts[update.AccountId],
+                    FinanceSnapshotId = snapshot.Id,
+                    Balance = update.Balance
+                });
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return Result.Failure($"Bulk snapshot update failed and was rolled back. {ex.Message}");
+        }
+    }
+
     public async Task<Result> DeleteSnapshotAsync(int snapshotId, CancellationToken cancellationToken = default)
     {
         var snapshotEntity = await dbContext.FinanceSnapshots

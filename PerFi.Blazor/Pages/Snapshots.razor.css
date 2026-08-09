@@ -24,13 +24,24 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    align-items: center;
 }
 
-.filter-panel,
+.range-control {
+    position: relative;
+}
+
+.range-control .range-popover {
+    position: absolute;
+    top: calc(100% + 0.45rem);
+    right: 0;
+    width: min(36rem, calc(100vw - 2rem));
+    z-index: 20;
+}
+
 .chart-panel,
 .matrix-panel,
 .timeline-panel,
-.composer-panel,
 .detail-panel {
     border: 1px solid var(--pf-border-soft);
     background: var(--pf-bg-elevated);
@@ -38,9 +49,11 @@
     padding: 1rem;
 }
 
-.filter-panel {
-    display: grid;
-    gap: 0.8rem;
+.range-popover {
+    border: 1px solid var(--pf-border-soft);
+    background: rgba(9, 14, 22, 0.95);
+    border-radius: 12px;
+    padding: 0.75rem;
 }
 
 .filter-presets {
@@ -58,6 +71,21 @@
 .chart-grid {
     display: grid;
     gap: 1rem;
+}
+
+.chart-surface {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+}
+
+.chart-surface .section-header {
+    margin-bottom: 0.4rem;
+}
+
+::deep .apexcharts-toolbar {
+    display: none !important;
 }
 
 .summary-card {
@@ -94,15 +122,51 @@
 }
 
 .section-header p {
-    margin: 0.2rem 0 0.8rem;
+    margin: 0.2rem 0 0;
     color: var(--pf-text-secondary);
+}
+
+.matrix-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: end;
+}
+
+.matrix-nav-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.matrix-staged-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 193, 7, 0.5);
+    background: rgba(255, 193, 7, 0.18);
+    color: #ffe8a3;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.2rem 0.52rem;
+    min-width: 9.5rem;
+}
+
+.matrix-staged-chip-hidden {
+    visibility: hidden;
 }
 
 .matrix-wrap {
     margin-top: 0.3rem;
+    overflow: hidden;
 }
 
 .snapshot-matrix {
+    width: 100%;
+    table-layout: fixed;
     margin-bottom: 0;
     --bs-table-bg: transparent;
     --bs-table-color: var(--pf-text-primary);
@@ -112,8 +176,24 @@
 
 .snapshot-matrix th,
 .snapshot-matrix td {
-    white-space: nowrap;
     vertical-align: middle;
+}
+
+.snapshot-matrix td {
+    min-width: 7.2rem;
+}
+
+.group-header-row th {
+    background: rgba(36, 181, 217, 0.16);
+    color: var(--pf-text-primary);
+    font-weight: 700;
+}
+
+.snapshot-matrix th.new-entry-column-header {
+    background: linear-gradient(180deg, rgba(255, 193, 7, 0.32), rgba(168, 118, 8, 0.28));
+    color: #ffe8a3;
+    box-shadow: inset 0 -2px 0 rgba(255, 216, 117, 0.85), inset 0 0 0 1px rgba(255, 215, 102, 0.4);
+    font-weight: 800;
 }
 
 .snapshot-matrix .account-name {
@@ -130,40 +210,52 @@
     background: rgba(34, 57, 94, 0.25);
 }
 
-.timeline-grid {
-    display: grid;
-    gap: 0.7rem;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+.matrix-cell-input {
+    min-width: 6.8rem;
 }
 
-.timeline-card {
-    border: 1px solid var(--pf-border-soft);
-    border-radius: 10px;
-    background: var(--pf-surface);
-    padding: 0.8rem;
-    display: grid;
-    gap: 0.6rem;
+.matrix-cell {
+    transition: background-color 140ms ease;
 }
 
-.timeline-card.selected {
-    border-color: var(--pf-accent);
-    box-shadow: 0 0 0 1px rgba(36, 181, 217, 0.25);
+.matrix-cell-edited {
+    background: linear-gradient(180deg, rgba(54, 170, 255, 0.32), rgba(26, 88, 142, 0.28));
+    box-shadow: inset 5px 0 0 rgba(130, 212, 255, 0.98), inset 0 0 0 1px rgba(112, 200, 255, 0.4);
 }
 
-.timeline-card h3 {
-    margin: 0;
-    font-size: 1rem;
+.matrix-cell-invalid {
+    background: linear-gradient(180deg, rgba(229, 62, 62, 0.3), rgba(117, 26, 26, 0.26));
+    box-shadow: inset 5px 0 0 rgba(255, 150, 150, 0.98), inset 0 0 0 1px rgba(255, 145, 145, 0.42);
 }
 
-.timeline-card p {
-    margin: 0.25rem 0;
-    color: var(--pf-text-secondary);
+.matrix-cell-input-edited {
+    border-color: rgba(120, 208, 255, 1);
+    background: rgba(10, 30, 48, 0.65);
+    box-shadow: 0 0 0 0.18rem rgba(56, 175, 255, 0.4);
+    font-weight: 700;
 }
 
-.timeline-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
+.matrix-validation-banner {
+    margin-bottom: 0.75rem;
+}
+
+.matrix-cell-error {
+    color: var(--pf-danger);
+    font-size: 0.72rem;
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
+.amount-positive {
+    color: var(--pf-success) !important;
+}
+
+.amount-negative {
+    color: var(--pf-danger) !important;
+}
+
+.amount-muted {
+    color: var(--pf-text-tertiary) !important;
 }
 
 .composer-panel .form-label,
@@ -177,12 +269,69 @@
     --bs-table-border-color: var(--pf-border-soft);
 }
 
+@media (max-width: 767.98px) {
+    .matrix-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .hero-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .range-control {
+        width: 100%;
+    }
+
+    .range-control > .btn {
+        width: 100%;
+    }
+
+    .range-control .range-popover {
+        right: auto;
+        left: 0;
+        width: min(28rem, calc(100vw - 2rem));
+    }
+
+    .matrix-nav-actions {
+        justify-content: flex-start;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .chart-panel,
+    .matrix-panel,
+    .composer-panel,
+    .detail-panel {
+        padding: 0.85rem;
+    }
+
+    .snapshot-matrix th,
+    .snapshot-matrix td {
+        padding: 0.4rem 0.3rem;
+    }
+
+    .snapshot-matrix td {
+        min-width: 5.6rem;
+    }
+
+    .matrix-cell-input {
+        min-width: 5.25rem;
+        font-size: 0.82rem;
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+    }
+
+}
+
 @media (min-width: 992px) {
     .chart-grid {
         grid-template-columns: 1fr 1fr;
     }
 
-    .filter-panel,
     .chart-panel,
     .matrix-panel,
     .timeline-panel,

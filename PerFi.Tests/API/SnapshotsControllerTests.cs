@@ -58,6 +58,9 @@ public sealed class SnapshotsControllerTests
         public Task<Result> UpdateSnapshotAsync(UpdateFinanceSnapshotCommand command, CancellationToken cancellationToken = default)
             => Task.FromResult(Result.Success());
 
+        public Task<Result> UpdateSnapshotCellsAsync(BulkUpdateFinanceSnapshotCellsCommand command, CancellationToken cancellationToken = default)
+            => Task.FromResult(Result.Success());
+
         public Task<Result> DeleteSnapshotAsync(int snapshotId, CancellationToken cancellationToken = default)
             => Task.FromResult(Result.Success());
 
