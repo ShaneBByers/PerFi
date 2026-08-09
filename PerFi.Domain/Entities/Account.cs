@@ -6,6 +6,7 @@ public sealed record Account
     public string Name { get; }
     public AccountType Type { get; }
     public int InstitutionId { get; set; }
+    public int DisplayOrder { get; set; }
 
     public Account(string name, AccountType type)
     {

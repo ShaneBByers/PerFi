@@ -4,6 +4,7 @@ public sealed record AccountTypeGroup
 {
     public int Id { get; set; }
     public string Name { get; }
+    public int DisplayOrder { get; set; }
 
     public AccountTypeGroup(string name)
     {

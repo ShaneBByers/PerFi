@@ -5,6 +5,7 @@ public sealed record Institution
     public int Id { get; set; }
     public string Name { get; }
     public IReadOnlyList<Account> Accounts { get; }
+    public int DisplayOrder { get; set; }
 
     public Institution(string name, IReadOnlyList<Account> accounts)
     {

@@ -13,6 +13,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
     {
         return await dbContext.FinanceSnapshots
             .AsNoTracking()
+            .OrderBy(s => s.Date)
             .Include(s => s.AccountBalances)
                 .ThenInclude(ab => ab.Account)
                     .ThenInclude(a => a.AccountType)
@@ -21,7 +22,23 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
                 s.Id,
                 s.Date,
                 s.AccountBalances.Select(ab => new AccountBalance(
-                    new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.AccountType.Id, ab.Account.AccountType.Name, new AccountTypeGroup(ab.Account.AccountType.AccountTypeGroup.Id, ab.Account.AccountType.AccountTypeGroup.Name)), ab.Account.InstitutionId),
+                    new Account(
+                        ab.Account.Id,
+                        ab.Account.Name,
+                        new AccountType(
+                            ab.Account.AccountType.Id,
+                            ab.Account.AccountType.Name,
+                            new AccountTypeGroup(ab.Account.AccountType.AccountTypeGroup.Id, ab.Account.AccountType.AccountTypeGroup.Name)
+                            {
+                                DisplayOrder = ab.Account.AccountType.AccountTypeGroup.DisplayOrder
+                            })
+                        {
+                            DisplayOrder = ab.Account.AccountType.DisplayOrder
+                        },
+                        ab.Account.InstitutionId)
+                    {
+                        DisplayOrder = ab.Account.DisplayOrder
+                    },
                     ab.Balance)).ToList()))
             .ToListAsync(cancellationToken);
     }
@@ -30,6 +47,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
     {
         var snapshotEntity = await dbContext.FinanceSnapshots
             .AsNoTracking()
+            .OrderBy(s => s.Date)
             .Include(s => s.AccountBalances)
                 .ThenInclude(ab => ab.Account)
                     .ThenInclude(a => a.AccountType)
@@ -42,9 +60,25 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
         return new FinanceSnapshot(
             snapshotEntity.Id,
             snapshotEntity.Date,
-            [.. snapshotEntity.AccountBalances.Select(ab => new AccountBalance(
-                new Account(ab.Account.Id, ab.Account.Name, new AccountType(ab.Account.AccountType.Id, ab.Account.AccountType.Name, new AccountTypeGroup(ab.Account.AccountType.AccountTypeGroup.Id, ab.Account.AccountType.AccountTypeGroup.Name)), ab.Account.InstitutionId),
-                ab.Balance))]);
+            [.. snapshotEntity.AccountBalances.Select(ab =>
+            {
+                var group = new AccountTypeGroup(ab.Account.AccountType.AccountTypeGroup.Id, ab.Account.AccountType.AccountTypeGroup.Name)
+                {
+                    DisplayOrder = ab.Account.AccountType.AccountTypeGroup.DisplayOrder
+                };
+
+                var type = new AccountType(ab.Account.AccountType.Id, ab.Account.AccountType.Name, group)
+                {
+                    DisplayOrder = ab.Account.AccountType.DisplayOrder
+                };
+
+                var account = new Account(ab.Account.Id, ab.Account.Name, type, ab.Account.InstitutionId)
+                {
+                    DisplayOrder = ab.Account.DisplayOrder
+                };
+
+                return new AccountBalance(account, ab.Balance);
+            })]);
     }
 
     public async Task<Result<int>> AddSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default)

@@ -205,30 +205,21 @@ public sealed class ImportNetWorthCsvOperation(
 
     private static ImportPlan BuildImportPlan(NetWorthCsvDocument document)
     {
-        var orderedRows = document.Rows
-            .OrderBy(row => row.InstitutionName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(row => row.AccountTypeGroupName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(row => row.AccountTypeName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(row => row.AccountName, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        var orderedRows = document.Rows.ToArray();
 
         var accountTypeGroups = orderedRows
             .Select(row => row.AccountTypeGroupName)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(groupName => groupName, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var accountTypes = orderedRows
             .GroupBy(row => MakeAccountTypeKey(row.AccountTypeGroupName, row.AccountTypeName), StringComparer.OrdinalIgnoreCase)
             .Select(group => new AccountTypeSeed(group.First().AccountTypeGroupName, group.First().AccountTypeName))
-            .OrderBy(accountType => accountType.GroupName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(accountType => accountType.TypeName, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var institutions = orderedRows
             .Select(row => row.InstitutionName)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(institutionName => institutionName, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var accounts = orderedRows

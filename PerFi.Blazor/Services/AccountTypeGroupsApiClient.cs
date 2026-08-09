@@ -40,4 +40,14 @@ public sealed class AccountTypeGroupsApiClient(HttpClient httpClient) : IAccount
 
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
+
+    public async Task<ApiResult> ReorderAsync(IReadOnlyList<int> orderedAccountTypeGroupIds, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync("api/accounttypegroups/reorder", new ReorderAccountTypeGroupsRequest(orderedAccountTypeGroupIds), cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
 }

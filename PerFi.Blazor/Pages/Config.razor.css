@@ -90,6 +90,7 @@
     border-radius: 12px;
     padding: 0.8rem;
     background: rgba(8, 12, 19, 0.5);
+    color: var(--pf-text-primary);
 }
 
 .tab-strip {
@@ -124,6 +125,15 @@
     margin-bottom: 0.75rem;
 }
 
+.nested-panel .table,
+.nested-panel .table-striped {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--pf-text-primary);
+    --bs-table-striped-bg: rgba(28, 42, 62, 0.24);
+    --bs-table-striped-color: var(--pf-text-primary);
+    --bs-table-border-color: var(--pf-border-soft);
+}
+
 .nested-panel .btn {
     white-space: nowrap;
 }
@@ -137,14 +147,13 @@
     color: var(--pf-text-tertiary) !important;
 }
 
-.detail-panel dl {
-    margin-bottom: 0;
+.relationship-list .text-muted,
+.relationship-list small {
+    color: var(--pf-text-secondary) !important;
 }
 
-.table {
-    --bs-table-bg: transparent;
-    --bs-table-color: var(--pf-text-primary);
-    --bs-table-border-color: var(--pf-border-soft);
+.detail-panel dl {
+    margin-bottom: 0;
 }
 
 @media (min-width: 992px) {

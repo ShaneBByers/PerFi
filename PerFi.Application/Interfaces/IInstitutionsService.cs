@@ -11,4 +11,5 @@ public interface IInstitutionService
     Task<Result<Institution>> CreateInstitutionAsync(CreateInstitutionCommand command, CancellationToken cancellationToken = default);
     Task<Result> UpdateInstitutionAsync(UpdateInstitutionCommand command, CancellationToken cancellationToken = default);
     Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default);
+    Task<Result> ReorderInstitutionsAsync(ReorderInstitutionCommand command, CancellationToken cancellationToken = default);
 }

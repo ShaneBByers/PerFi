@@ -10,4 +10,5 @@ public interface IAccountTypeGroupRepository
     Task<Result<int>> AddAccountTypeGroupAsync(AccountTypeGroup accountTypeGroup, CancellationToken cancellationToken = default);
     Task<Result> UpdateAccountTypeGroupAsync(AccountTypeGroup accountTypeGroup, CancellationToken cancellationToken = default);
     Task<Result> DeleteAccountTypeGroupAsync(int accountTypeGroupId, CancellationToken cancellationToken = default);
+    Task<Result> ReorderAccountTypeGroupsAsync(IReadOnlyList<int> orderedAccountTypeGroupIds, CancellationToken cancellationToken = default);
 }

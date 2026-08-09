@@ -9,4 +9,5 @@ public interface IInstitutionsApiClient
     Task<ApiResult> CreateAsync(string name, CancellationToken cancellationToken = default);
     Task<ApiResult> UpdateAsync(int id, string name, CancellationToken cancellationToken = default);
     Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<ApiResult> ReorderAsync(IReadOnlyList<int> orderedInstitutionIds, CancellationToken cancellationToken = default);
 }

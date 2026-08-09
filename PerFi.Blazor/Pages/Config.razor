@@ -83,12 +83,12 @@
                         @if (institutions.Count > 0)
                         {
                             <ul class="relationship-list">
-                                @foreach (var institution in institutions.OrderBy(item => item.Name))
+                                @foreach (var institution in institutions)
                                 {
                                     <li>
                                         <div class="d-flex justify-content-between gap-3 align-items-start">
                                             <div>
-                                                <strong>@institution.Name</strong>
+                                                <strong>#@institution.DisplayOrder @institution.Name</strong>
                                                 <div class="text-muted small">@institution.Accounts.Count accounts</div>
                                             </div>
                                             <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="() => StartEditInstitution(institution)">Edit</button>
@@ -97,9 +97,9 @@
                                         @if (institution.Accounts.Count > 0)
                                         {
                                             <ul class="small mt-2 mb-0">
-                                                @foreach (var account in institution.Accounts.OrderBy(item => item.Name))
+                                                @foreach (var account in institution.Accounts)
                                                 {
-                                                    <li>@account.Name (@account.Type.Name / @account.Type.Group.Name)</li>
+                                                    <li>#@account.DisplayOrder @account.Name (@account.Type.Name / @account.Type.Group.Name)</li>
                                                 }
                                             </ul>
                                         }
@@ -125,6 +125,7 @@
                             <table class="table table-sm align-middle">
                                 <thead>
                                     <tr>
+                                        <th>Order</th>
                                         <th>Name</th>
                                         <th>Institution</th>
                                         <th>Type</th>
@@ -132,9 +133,10 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var account in accounts.OrderBy(item => item.Name))
+                                    @foreach (var account in accounts)
                                     {
                                         <tr>
+                                            <td>@account.DisplayOrder</td>
                                             <td>@account.Name</td>
                                             <td>@account.Institution.Name</td>
                                             <td>@account.Type.Name</td>
@@ -162,10 +164,10 @@
                         @if (accountTypes.Count > 0)
                         {
                             <ul class="relationship-list">
-                                @foreach (var accountType in accountTypes.OrderBy(item => item.Name))
+                                @foreach (var accountType in accountTypes)
                                 {
                                     <li class="d-flex justify-content-between gap-3 align-items-center">
-                                        <span>@accountType.Name (@accountType.Group.Name)</span>
+                                        <span>#@accountType.DisplayOrder @accountType.Name (@accountType.Group.Name)</span>
                                         <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="() => StartEditAccountType(accountType)">Edit</button>
                                     </li>
                                 }
@@ -242,21 +244,25 @@
                                     <table class="table table-striped table-sm align-middle">
                                         <thead>
                                             <tr>
+                                                <th>Order</th>
                                                 <th>Name</th>
                                                 <th>Accounts</th>
                                                 <th class="text-end">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var item in institutions.OrderBy(i => i.Name))
+                                            @foreach (var item in institutions)
                                             {
                                                 <tr>
+                                                    <td>@item.DisplayOrder</td>
                                                     <td>@item.Name</td>
                                                     <td>@item.Accounts.Count</td>
                                                     <td class="text-end">
                                                         <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadInstitutionDetailAsync(item.Id)">Open</button>
                                                         <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEditInstitution(item)">Edit</button>
                                                         <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteInstitutionAsync(item.Id)">Delete</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => MoveInstitutionAsync(item.Id, -1)">Up</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="() => MoveInstitutionAsync(item.Id, 1)">Down</button>
                                                     </td>
                                                 </tr>
                                             }
@@ -281,7 +287,7 @@
                                 @if (selectedInstitution.Accounts.Count > 0)
                                 {
                                     <ul>
-                                        @foreach (var account in selectedInstitution.Accounts.OrderBy(a => a.Name))
+                                        @foreach (var account in selectedInstitution.Accounts)
                                         {
                                             <li>@account.Name (@account.Type.Name)</li>
                                         }
@@ -323,7 +329,7 @@
                                             <label class="form-label" for="institution">Institution</label>
                                             <InputSelect id="institution" class="form-select" @bind-Value="createAccountModel.InstitutionId">
                                                 <option value="0">Select institution</option>
-                                                @foreach (var institution in institutions.OrderBy(i => i.Name))
+                                                @foreach (var institution in institutions)
                                                 {
                                                     <option value="@institution.Id">@institution.Name</option>
                                                 }
@@ -333,7 +339,7 @@
                                             <label class="form-label" for="accountType">Account Type</label>
                                             <InputSelect id="accountType" class="form-select" @bind-Value="createAccountModel.AccountTypeId">
                                                 <option value="0">Select account type</option>
-                                                @foreach (var accountType in accountTypes.OrderBy(t => t.Name))
+                                                @foreach (var accountType in accountTypes)
                                                 {
                                                     <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
                                                 }
@@ -358,7 +364,7 @@
                                             <label class="form-label" for="editInstitution">Institution</label>
                                             <InputSelect id="editInstitution" class="form-select" @bind-Value="editAccountModel.InstitutionId">
                                                 <option value="0">Select institution</option>
-                                                @foreach (var institution in institutions.OrderBy(i => i.Name))
+                                                @foreach (var institution in institutions)
                                                 {
                                                     <option value="@institution.Id">@institution.Name</option>
                                                 }
@@ -368,7 +374,7 @@
                                             <label class="form-label" for="editAccountType">Account Type</label>
                                             <InputSelect id="editAccountType" class="form-select" @bind-Value="editAccountModel.AccountTypeId">
                                                 <option value="0">Select account type</option>
-                                                @foreach (var accountType in accountTypes.OrderBy(t => t.Name))
+                                                @foreach (var accountType in accountTypes)
                                                 {
                                                     <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
                                                 }
@@ -400,6 +406,7 @@
                                     <table class="table table-striped table-sm align-middle">
                                         <thead>
                                             <tr>
+                                                <th>Order</th>
                                                 <th>Name</th>
                                                 <th>Institution</th>
                                                 <th>Type</th>
@@ -408,9 +415,10 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var account in accounts.OrderBy(a => a.Name))
+                                            @foreach (var account in accounts)
                                             {
                                                 <tr>
+                                                    <td>@account.DisplayOrder</td>
                                                     <td>@account.Name</td>
                                                     <td>@account.Institution.Name</td>
                                                     <td>@account.Type.Name</td>
@@ -419,6 +427,8 @@
                                                         <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadAccountDetailAsync(account.Id)">Open</button>
                                                         <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEditAccount(account)">Edit</button>
                                                         <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAccountAsync(account.Id)">Delete</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => MoveAccountAsync(account.Id, -1)">Up</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="() => MoveAccountAsync(account.Id, 1)">Down</button>
                                                     </td>
                                                 </tr>
                                             }
@@ -484,7 +494,7 @@
                                             <label class="form-label" for="accountTypeGroup">Group</label>
                                             <InputSelect id="accountTypeGroup" class="form-select" @bind-Value="createAccountTypeModel.AccountTypeGroupId">
                                                 <option value="0">Select group</option>
-                                                @foreach (var group in accountTypeGroups.OrderBy(item => item.Name))
+                                                @foreach (var group in accountTypeGroups)
                                                 {
                                                     <option value="@group.Id">@group.Name</option>
                                                 }
@@ -509,7 +519,7 @@
                                             <label class="form-label" for="editAccountTypeGroup">Group</label>
                                             <InputSelect id="editAccountTypeGroup" class="form-select" @bind-Value="editAccountTypeModel.AccountTypeGroupId">
                                                 <option value="0">Select group</option>
-                                                @foreach (var group in accountTypeGroups.OrderBy(item => item.Name))
+                                                @foreach (var group in accountTypeGroups)
                                                 {
                                                     <option value="@group.Id">@group.Name</option>
                                                 }
@@ -541,21 +551,25 @@
                                     <table class="table table-striped table-sm align-middle">
                                         <thead>
                                             <tr>
+                                                <th>Order</th>
                                                 <th>Name</th>
                                                 <th>Group</th>
                                                 <th class="text-end">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var item in accountTypes.OrderBy(a => a.Name))
+                                            @foreach (var item in accountTypes)
                                             {
                                                 <tr>
+                                                    <td>@item.DisplayOrder</td>
                                                     <td>@item.Name</td>
                                                     <td>@item.Group.Name</td>
                                                     <td class="text-end">
                                                         <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadAccountTypeDetailAsync(item.Id)">Open</button>
                                                         <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEditAccountType(item)">Edit</button>
                                                         <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAccountTypeAsync(item.Id)">Delete</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => MoveAccountTypeAsync(item.Id, -1)">Up</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="() => MoveAccountTypeAsync(item.Id, 1)">Down</button>
                                                     </td>
                                                 </tr>
                                             }
@@ -653,18 +667,22 @@
                                     <table class="table table-striped table-sm align-middle">
                                         <thead>
                                             <tr>
+                                                <th>Order</th>
                                                 <th>Name</th>
                                                 <th class="text-end">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var item in accountTypeGroups.OrderBy(item => item.Name))
+                                            @foreach (var item in accountTypeGroups)
                                             {
                                                 <tr>
+                                                    <td>@item.DisplayOrder</td>
                                                     <td>@item.Name</td>
                                                     <td class="text-end">
                                                         <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEditAccountTypeGroup(item)">Edit</button>
                                                         <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteAccountTypeGroupAsync(item.Id)">Delete</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => MoveAccountTypeGroupAsync(item.Id, -1)">Up</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="() => MoveAccountTypeGroupAsync(item.Id, 1)">Down</button>
                                                     </td>
                                                 </tr>
                                             }
@@ -683,7 +701,7 @@
                             </div>
 
                             <ul class="mb-0">
-                                @foreach (var item in accountTypeGroups.OrderBy(item => item.Name))
+                                @foreach (var item in accountTypeGroups)
                                 {
                                     <li>@item.Name (@accountTypes.Count(type => type.Group.Id == item.Id) types)</li>
                                 }
@@ -1125,6 +1143,52 @@
 
         successMessage = "Account type group deleted.";
         await LoadAllAsync();
+    }
+
+    private async Task MoveInstitutionAsync(int id, int delta)
+        => await MoveAndPersistAsync(institutions, id, delta, item => item.Id, orderedIds => InstitutionsApiClient.ReorderAsync(orderedIds), "institution order updated.");
+
+    private async Task MoveAccountAsync(int id, int delta)
+        => await MoveAndPersistAsync(accounts, id, delta, item => item.Id, orderedIds => AccountsApiClient.ReorderAsync(orderedIds), "account order updated.");
+
+    private async Task MoveAccountTypeAsync(int id, int delta)
+        => await MoveAndPersistAsync(accountTypes, id, delta, item => item.Id, orderedIds => AccountTypesApiClient.ReorderAsync(orderedIds), "account type order updated.");
+
+    private async Task MoveAccountTypeGroupAsync(int id, int delta)
+        => await MoveAndPersistAsync(accountTypeGroups, id, delta, item => item.Id, orderedIds => AccountTypeGroupsApiClient.ReorderAsync(orderedIds), "account type group order updated.");
+
+    private async Task MoveAndPersistAsync<T>(List<T> items, int id, int delta, Func<T, int> idSelector, Func<IReadOnlyList<int>, Task<ApiResult>> persistAsync, string successText)
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        if (!TryMove(items, idSelector, id, delta))
+            return;
+
+        var orderedIds = items.Select(idSelector).ToList();
+        var result = await persistAsync(orderedIds);
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            await LoadAllAsync();
+            return;
+        }
+
+        successMessage = successText;
+        await LoadAllAsync();
+    }
+
+    private static bool TryMove<T>(List<T> items, Func<T, int> idSelector, int id, int delta)
+    {
+        var currentIndex = items.FindIndex(item => idSelector(item) == id);
+        var targetIndex = currentIndex + delta;
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= items.Count)
+            return false;
+
+        (items[currentIndex], items[targetIndex]) = (items[targetIndex], items[currentIndex]);
+        return true;
     }
 
     private sealed class CreateInstitutionModel

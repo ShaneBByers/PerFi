@@ -26,13 +26,15 @@ public class AccountsController(
         var response = accounts.Select(a => new AccountResponse(
             a.Id, 
             a.Name,
+            a.DisplayOrder,
             new InstitutionIdentityResponse(
                 a.InstitutionId,
                 institutionNameById.GetValueOrDefault(a.InstitutionId, "Unknown Institution")),
             new AccountTypeResponse(
                 a.Type.Id,
                 a.Type.Name,
-                new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name))));
+                a.Type.DisplayOrder,
+                new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder))));
         return Ok(response);
     }
 
@@ -51,11 +53,13 @@ public class AccountsController(
         var response = new AccountResponse(
             account.Id, 
             account.Name,
+            account.DisplayOrder,
             new InstitutionIdentityResponse(account.InstitutionId, institution.Name),
             new AccountTypeResponse(
                 account.Type.Id,
                 account.Type.Name,
-                new AccountTypeGroupIdentityResponse(account.Type.Group.Id, account.Type.Group.Name)));
+                account.Type.DisplayOrder,
+                new AccountTypeGroupIdentityResponse(account.Type.Group.Id, account.Type.Group.Name, account.Type.Group.DisplayOrder)));
         return Ok(response);
     }
 
@@ -107,6 +111,19 @@ public class AccountsController(
             return IsNotFoundError(result.Error)
                 ? NotFound(new { error = result.Error })
                 : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    [HttpPut("reorder")]
+    public async Task<IActionResult> Reorder([FromBody] ReorderAccountsRequest request)
+    {
+        var result = await accountService.ReorderAccountsAsync(
+            new ReorderAccountCommand(request.OrderedAccountIds),
+            HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return BadRequest(new { error = result.Error });
 
         return NoContent();
     }

@@ -22,14 +22,17 @@ public class InstitutionsController(
         var response = institutions.Select(i => new InstitutionResponse(
             i.Id, 
             i.Name, 
+            i.DisplayOrder,
             [.. i.Accounts.Select(a => new AccountResponse(
                 a.Id, 
                 a.Name,
+                a.DisplayOrder,
                 new InstitutionIdentityResponse(i.Id, i.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
                     a.Type.Name,
-                    new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name))))]));
+                    a.Type.DisplayOrder,
+                        new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder))))]));
 
         return Ok(response);
     }
@@ -45,14 +48,17 @@ public class InstitutionsController(
         var response = new InstitutionResponse(
             institution.Id, 
             institution.Name, 
+            institution.DisplayOrder,
             [.. institution.Accounts.Select(a => new AccountResponse(
                 a.Id, 
                 a.Name,
+                a.DisplayOrder,
                 new InstitutionIdentityResponse(institution.Id, institution.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
                     a.Type.Name,
-                    new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name))))]);
+                    a.Type.DisplayOrder,
+                        new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder))))]);
         return Ok(response);
     }
 
@@ -104,6 +110,19 @@ public class InstitutionsController(
             return IsNotFoundError(result.Error)
                 ? NotFound(new { error = result.Error })
                 : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    [HttpPut("reorder")]
+    public async Task<IActionResult> Reorder([FromBody] ReorderInstitutionsRequest request)
+    {
+        var result = await institutionService.ReorderInstitutionsAsync(
+            new ReorderInstitutionCommand(request.OrderedInstitutionIds),
+            HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return BadRequest(new { error = result.Error });
 
         return NoContent();
     }

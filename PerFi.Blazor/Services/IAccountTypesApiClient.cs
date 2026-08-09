@@ -9,4 +9,5 @@ public interface IAccountTypesApiClient
     Task<ApiResult> CreateAsync(string name, int accountTypeGroupId, CancellationToken cancellationToken = default);
     Task<ApiResult> UpdateAsync(int id, string name, int accountTypeGroupId, CancellationToken cancellationToken = default);
     Task<ApiResult> DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<ApiResult> ReorderAsync(IReadOnlyList<int> orderedAccountTypeIds, CancellationToken cancellationToken = default);
 }

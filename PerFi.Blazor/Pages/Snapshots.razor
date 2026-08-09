@@ -620,18 +620,38 @@
                 return new AccountMatrixRow(
                     sourceAccount.Id,
                     sourceAccount.Name,
+                    sourceAccount.DisplayOrder,
                     sourceAccount.Institution.Name,
+                    sourceAccount.Type.Id,
+                    sourceAccount.Type.Name,
+                    sourceAccount.Type.DisplayOrder,
+                    sourceAccount.Type.Group.Id,
                     sourceAccount.Type.Group.Name,
+                    sourceAccount.Type.Group.DisplayOrder,
                     bySnapshot);
             })
-            .OrderBy(row => row.AccountTypeGroupName)
-            .ThenBy(row => row.AccountName)
+            .OrderBy(row => row.AccountTypeGroupDisplayOrder)
+            .ThenBy(row => row.AccountTypeGroupName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(row => row.AccountTypeGroupId)
+            .ThenBy(row => row.AccountTypeDisplayOrder)
+            .ThenBy(row => row.AccountTypeName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(row => row.AccountTypeId)
+            .ThenBy(row => row.AccountDisplayOrder)
+            .ThenBy(row => row.AccountName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(row => row.AccountId)
             .ToList();
 
         var groupedRows = rows
-            .GroupBy(row => row.AccountTypeGroupName)
-            .OrderBy(group => group.Key)
-            .Select(group => new AccountMatrixGroup(group.Key, [.. group.OrderBy(row => row.AccountName)]))
+            .GroupBy(row => new
+            {
+                row.AccountTypeGroupId,
+                row.AccountTypeGroupName,
+                row.AccountTypeGroupDisplayOrder
+            })
+            .OrderBy(group => group.Key.AccountTypeGroupDisplayOrder)
+            .ThenBy(group => group.Key.AccountTypeGroupName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(group => group.Key.AccountTypeGroupId)
+            .Select(group => new AccountMatrixGroup(group.Key.AccountTypeGroupName, [.. group]))
             .ToList();
 
         matrixGroups.AddRange(groupedRows);
@@ -640,7 +660,6 @@
         var groupNames = matrixGroups
             .Select(group => group.AccountTypeGroupName)
             .Distinct()
-            .OrderBy(name => name)
             .ToList();
 
         foreach (var groupName in groupNames)
@@ -1049,8 +1068,14 @@
     private sealed record AccountMatrixRow(
         int AccountId,
         string AccountName,
+        int AccountDisplayOrder,
         string InstitutionName,
+        int AccountTypeId,
+        string AccountTypeName,
+        int AccountTypeDisplayOrder,
+        int AccountTypeGroupId,
         string AccountTypeGroupName,
+        int AccountTypeGroupDisplayOrder,
         Dictionary<int, decimal> BalancesBySnapshotId);
 
     private sealed record SnapshotTrendPoint(string Label, decimal Total);

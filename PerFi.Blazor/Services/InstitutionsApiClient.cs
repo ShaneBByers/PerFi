@@ -40,4 +40,14 @@ public sealed class InstitutionsApiClient(HttpClient httpClient) : IInstitutions
 
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
+
+    public async Task<ApiResult> ReorderAsync(IReadOnlyList<int> orderedInstitutionIds, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync("api/institutions/reorder", new ReorderInstitutionsRequest(orderedInstitutionIds), cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return ApiResult.Success();
+
+        return await ApiErrorParser.FromFailedResponseAsync(response);
+    }
 }

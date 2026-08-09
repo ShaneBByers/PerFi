@@ -90,5 +90,8 @@ public sealed class SnapshotsControllerTests
 
         public Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default)
             => Task.FromResult(Result.Failure("Not implemented in test."));
+
+        public Task<Result> ReorderInstitutionsAsync(ReorderInstitutionCommand command, CancellationToken cancellationToken = default)
+            => Task.FromResult(Result.Success());
     }
 }

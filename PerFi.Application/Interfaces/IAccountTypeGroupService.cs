@@ -11,4 +11,5 @@ public interface IAccountTypeGroupService
     Task<Result<AccountTypeGroup>> CreateAccountTypeGroupAsync(CreateAccountTypeGroupCommand command, CancellationToken cancellationToken = default);
     Task<Result> UpdateAccountTypeGroupAsync(UpdateAccountTypeGroupCommand command, CancellationToken cancellationToken = default);
     Task<Result> DeleteAccountTypeGroupAsync(int accountTypeGroupId, CancellationToken cancellationToken = default);
+    Task<Result> ReorderAccountTypeGroupsAsync(ReorderAccountTypeGroupCommand command, CancellationToken cancellationToken = default);
 }

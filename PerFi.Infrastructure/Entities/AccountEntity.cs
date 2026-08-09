@@ -4,6 +4,7 @@ public class AccountEntity
 {
     public int Id { get; set; }
     public required string Name { get; set; }
+    public int DisplayOrder { get; set; }
     public int InstitutionId { get; set; }
     public InstitutionEntity? Institution { get; set; }
     public int AccountTypeId { get; set; }

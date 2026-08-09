@@ -19,7 +19,7 @@ public sealed class AccountTypeGroupsController(
     public async Task<IActionResult> GetAll()
     {
         var accountTypeGroups = await accountTypeGroupService.GetAllAccountTypeGroupsAsync(HttpContext.RequestAborted);
-        var response = accountTypeGroups.Select(group => new AccountTypeGroupResponse(group.Id, group.Name));
+        var response = accountTypeGroups.Select(group => new AccountTypeGroupResponse(group.Id, group.Name, group.DisplayOrder));
         return Ok(response);
     }
 
@@ -31,7 +31,7 @@ public sealed class AccountTypeGroupsController(
         if (accountTypeGroup is null)
             return NotFound(new { error = $"No account type group found with ID '{id}'." });
 
-        return Ok(new AccountTypeGroupResponse(accountTypeGroup.Id, accountTypeGroup.Name));
+        return Ok(new AccountTypeGroupResponse(accountTypeGroup.Id, accountTypeGroup.Name, accountTypeGroup.DisplayOrder));
     }
 
     [HttpPost]
@@ -82,6 +82,19 @@ public sealed class AccountTypeGroupsController(
             return IsNotFoundError(result.Error)
                 ? NotFound(new { error = result.Error })
                 : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    [HttpPut("reorder")]
+    public async Task<IActionResult> Reorder([FromBody] ReorderAccountTypeGroupsRequest request)
+    {
+        var result = await accountTypeGroupService.ReorderAccountTypeGroupsAsync(
+            new ReorderAccountTypeGroupCommand(request.OrderedAccountTypeGroupIds),
+            HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return BadRequest(new { error = result.Error });
 
         return NoContent();
     }

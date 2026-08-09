@@ -57,4 +57,12 @@ internal class InstitutionService(
 
     public async Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default)
         => await institutionRepository.DeleteInstitutionAsync(institutionId, cancellationToken);
+
+    public async Task<Result> ReorderInstitutionsAsync(ReorderInstitutionCommand command, CancellationToken cancellationToken = default)
+    {
+        if (command is null)
+            return Result.Failure("Reorder institutions command cannot be null.");
+
+        return await institutionRepository.ReorderInstitutionsAsync(command.OrderedInstitutionIds, cancellationToken);
+    }
 }

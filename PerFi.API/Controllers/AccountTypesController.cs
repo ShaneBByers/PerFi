@@ -22,7 +22,8 @@ public class AccountTypesController(
         var response = accountTypes.Select(at => new AccountTypeResponse(
             at.Id,
             at.Name,
-            new AccountTypeGroupIdentityResponse(at.Group.Id, at.Group.Name)));
+            at.DisplayOrder,
+            new AccountTypeGroupIdentityResponse(at.Group.Id, at.Group.Name, at.Group.DisplayOrder)));
         return Ok(response);
     }
 
@@ -37,7 +38,8 @@ public class AccountTypesController(
         var response = new AccountTypeResponse(
             accountType.Id,
             accountType.Name,
-            new AccountTypeGroupIdentityResponse(accountType.Group.Id, accountType.Group.Name));
+            accountType.DisplayOrder,
+            new AccountTypeGroupIdentityResponse(accountType.Group.Id, accountType.Group.Name, accountType.Group.DisplayOrder));
         return Ok(response);
     }
 
@@ -89,6 +91,19 @@ public class AccountTypesController(
             return IsNotFoundError(result.Error)
                 ? NotFound(new { error = result.Error })
                 : BadRequest(new { error = result.Error });
+
+        return NoContent();
+    }
+
+    [HttpPut("reorder")]
+    public async Task<IActionResult> Reorder([FromBody] ReorderAccountTypesRequest request)
+    {
+        var result = await accountTypeService.ReorderAccountTypesAsync(
+            new ReorderAccountTypeCommand(request.OrderedAccountTypeIds),
+            HttpContext.RequestAborted);
+
+        if (result.IsFailure)
+            return BadRequest(new { error = result.Error });
 
         return NoContent();
     }

@@ -63,4 +63,12 @@ internal class AccountTypeService(
 
     public async Task<Result> DeleteAccountTypeAsync(int accountTypeId, CancellationToken cancellationToken = default)
         => await accountTypeRepository.DeleteAccountTypeAsync(accountTypeId, cancellationToken);
+
+    public async Task<Result> ReorderAccountTypesAsync(ReorderAccountTypeCommand command, CancellationToken cancellationToken = default)
+    {
+        if (command is null)
+            return Result.Failure("Reorder account types command cannot be null.");
+
+        return await accountTypeRepository.ReorderAccountTypesAsync(command.OrderedAccountTypeIds, cancellationToken);
+    }
 }

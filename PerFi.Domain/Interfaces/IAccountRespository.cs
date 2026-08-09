@@ -10,4 +10,5 @@ public interface IAccountRepository
     Task<Result<int>> AddAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default);
     Task<Result> UpdateAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default);
     Task<Result> DeleteAccountAsync(int accountId, CancellationToken cancellationToken = default);
+    Task<Result> ReorderAccountsAsync(IReadOnlyList<int> orderedAccountIds, CancellationToken cancellationToken = default);
 }

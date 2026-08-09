@@ -23,6 +23,8 @@ A Bank,Checking & Savings,Checking,Alpha,-$3.00,$4.00
             Assert.True(result.IsSuccess);
             Assert.NotNull(result.Document);
             Assert.Single(result.Warnings);
+            Assert.Equal("B Bank", result.Document!.Rows[0].InstitutionName);
+            Assert.Equal("A Bank", result.Document.Rows[1].InstitutionName);
             Assert.Equal(new DateOnly(2026, 1, 1), result.Document!.SortedSnapshotDates[0]);
             Assert.Equal(new DateOnly(2026, 2, 1), result.Document.SortedSnapshotDates[1]);
             Assert.Equal(-3.00m, result.Document.Rows[1].BalancesByDate[new DateOnly(2026, 2, 1)]);

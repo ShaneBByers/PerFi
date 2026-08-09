@@ -10,4 +10,5 @@ public interface IInstitutionRepository
     Task<Result<int>> AddInstitutionAsync(Institution institution, CancellationToken cancellationToken = default);
     Task<Result> UpdateInstitutionAsync(Institution institution, CancellationToken cancellationToken = default);
     Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default);
+    Task<Result> ReorderInstitutionsAsync(IReadOnlyList<int> orderedInstitutionIds, CancellationToken cancellationToken = default);
 }
