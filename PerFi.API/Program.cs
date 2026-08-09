@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PerFi.API.Infrastructure.Authentication;
 using PerFi.API.Infrastructure.ExceptionHandling;
 using PerFi.API.Infrastructure.HealthChecks;
 using PerFi.Bootstrapper;
+using PerFi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,13 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddPerFiBootstrapper(builder.Configuration);
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<PerFiDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
