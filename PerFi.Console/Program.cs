@@ -1,8 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using PerFi.Bootstrapper;
+using PerFi.Console;
+using PerFi.Console.Import;
 using PerFi.Console.Operations;
-using PerFi.Infrastructure.Extensions;
 
 var contentRootPath = ResolveContentRootPath();
 var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
@@ -20,6 +23,8 @@ builder.Configuration
         reloadOnChange: false)
     .AddEnvironmentVariables();
 
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+
 var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrWhiteSpace(defaultConnection))
@@ -28,18 +33,30 @@ if (string.IsNullOrWhiteSpace(defaultConnection))
         $"ConnectionStrings:DefaultConnection is missing. Checked content root: {contentRootPath}");
 }
 
-builder.Services.AddPerFiInfrastructure(builder.Configuration);
-builder.Services.AddScoped<FetchInstitutionsOperation>();
+var command = ConsoleCommand.Parse(args);
+
+builder.Services.AddPerFiBootstrapper(builder.Configuration);
+builder.Services.AddScoped<NetWorthCsvParser>();
+builder.Services.AddScoped<ImportNetWorthCsvOperation>();
 
 using var host = builder.Build();
 using var scope = host.Services.CreateScope();
 
 try
 {
-    System.Console.WriteLine("PerFi.Console starting operation: FetchInstitutionsOperation");
+    System.Console.WriteLine($"PerFi.Console starting command: {command.Verb}");
 
-    var operation = scope.ServiceProvider.GetRequiredService<FetchInstitutionsOperation>();
-    await operation.ExecuteAsync();
+    switch (command.Verb.ToLowerInvariant())
+    {
+        case "import-net-worth":
+        {
+            var operation = scope.ServiceProvider.GetRequiredService<ImportNetWorthCsvOperation>();
+            await operation.ExecuteAsync(command.CsvPath, command.DryRun);
+            break;
+        }
+        default:
+            throw new InvalidOperationException($"Unsupported command '{command.Verb}'.");
+    }
 
     System.Console.WriteLine("PerFi.Console operation completed successfully.");
 }

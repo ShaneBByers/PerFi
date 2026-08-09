@@ -17,6 +17,9 @@ appsettings.Development.json
 appsettings.Local.json
 secrets.json
 
+# Console sample/import data
+PerFi.Console/data/
+
 # Logs / temp
 *.log
 *.tmp

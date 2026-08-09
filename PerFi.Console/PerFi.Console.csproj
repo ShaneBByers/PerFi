@@ -4,6 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CsvHelper" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
@@ -11,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../PerFi.Bootstrapper/PerFi.Bootstrapper.csproj" />
     <ProjectReference Include="../PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
