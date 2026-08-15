@@ -7,10 +7,22 @@ namespace PerFi.API.Infrastructure.Authentication;
 
 public static class AuthenticationExtensions
 {
-    public static IServiceCollection AddPerFiAuthentication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddPerFiAuthentication(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
         var jwtSettings = configuration.GetSection("Jwt");
-        var key = jwtSettings["Key"] ?? "development-only-super-secret-key-12345";
+        var key = jwtSettings["Key"];
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            if (environment.IsDevelopment() || environment.IsEnvironment("Testing"))
+            {
+                key = "development-only-super-secret-key-12345";
+            }
+            else
+            {
+                throw new InvalidOperationException("JWT signing key is not configured. Set Jwt:Key in environment configuration.");
+            }
+        }
+
         var issuer = jwtSettings["Issuer"] ?? "PerFi";
         var audience = jwtSettings["Audience"] ?? "PerFi-Clients";
 

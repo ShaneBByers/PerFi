@@ -13,7 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddLogging();
-builder.Services.AddPerFiAuthentication(builder.Configuration);
+builder.Services.AddPerFiAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendCorsPolicy, policy =>

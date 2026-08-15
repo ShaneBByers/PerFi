@@ -1,3 +1,5 @@
 {
-    "dotnet.defaultSolution": "PerFi.slnx"
+    "dotnet.defaultSolution": "PerFi.slnx",
+    "appService.defaultWebAppToDeploy": "/subscriptions/cb24da72-6b2d-4359-b110-bb622e17631c/resourceGroups/per-fi-api-rg/providers/Microsoft.Web/sites/per-fi-api",
+    "appService.deploySubpath": "PerFi.API"
 }
