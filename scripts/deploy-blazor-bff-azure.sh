@@ -91,25 +91,6 @@ if [[ -z "$UI_ORIGIN" ]]; then
   fi
 fi
 
-APP_SETTINGS=(
-  "PerFiApi__BaseUrl=${API_BASE_URL}"
-  "Cors__AllowedOrigins__0=${UI_ORIGIN}"
-)
-
-if [[ -n "$UI_DEFAULT_HOSTNAME" ]]; then
-  UI_DEFAULT_ORIGIN="https://${UI_DEFAULT_HOSTNAME}"
-  if [[ "$UI_DEFAULT_ORIGIN" != "$UI_ORIGIN" ]]; then
-    APP_SETTINGS+=("Cors__AllowedOrigins__1=${UI_DEFAULT_ORIGIN}")
-  fi
-fi
-
-echo "Configuring BFF app settings (PerFiApi base URL + allowed UI origins)..."
-az webapp config appsettings set \
-  --resource-group "$RESOURCE_GROUP" \
-  --name "$APP_NAME" \
-  --settings "${APP_SETTINGS[@]}" \
-  1>/dev/null
-
 echo "Deploying ${ZIP_PATH} to App Service '${APP_NAME}' in resource group '${RESOURCE_GROUP}'..."
 az webapp deploy \
   --resource-group "$RESOURCE_GROUP" \

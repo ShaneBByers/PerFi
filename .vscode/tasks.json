@@ -23,9 +23,9 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "Publish API for Azure",
+      "label": "Publish + Deploy API to Azure",
       "type": "shell",
-      "command": "bash ./scripts/publish-api-azure.sh",
+      "command": "bash ./scripts/publish-api-azure.sh && bash ./scripts/deploy-api-azure.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -37,9 +37,9 @@
       }
     },
     {
-      "label": "Deploy API to Azure",
+      "label": "Publish + Deploy Blazor BFF to Azure",
       "type": "shell",
-      "command": "bash ./scripts/deploy-api-azure.sh",
+      "command": "bash ./scripts/publish-blazor-bff-azure.sh && bash ./scripts/deploy-blazor-bff-azure.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -51,51 +51,9 @@
       }
     },
     {
-      "label": "Publish Blazor BFF for Azure",
+      "label": "Publish + Deploy Blazor UI to Azure",
       "type": "shell",
-      "command": "bash ./scripts/publish-blazor-bff-azure.sh",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Deploy Blazor BFF to Azure",
-      "type": "shell",
-      "command": "bash ./scripts/deploy-blazor-bff-azure.sh",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Publish Blazor UI for Azure",
-      "type": "shell",
-      "command": "bash ./scripts/publish-blazor-ui-azure.sh",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Deploy Blazor UI to Azure",
-      "type": "shell",
-      "command": "bash ./scripts/deploy-blazor-ui-azure.sh",
+      "command": "bash ./scripts/publish-blazor-ui-azure.sh && bash ./scripts/deploy-blazor-ui-azure.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },

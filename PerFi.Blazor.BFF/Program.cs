@@ -12,23 +12,32 @@ var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "PerFiBlazorFrontend";
 const string AccessTokenClaimType = "perfi:api_token";
 
+var cookieDomain = builder.Configuration["Cookie:Domain"];
+var sameSiteValue = builder.Configuration["Cookie:SameSite"];
+var useCrossSiteCookies = string.Equals(builder.Configuration["Cookie:UseCrossSiteCookies"], "true", StringComparison.OrdinalIgnoreCase)
+	|| builder.Environment.IsProduction();
+
+if (string.IsNullOrWhiteSpace(sameSiteValue))
+	sameSiteValue = useCrossSiteCookies ? nameof(SameSiteMode.None) : nameof(SameSiteMode.Lax);
+
+var cookieSameSite = Enum.TryParse<SameSiteMode>(sameSiteValue, ignoreCase: true, out var parsedSameSite)
+	? parsedSameSite
+	: (useCrossSiteCookies ? SameSiteMode.None : SameSiteMode.Lax);
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 	.AddCookie(options =>
 	{
 		options.Cookie.Name = "PerFi.Blazor.BFF.Auth";
 		options.Cookie.HttpOnly = true;
-		// Blazor UI and BFF are hosted on different origins, so auth cookies must be cross-site.
 		options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-		options.Cookie.SameSite = SameSiteMode.None;
+		options.Cookie.SameSite = cookieSameSite;
+		if (!string.IsNullOrWhiteSpace(cookieDomain))
+			options.Cookie.Domain = cookieDomain;
+		options.Cookie.IsEssential = true;
 		options.SlidingExpiration = true;
 		options.ExpireTimeSpan = TimeSpan.FromHours(8);
 		options.Events = new CookieAuthenticationEvents
 		{
-			OnSigningIn = context =>
-			{
-				context.CookieOptions.Extensions.Add("Partitioned");
-				return Task.CompletedTask;
-			},
 			OnRedirectToLogin = context =>
 			{
 				if (IsApiRequest(context.Request))

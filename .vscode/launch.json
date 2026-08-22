@@ -91,6 +91,27 @@
       "url": "http://localhost:5240",
       "webRoot": "${workspaceFolder}/PerFi.Blazor",
       "timeout": 60000
+    },
+    {
+      "name": "Publish + Deploy API to Azure",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bash ./scripts/publish-api-azure.sh && bash ./scripts/deploy-api-azure.sh",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Publish + Deploy BFF to Azure",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bash ./scripts/publish-blazor-bff-azure.sh && bash ./scripts/deploy-blazor-bff-azure.sh",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Publish + Deploy Blazor UI to Azure",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bash ./scripts/publish-blazor-ui-azure.sh && bash ./scripts/deploy-blazor-ui-azure.sh",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }
