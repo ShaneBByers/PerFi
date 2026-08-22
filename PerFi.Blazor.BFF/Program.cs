@@ -40,24 +40,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 		{
 			OnRedirectToLogin = context =>
 			{
-				if (IsApiRequest(context.Request))
-				{
-					context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-					return Task.CompletedTask;
-				}
-
-				context.Response.Redirect(context.RedirectUri);
+				context.Response.StatusCode = StatusCodes.Status401Unauthorized;
 				return Task.CompletedTask;
 			},
 			OnRedirectToAccessDenied = context =>
 			{
-				if (IsApiRequest(context.Request))
-				{
-					context.Response.StatusCode = StatusCodes.Status403Forbidden;
-					return Task.CompletedTask;
-				}
-
-				context.Response.Redirect(context.RedirectUri);
+				context.Response.StatusCode = StatusCodes.Status403Forbidden;
 				return Task.CompletedTask;
 			}
 		};
@@ -110,7 +98,7 @@ app.UseAuthorization();
 app.MapGet("/", () => Results.Ok(new { service = "PerFi.Blazor.BFF" }))
 	.AllowAnonymous();
 
-app.MapPost("/bff/login", async (
+app.MapPost("/login", async (
 	LoginRequest request,
 	IHttpClientFactory httpClientFactory,
 	HttpContext httpContext,
@@ -143,20 +131,20 @@ app.MapPost("/bff/login", async (
 	return Results.Ok(new SessionResponse(true, request.Username));
 }).AllowAnonymous();
 
-app.MapPost("/bff/logout", async (HttpContext httpContext) =>
+app.MapPost("/logout", async (HttpContext httpContext) =>
 {
 	await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 	return Results.Ok(new SessionResponse(false, null));
 }).RequireAuthorization();
 
-app.MapGet("/bff/session", (HttpContext httpContext) =>
+app.MapGet("/session", (HttpContext httpContext) =>
 {
 	var isAuthenticated = httpContext.User.Identity?.IsAuthenticated ?? false;
 	var userName = isAuthenticated ? httpContext.User.Identity?.Name : null;
 	return Results.Ok(new SessionResponse(isAuthenticated, userName));
 }).AllowAnonymous();
 
-app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "DELETE", "PATCH"], async (
+app.MapMethods("/{**path}", ["GET", "POST", "PUT", "DELETE", "PATCH"], async (
 	HttpContext httpContext,
 	IHttpClientFactory httpClientFactory,
 	string path,
@@ -166,9 +154,13 @@ app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "DELETE", "PATCH"], async
 	if (string.IsNullOrWhiteSpace(accessToken))
 		return Results.Unauthorized();
 
+	var upstreamPathOnly = NormalizeUpstreamPath(path);
+	if (string.IsNullOrWhiteSpace(upstreamPathOnly))
+		return Results.NotFound();
+
 	var client = httpClientFactory.CreateClient("PerFiApi");
 	var query = httpContext.Request.QueryString.HasValue ? httpContext.Request.QueryString.Value : string.Empty;
-	var upstreamPath = $"api/{path}{query}";
+	var upstreamPath = $"{upstreamPathOnly}{query}";
 
 	using var proxyRequest = new HttpRequestMessage(new HttpMethod(httpContext.Request.Method), upstreamPath);
 	proxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -214,10 +206,17 @@ static string ResolvePerFiApiBaseUrl(IConfiguration configuration, IWebHostEnvir
 	return configuredBaseUrl;
 }
 
-static bool IsApiRequest(HttpRequest request)
-	=> request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
-		|| request.Path.StartsWithSegments("/bff", StringComparison.OrdinalIgnoreCase)
-		|| string.Equals(request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+static string? NormalizeUpstreamPath(string? path)
+{
+	if (string.IsNullOrWhiteSpace(path))
+		return null;
+
+	var trimmedPath = path.TrimStart('/');
+	if (trimmedPath.StartsWith("api/", StringComparison.OrdinalIgnoreCase))
+		return trimmedPath;
+
+	return $"api/{trimmedPath}";
+}
 
 public sealed record LoginRequest(string Username, string Password);
 

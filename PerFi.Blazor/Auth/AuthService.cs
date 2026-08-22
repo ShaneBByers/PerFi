@@ -14,7 +14,7 @@ public sealed class AuthService(
 
         try
         {
-            var session = await client.GetFromJsonAsync<SessionResponse>("bff/session");
+            var session = await client.GetFromJsonAsync<SessionResponse>("session");
             if (session?.IsAuthenticated is true)
             {
                 await authStateProvider.MarkUserAuthenticatedAsync(session.UserName ?? "PerFi User");
@@ -33,7 +33,7 @@ public sealed class AuthService(
     public async Task<ApiLoginResult> LoginAsync(string username, string password)
     {
         var client = httpClientFactory.CreateClient(HttpClientNames.AnonymousApiClient);
-        var response = await client.PostAsJsonAsync("bff/login", new LoginRequest(username, password));
+        var response = await client.PostAsJsonAsync("login", new LoginRequest(username, password));
 
         if (!response.IsSuccessStatusCode)
         {
@@ -48,7 +48,7 @@ public sealed class AuthService(
         SessionResponse? persistedSession;
         try
         {
-            persistedSession = await client.GetFromJsonAsync<SessionResponse>("bff/session");
+            persistedSession = await client.GetFromJsonAsync<SessionResponse>("session");
         }
         catch
         {
@@ -68,7 +68,7 @@ public sealed class AuthService(
     public async Task LogoutAsync()
     {
         var client = httpClientFactory.CreateClient(HttpClientNames.AnonymousApiClient);
-        await client.PostAsync("bff/logout", content: null);
+        await client.PostAsync("logout", content: null);
         await authStateProvider.MarkUserLoggedOutAsync();
     }
 
