@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,7 @@ const string AccessTokenClaimType = "perfi:api_token";
 
 var cookieDomain = builder.Configuration["Cookie:Domain"];
 var sameSiteValue = builder.Configuration["Cookie:SameSite"];
+var securePolicyValue = builder.Configuration["Cookie:SecurePolicy"];
 var useCrossSiteCookies = string.Equals(builder.Configuration["Cookie:UseCrossSiteCookies"], "true", StringComparison.OrdinalIgnoreCase)
 	|| builder.Environment.IsProduction();
 
@@ -24,12 +26,23 @@ var cookieSameSite = Enum.TryParse<SameSiteMode>(sameSiteValue, ignoreCase: true
 	? parsedSameSite
 	: (useCrossSiteCookies ? SameSiteMode.None : SameSiteMode.Lax);
 
+var defaultSecurePolicy = builder.Environment.IsDevelopment() && cookieSameSite != SameSiteMode.None
+	? CookieSecurePolicy.SameAsRequest
+	: CookieSecurePolicy.Always;
+
+var cookieSecurePolicy = Enum.TryParse<CookieSecurePolicy>(securePolicyValue, ignoreCase: true, out var parsedSecurePolicy)
+	? parsedSecurePolicy
+	: defaultSecurePolicy;
+
+if (cookieSameSite == SameSiteMode.None && cookieSecurePolicy != CookieSecurePolicy.Always)
+	cookieSecurePolicy = CookieSecurePolicy.Always;
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 	.AddCookie(options =>
 	{
 		options.Cookie.Name = "PerFi.Blazor.BFF.Auth";
 		options.Cookie.HttpOnly = true;
-		options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+		options.Cookie.SecurePolicy = cookieSecurePolicy;
 		options.Cookie.SameSite = cookieSameSite;
 		if (!string.IsNullOrWhiteSpace(cookieDomain))
 			options.Cookie.Domain = cookieDomain;
@@ -57,6 +70,7 @@ builder.Services.AddHttpClient("PerFiApi", client =>
 {
 	var apiBaseUrl = ResolvePerFiApiBaseUrl(builder.Configuration, builder.Environment);
 	client.BaseAddress = new Uri(apiBaseUrl);
+	client.Timeout = TimeSpan.FromSeconds(15);
 });
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -66,11 +80,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 	options.KnownProxies.Clear();
 });
 
+var allowedOrigins = ResolveAllowedCorsOrigins(builder.Configuration, builder.Logging);
+
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy(FrontendCorsPolicy, policy =>
 	{
-		var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 		if (allowedOrigins.Length == 0)
 			return;
 
@@ -102,33 +117,52 @@ app.MapPost("/login", async (
 	LoginRequest request,
 	IHttpClientFactory httpClientFactory,
 	HttpContext httpContext,
+	ILogger<Program> logger,
 	CancellationToken cancellationToken) =>
 {
 	var client = httpClientFactory.CreateClient("PerFiApi");
-	using var response = await client.PostAsJsonAsync("api/auth/login", request, cancellationToken);
 
-	if (!response.IsSuccessStatusCode)
+	try
 	{
-		var failedBody = await response.Content.ReadAsStringAsync(cancellationToken);
-		var failedContentType = response.Content.Headers.ContentType?.ToString() ?? "application/json";
-		return Results.Content(failedBody, failedContentType, Encoding.UTF8, (int)response.StatusCode);
+		using var response = await client.PostAsJsonAsync("api/auth/login", request, cancellationToken);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var failedBody = await response.Content.ReadAsStringAsync(cancellationToken);
+			var failedContentType = response.Content.Headers.ContentType?.ToString() ?? "application/json";
+			return Results.Content(failedBody, failedContentType, Encoding.UTF8, (int)response.StatusCode);
+		}
+
+		var loginPayload = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken: cancellationToken);
+		if (loginPayload is null || string.IsNullOrWhiteSpace(loginPayload.Token))
+			return Results.Problem("The upstream login response did not include a token.", statusCode: StatusCodes.Status502BadGateway);
+
+		var claims = new List<Claim>
+		{
+			new(ClaimTypes.Name, request.Username),
+			new(AccessTokenClaimType, loginPayload.Token)
+		};
+
+		var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+		var principal = new ClaimsPrincipal(identity);
+		await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+		return Results.Ok(new SessionResponse(true, request.Username));
 	}
-
-	var loginPayload = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken: cancellationToken);
-	if (loginPayload is null || string.IsNullOrWhiteSpace(loginPayload.Token))
-		return Results.Problem("The upstream login response did not include a token.", statusCode: StatusCodes.Status502BadGateway);
-
-	var claims = new List<Claim>
+	catch (TaskCanceledException ex) when (!ex.CancellationToken.IsCancellationRequested)
 	{
-		new(ClaimTypes.Name, request.Username),
-		new(AccessTokenClaimType, loginPayload.Token)
-	};
-
-	var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-	var principal = new ClaimsPrincipal(identity);
-	await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-	return Results.Ok(new SessionResponse(true, request.Username));
+		logger.LogError(ex, "Login request to upstream API timed out for user '{UserName}'.", request.Username);
+		return Results.Problem(
+			"The authentication service is not responding. Please try again in a moment.",
+			statusCode: StatusCodes.Status504GatewayTimeout);
+	}
+	catch (HttpRequestException ex)
+	{
+		logger.LogError(ex, "Login request to upstream API failed for user '{UserName}'.", request.Username);
+		return Results.Problem(
+			"The authentication service is currently unavailable. Please try again in a moment.",
+			statusCode: StatusCodes.Status503ServiceUnavailable);
+	}
 }).AllowAnonymous();
 
 app.MapPost("/logout", async (HttpContext httpContext) =>
@@ -204,6 +238,48 @@ static string ResolvePerFiApiBaseUrl(IConfiguration configuration, IWebHostEnvir
 		throw new InvalidOperationException($"Invalid PerFiApi:BaseUrl value '{configuredBaseUrl}'. Configure an absolute URL.");
 
 	return configuredBaseUrl;
+}
+
+static string[] ResolveAllowedCorsOrigins(IConfiguration configuration, ILoggingBuilder logging)
+{
+	var loggerFactory = LoggerFactory.Create(builder =>
+	{
+		foreach (var provider in logging.Services)
+		{
+			builder.Services.Add(provider);
+		}
+	});
+	var logger = loggerFactory.CreateLogger("PerFi.Blazor.BFF.Cors");
+
+	var configuredOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+	var normalizedOrigins = new List<string>();
+
+	foreach (var configuredOrigin in configuredOrigins)
+	{
+		if (string.IsNullOrWhiteSpace(configuredOrigin))
+			continue;
+
+		var trimmedOrigin = configuredOrigin.Trim().TrimEnd('/');
+		if (!Uri.TryCreate(trimmedOrigin, UriKind.Absolute, out var parsedOrigin)
+			|| (parsedOrigin.Scheme != Uri.UriSchemeHttp && parsedOrigin.Scheme != Uri.UriSchemeHttps))
+		{
+			logger.LogWarning("Skipping invalid CORS origin '{Origin}'. Configure absolute http/https origins.", configuredOrigin);
+			continue;
+		}
+
+		normalizedOrigins.Add($"{parsedOrigin.Scheme}://{parsedOrigin.Authority}");
+	}
+
+	var distinctOrigins = normalizedOrigins
+		.Distinct(StringComparer.OrdinalIgnoreCase)
+		.ToArray();
+
+	if (distinctOrigins.Length == 0)
+		logger.LogWarning("No valid CORS origins configured in Cors:AllowedOrigins. Cross-origin browser requests will be blocked.");
+	else
+		logger.LogInformation("Configured CORS allowed origins: {Origins}", string.Join(", ", distinctOrigins));
+
+	return distinctOrigins;
 }
 
 static string? NormalizeUpstreamPath(string? path)
