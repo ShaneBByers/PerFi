@@ -14,9 +14,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddOptions<ApiOptions>()
 	.Bind(builder.Configuration.GetSection(ApiOptions.SectionName));
 
-var apiBaseUrl = builder.Configuration[$"{ApiOptions.SectionName}:BaseUrl"];
-if (string.IsNullOrWhiteSpace(apiBaseUrl))
-	apiBaseUrl = "http://localhost:5239";
+var apiBaseUrl = ResolveApiBaseUrl(builder.Configuration[$"{ApiOptions.SectionName}:BaseUrl"], builder.HostEnvironment);
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddApexCharts();
@@ -68,3 +66,17 @@ builder.Services.AddHttpClient<ISnapshotsApiClient, SnapshotsApiClient>(client =
 	.AddHttpMessageHandler<AuthMessageHandler>();
 
 await builder.Build().RunAsync();
+
+static string ResolveApiBaseUrl(string? configuredBaseUrl, IWebAssemblyHostEnvironment hostEnvironment)
+{
+	if (string.IsNullOrWhiteSpace(configuredBaseUrl))
+		return hostEnvironment.IsDevelopment() ? "http://localhost:5239" : hostEnvironment.BaseAddress;
+
+	if (Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out _))
+		return configuredBaseUrl;
+
+	if (Uri.TryCreate(new Uri(hostEnvironment.BaseAddress), configuredBaseUrl, out var resolved))
+		return resolved.ToString();
+
+	throw new InvalidOperationException($"Invalid Api:BaseUrl value '{configuredBaseUrl}'. Configure an absolute URL or relative path.");
+}

@@ -21,6 +21,90 @@
       "type": "process",
       "args": ["build", "${workspaceFolder}/PerFi.slnx"],
       "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Publish API for Azure",
+      "type": "shell",
+      "command": "bash ./scripts/publish-api-azure.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Deploy API to Azure",
+      "type": "shell",
+      "command": "bash ./scripts/deploy-api-azure.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Publish Blazor BFF for Azure",
+      "type": "shell",
+      "command": "bash ./scripts/publish-blazor-bff-azure.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Deploy Blazor BFF to Azure",
+      "type": "shell",
+      "command": "bash ./scripts/deploy-blazor-bff-azure.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Publish Blazor UI for Azure",
+      "type": "shell",
+      "command": "bash ./scripts/publish-blazor-ui-azure.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Deploy Blazor UI to Azure",
+      "type": "shell",
+      "command": "bash ./scripts/deploy-blazor-ui-azure.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ]
 }

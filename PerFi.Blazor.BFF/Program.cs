@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,20 +17,56 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 	{
 		options.Cookie.Name = "PerFi.Blazor.BFF.Auth";
 		options.Cookie.HttpOnly = true;
-		options.Cookie.SameSite = SameSiteMode.Lax;
+		// Blazor UI and BFF are hosted on different origins, so auth cookies must be cross-site.
+		options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+		options.Cookie.SameSite = SameSiteMode.None;
 		options.SlidingExpiration = true;
 		options.ExpireTimeSpan = TimeSpan.FromHours(8);
+		options.Events = new CookieAuthenticationEvents
+		{
+			OnSigningIn = context =>
+			{
+				context.CookieOptions.Extensions.Add("Partitioned");
+				return Task.CompletedTask;
+			},
+			OnRedirectToLogin = context =>
+			{
+				if (IsApiRequest(context.Request))
+				{
+					context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+					return Task.CompletedTask;
+				}
+
+				context.Response.Redirect(context.RedirectUri);
+				return Task.CompletedTask;
+			},
+			OnRedirectToAccessDenied = context =>
+			{
+				if (IsApiRequest(context.Request))
+				{
+					context.Response.StatusCode = StatusCodes.Status403Forbidden;
+					return Task.CompletedTask;
+				}
+
+				context.Response.Redirect(context.RedirectUri);
+				return Task.CompletedTask;
+			}
+		};
 	});
 
 builder.Services.AddAuthorization();
 
 builder.Services.AddHttpClient("PerFiApi", client =>
 {
-	var apiBaseUrl = builder.Configuration["PerFiApi:BaseUrl"];
-	if (string.IsNullOrWhiteSpace(apiBaseUrl))
-		apiBaseUrl = "http://localhost:5238";
-
+	var apiBaseUrl = ResolvePerFiApiBaseUrl(builder.Configuration, builder.Environment);
 	client.BaseAddress = new Uri(apiBaseUrl);
+});
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+	options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+	options.KnownIPNetworks.Clear();
+	options.KnownProxies.Clear();
 });
 
 builder.Services.AddCors(options =>
@@ -48,6 +85,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
+
+if (!app.Environment.IsDevelopment())
+{
+	app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
@@ -143,6 +187,28 @@ app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "DELETE", "PATCH"], async
 }).RequireAuthorization();
 
 app.Run();
+
+static string ResolvePerFiApiBaseUrl(IConfiguration configuration, IWebHostEnvironment environment)
+{
+	var configuredBaseUrl = configuration["PerFiApi:BaseUrl"];
+	if (string.IsNullOrWhiteSpace(configuredBaseUrl))
+	{
+		if (environment.IsDevelopment() || environment.IsEnvironment("Testing"))
+			return "http://localhost:5238";
+
+		throw new InvalidOperationException("PerFi API base URL is not configured. Set PerFiApi:BaseUrl in environment configuration.");
+	}
+
+	if (!Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out _))
+		throw new InvalidOperationException($"Invalid PerFiApi:BaseUrl value '{configuredBaseUrl}'. Configure an absolute URL.");
+
+	return configuredBaseUrl;
+}
+
+static bool IsApiRequest(HttpRequest request)
+	=> request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
+		|| request.Path.StartsWithSegments("/bff", StringComparison.OrdinalIgnoreCase)
+		|| string.Equals(request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
 
 public sealed record LoginRequest(string Username, string Password);
 

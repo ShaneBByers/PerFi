@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PerFi.API.Infrastructure.Authentication;
 using PerFi.API.Infrastructure.ExceptionHandling;
@@ -44,9 +46,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<PerFiDbContext>();
-    dbContext.Database.Migrate();
+    await ApplyMigrationsWithRetryAsync(app.Services, app.Logger);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -66,3 +66,35 @@ app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
+
+static async Task ApplyMigrationsWithRetryAsync(IServiceProvider services, ILogger logger, CancellationToken cancellationToken = default)
+{
+    const int maxAttempts = 3;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        try
+        {
+            using var scope = services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PerFiDbContext>();
+            await dbContext.Database.MigrateAsync(cancellationToken);
+            return;
+        }
+        catch (SqlException ex) when (IsTransientSqlTimeout(ex) && attempt < maxAttempts)
+        {
+            var retryDelay = TimeSpan.FromSeconds(attempt * 5);
+            logger.LogWarning(
+                ex,
+                "Database migration attempt {Attempt}/{MaxAttempts} failed due to SQL timeout. Retrying in {DelaySeconds} seconds.",
+                attempt,
+                maxAttempts,
+                retryDelay.TotalSeconds);
+            await Task.Delay(retryDelay, cancellationToken);
+        }
+    }
+}
+
+static bool IsTransientSqlTimeout(SqlException ex)
+    => ex.Number == -2
+       || ex.Message.Contains("Connection Timeout Expired", StringComparison.OrdinalIgnoreCase)
+       || ex.InnerException is Win32Exception { NativeErrorCode: 258 };

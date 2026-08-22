@@ -45,7 +45,23 @@ public sealed class AuthService(
         if (session is null || !session.IsAuthenticated)
             return ApiLoginResult.Failure("Login response did not establish a session.");
 
-        await authStateProvider.MarkUserAuthenticatedAsync(session.UserName ?? username);
+        SessionResponse? persistedSession;
+        try
+        {
+            persistedSession = await client.GetFromJsonAsync<SessionResponse>("bff/session");
+        }
+        catch
+        {
+            persistedSession = null;
+        }
+
+        if (persistedSession?.IsAuthenticated is not true)
+        {
+            await authStateProvider.MarkUserLoggedOutAsync();
+            return ApiLoginResult.Failure("Login succeeded, but the browser did not persist the session cookie. Cross-site cookies may be blocked for this site.");
+        }
+
+        await authStateProvider.MarkUserAuthenticatedAsync(persistedSession.UserName ?? username);
         return ApiLoginResult.Success();
     }
 

@@ -53,11 +53,15 @@ public sealed class ImportNetWorthCsvOperation(
             return;
         }
 
-        await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
-        await ImportAsync(importPlan, cancellationToken);
+        var executionStrategy = dbContext.Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
+            await ImportAsync(importPlan, cancellationToken);
 
-        if (transaction is not null)
-            await transaction.CommitAsync(cancellationToken);
+            if (transaction is not null)
+                await transaction.CommitAsync(cancellationToken);
+        });
 
         System.Console.WriteLine();
         System.Console.WriteLine(

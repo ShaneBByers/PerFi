@@ -15,10 +15,14 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<PerFiDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
-                sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
-                    maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null)));
+                sqlServerOptions =>
+                {
+                    sqlServerOptions.CommandTimeout(60);
+                    sqlServerOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
+                }));
 
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IAccountTypeGroupRepository, AccountTypeGroupRepository>();

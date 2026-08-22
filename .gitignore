@@ -1,6 +1,7 @@
 # Build output
 bin/
 obj/
+artifacts/
 
 # Editor / local tooling
 .vs/
