@@ -10,9 +10,9 @@ UI_APP_NAME="${PERFI_UI_APP_NAME:-per-fi-blazor-ui}"
 SUBSCRIPTION="${AZURE_SUBSCRIPTION:-PerFiSubscription}"
 API_APP_NAME="${PERFI_API_APP_NAME:-per-fi-api}"
 API_RESOURCE_GROUP="${PERFI_API_RESOURCE_GROUP:-per-fi-api-rg}"
-API_BASE_URL="${PERFI_API_BASE_URL:-}"
-UI_ORIGIN="${PERFI_UI_ORIGIN:-}"
-UI_CUSTOM_DOMAIN_ORIGIN="${PERFI_UI_CUSTOM_DOMAIN_ORIGIN:-https://www.per-fi.net}"
+API_BASE_URL="${PERFI_API_BASE_URL:-https://api.per-fi.net}"
+UI_ORIGIN="${PERFI_UI_ORIGIN:-https://www.per-fi.net}"
+UI_FALLBACK_ORIGIN="${PERFI_UI_FALLBACK_ORIGIN:-}"
 
 usage() {
   cat <<'EOF'
@@ -23,16 +23,16 @@ Defaults:
   Resource group: per-fi-blazor-rg
   App Service name: per-fi-blazor-bff
   Subscription: PerFiSubscription
-  API base URL: Auto-discovered from API App Service default hostname
-  UI origin: https://per-fi-blazor-ui.azurestaticapps.net
+  API base URL: https://api.per-fi.net (Front Door custom domain)
+  UI origin: https://www.per-fi.net (Front Door custom domain)
 
 Optional environment variables:
   PERFI_API_APP_NAME   API App Service name used for hostname discovery.
   PERFI_API_RESOURCE_GROUP  API resource group used for hostname discovery.
-  PERFI_API_BASE_URL   Override upstream API URL used by BFF.
-  PERFI_UI_APP_NAME    Static Web App name used to resolve default hostname.
-  PERFI_UI_ORIGIN      Primary frontend origin allowed by BFF CORS.
-  PERFI_UI_CUSTOM_DOMAIN_ORIGIN  Custom domain origin allowed by BFF CORS (default: https://www.per-fi.net).
+  PERFI_API_BASE_URL   Override upstream API URL used by BFF (default: https://api.per-fi.net).
+  PERFI_UI_APP_NAME    Static Web App name used to resolve the fallback default hostname.
+  PERFI_UI_ORIGIN      Primary frontend origin allowed by BFF CORS (default: https://www.per-fi.net).
+  PERFI_UI_FALLBACK_ORIGIN  Extra frontend origin allowed by BFF CORS; auto-discovered from the Static Web App's default *.azurestaticapps.net hostname if unset.
 EOF
 }
 
@@ -65,31 +65,15 @@ if [[ -n "$SUBSCRIPTION" ]]; then
   az account set --subscription "$SUBSCRIPTION"
 fi
 
-if [[ -z "$API_BASE_URL" ]]; then
-  API_DEFAULT_HOSTNAME="$(az webapp show \
-    --resource-group "$API_RESOURCE_GROUP" \
-    --name "$API_APP_NAME" \
-    --query "defaultHostName" \
+if [[ -z "$UI_FALLBACK_ORIGIN" ]]; then
+  UI_DEFAULT_HOSTNAME="$(az staticwebapp show \
+    --name "$UI_APP_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "defaultHostname" \
     -o tsv 2>/dev/null || true)"
 
-  if [[ -n "$API_DEFAULT_HOSTNAME" ]]; then
-    API_BASE_URL="https://${API_DEFAULT_HOSTNAME}"
-  else
-    API_BASE_URL="https://${API_APP_NAME}.azurewebsites.net"
-  fi
-fi
-
-UI_DEFAULT_HOSTNAME="$(az staticwebapp show \
-  --name "$UI_APP_NAME" \
-  --resource-group "$RESOURCE_GROUP" \
-  --query "defaultHostname" \
-  -o tsv 2>/dev/null || true)"
-
-if [[ -z "$UI_ORIGIN" ]]; then
   if [[ -n "$UI_DEFAULT_HOSTNAME" ]]; then
-    UI_ORIGIN="https://${UI_DEFAULT_HOSTNAME}"
-  else
-    UI_ORIGIN="https://${UI_APP_NAME}.azurestaticapps.net"
+    UI_FALLBACK_ORIGIN="https://${UI_DEFAULT_HOSTNAME}"
   fi
 fi
 
@@ -100,7 +84,7 @@ az webapp config appsettings set \
   --settings \
     "PerFiApi__BaseUrl=${API_BASE_URL}" \
     "Cors__AllowedOrigins__0=${UI_ORIGIN}" \
-    "Cors__AllowedOrigins__1=${UI_CUSTOM_DOMAIN_ORIGIN}" \
+    "Cors__AllowedOrigins__1=${UI_FALLBACK_ORIGIN}" \
     "ASPNETCORE_ENVIRONMENT=Production" \
     "ASPNETCORE_URLS=http://0.0.0.0:8080" \
     "WEBSITES_PORT=8080" \
@@ -122,6 +106,6 @@ echo "Deployment complete."
 echo "URL: https://${APP_NAME}.azurewebsites.net"
 echo "BFF PerFiApi__BaseUrl: ${API_BASE_URL}"
 echo "BFF allowed origin[0]: ${UI_ORIGIN}"
-if [[ -n "$UI_DEFAULT_HOSTNAME" ]]; then
-  echo "BFF resolved Static Web App default hostname: https://${UI_DEFAULT_HOSTNAME}"
+if [[ -n "$UI_FALLBACK_ORIGIN" ]]; then
+  echo "BFF allowed origin[1] (fallback): ${UI_FALLBACK_ORIGIN}"
 fi

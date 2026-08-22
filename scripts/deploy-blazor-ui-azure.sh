@@ -7,8 +7,7 @@ PUBLISH_DIR="${ROOT}/artifacts/perfi-blazor-ui-publish"
 RESOURCE_GROUP="per-fi-blazor-rg"
 APP_NAME="${AZURE_APP_NAME:-per-fi-blazor-ui}"
 SUBSCRIPTION="${AZURE_SUBSCRIPTION:-PerFiSubscription}"
-BFF_APP_NAME="${PERFI_BFF_APP_NAME:-per-fi-blazor-bff}"
-BFF_BASE_URL="${PERFI_BFF_BASE_URL:-}"
+BFF_BASE_URL="${PERFI_BFF_BASE_URL:-https://auth.per-fi.net}"
 SWA_DEFAULT_HOSTNAME=""
 
 usage() {
@@ -20,11 +19,10 @@ Defaults:
   Resource group: per-fi-blazor-rg
   Static Web App name: per-fi-blazor-ui
   Subscription: PerFiSubscription
-  BFF base URL: Auto-discovered from Azure App Service default hostname
+  BFF base URL: https://auth.per-fi.net (Front Door custom domain)
 
 Optional environment variables:
-  PERFI_BFF_APP_NAME   BFF App Service name used to build default BFF URL.
-  PERFI_BFF_BASE_URL   Override API base URL written to UI appsettings.json.
+  PERFI_BFF_BASE_URL   Override API base URL written to UI appsettings.json (default: https://auth.per-fi.net).
 EOF
 }
 
@@ -62,20 +60,6 @@ SWA_DEFAULT_HOSTNAME="$(az staticwebapp show \
   --resource-group "$RESOURCE_GROUP" \
   --query "defaultHostname" \
   -o tsv 2>/dev/null || true)"
-
-if [[ -z "$BFF_BASE_URL" ]]; then
-  BFF_DEFAULT_HOSTNAME="$(az webapp show \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$BFF_APP_NAME" \
-    --query "defaultHostName" \
-    -o tsv 2>/dev/null || true)"
-
-  if [[ -n "$BFF_DEFAULT_HOSTNAME" ]]; then
-    BFF_BASE_URL="https://${BFF_DEFAULT_HOSTNAME}"
-  else
-    BFF_BASE_URL="https://${BFF_APP_NAME}.azurewebsites.net"
-  fi
-fi
 
 echo "Fetching deployment token for Static Web App '${APP_NAME}'..."
 DEPLOYMENT_TOKEN="$(az staticwebapp secrets list \

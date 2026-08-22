@@ -23,8 +23,9 @@ builder.Services.AddAuthentication(options =>
 	{
 		options.Cookie.Name = "PerFi.Blazor.BFF.Auth";
 		options.Cookie.HttpOnly = true;
-		// UI and BFF live on different Azure hostnames, so the cookie must be sent cross-site.
-		options.Cookie.SameSite = SameSiteMode.None;
+		// UI (www.per-fi.net) and BFF (auth.per-fi.net) are sibling subdomains of the same registrable domain,
+		// so this is a same-site request and Lax is sufficient - avoids Safari ITP blocking SameSite=None cookies.
+		options.Cookie.SameSite = SameSiteMode.Lax;
 		options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 		options.Cookie.IsEssential = true;
 		options.SlidingExpiration = true;
