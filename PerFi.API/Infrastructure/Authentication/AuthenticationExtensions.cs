@@ -9,6 +9,8 @@ public static class AuthenticationExtensions
 {
     public static IServiceCollection AddPerFiAuthentication(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
+        services.AddSingleton<JwtTokenService>();
+
         var jwtSettings = configuration.GetSection("Jwt");
         var key = jwtSettings["Key"];
         if (string.IsNullOrWhiteSpace(key))
@@ -25,8 +27,6 @@ public static class AuthenticationExtensions
 
         var issuer = jwtSettings["Issuer"] ?? "PerFi";
         var audience = jwtSettings["Audience"] ?? "PerFi-Clients";
-
-        services.AddSingleton<JwtTokenService>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

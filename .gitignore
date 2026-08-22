@@ -25,6 +25,8 @@ PerFi.Console/data/
 *.log
 *.tmp
 *.cache
+logs/
+webapp_logs.zip
 
 # OS noise
 .DS_Store

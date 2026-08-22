@@ -62,7 +62,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseExceptionHandler();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 app.MapControllers();
 
 app.Run();

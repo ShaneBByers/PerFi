@@ -12,6 +12,7 @@ API_APP_NAME="${PERFI_API_APP_NAME:-per-fi-api}"
 API_RESOURCE_GROUP="${PERFI_API_RESOURCE_GROUP:-per-fi-api-rg}"
 API_BASE_URL="${PERFI_API_BASE_URL:-}"
 UI_ORIGIN="${PERFI_UI_ORIGIN:-}"
+UI_CUSTOM_DOMAIN_ORIGIN="${PERFI_UI_CUSTOM_DOMAIN_ORIGIN:-https://www.per-fi.net}"
 
 usage() {
   cat <<'EOF'
@@ -31,6 +32,7 @@ Optional environment variables:
   PERFI_API_BASE_URL   Override upstream API URL used by BFF.
   PERFI_UI_APP_NAME    Static Web App name used to resolve default hostname.
   PERFI_UI_ORIGIN      Primary frontend origin allowed by BFF CORS.
+  PERFI_UI_CUSTOM_DOMAIN_ORIGIN  Custom domain origin allowed by BFF CORS (default: https://www.per-fi.net).
 EOF
 }
 
@@ -90,6 +92,19 @@ if [[ -z "$UI_ORIGIN" ]]; then
     UI_ORIGIN="https://${UI_APP_NAME}.azurestaticapps.net"
   fi
 fi
+
+echo "Applying App Service settings for BFF..."
+az webapp config appsettings set \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$APP_NAME" \
+  --settings \
+    "PerFiApi__BaseUrl=${API_BASE_URL}" \
+    "Cors__AllowedOrigins__0=${UI_ORIGIN}" \
+    "Cors__AllowedOrigins__1=${UI_CUSTOM_DOMAIN_ORIGIN}" \
+    "ASPNETCORE_ENVIRONMENT=Production" \
+    "ASPNETCORE_URLS=http://0.0.0.0:8080" \
+    "WEBSITES_PORT=8080" \
+  >/dev/null
 
 echo "Deploying ${ZIP_PATH} to App Service '${APP_NAME}' in resource group '${RESOURCE_GROUP}'..."
 az webapp deploy \

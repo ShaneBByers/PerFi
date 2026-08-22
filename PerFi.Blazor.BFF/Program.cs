@@ -13,42 +13,23 @@ var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "PerFiBlazorFrontend";
 const string AccessTokenClaimType = "perfi:api_token";
 
-var cookieDomain = builder.Configuration["Cookie:Domain"];
-var sameSiteValue = builder.Configuration["Cookie:SameSite"];
-var securePolicyValue = builder.Configuration["Cookie:SecurePolicy"];
-var useCrossSiteCookies = string.Equals(builder.Configuration["Cookie:UseCrossSiteCookies"], "true", StringComparison.OrdinalIgnoreCase)
-	|| builder.Environment.IsProduction();
-
-if (string.IsNullOrWhiteSpace(sameSiteValue))
-	sameSiteValue = useCrossSiteCookies ? nameof(SameSiteMode.None) : nameof(SameSiteMode.Lax);
-
-var cookieSameSite = Enum.TryParse<SameSiteMode>(sameSiteValue, ignoreCase: true, out var parsedSameSite)
-	? parsedSameSite
-	: (useCrossSiteCookies ? SameSiteMode.None : SameSiteMode.Lax);
-
-var defaultSecurePolicy = builder.Environment.IsDevelopment() && cookieSameSite != SameSiteMode.None
-	? CookieSecurePolicy.SameAsRequest
-	: CookieSecurePolicy.Always;
-
-var cookieSecurePolicy = Enum.TryParse<CookieSecurePolicy>(securePolicyValue, ignoreCase: true, out var parsedSecurePolicy)
-	? parsedSecurePolicy
-	: defaultSecurePolicy;
-
-if (cookieSameSite == SameSiteMode.None && cookieSecurePolicy != CookieSecurePolicy.Always)
-	cookieSecurePolicy = CookieSecurePolicy.Always;
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+	options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+	options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+	options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
 	.AddCookie(options =>
 	{
 		options.Cookie.Name = "PerFi.Blazor.BFF.Auth";
 		options.Cookie.HttpOnly = true;
-		options.Cookie.SecurePolicy = cookieSecurePolicy;
-		options.Cookie.SameSite = cookieSameSite;
-		if (!string.IsNullOrWhiteSpace(cookieDomain))
-			options.Cookie.Domain = cookieDomain;
+		// UI and BFF live on different Azure hostnames, so the cookie must be sent cross-site.
+		options.Cookie.SameSite = SameSiteMode.None;
+		options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 		options.Cookie.IsEssential = true;
 		options.SlidingExpiration = true;
 		options.ExpireTimeSpan = TimeSpan.FromHours(8);
+		// This is a JSON API for the Blazor client, not a page app; return status codes instead of redirecting.
 		options.Events = new CookieAuthenticationEvents
 		{
 			OnRedirectToLogin = context =>
@@ -64,8 +45,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 		};
 	});
 
-builder.Services.AddAuthorization();
-
 builder.Services.AddHttpClient("PerFiApi", client =>
 {
 	var apiBaseUrl = ResolvePerFiApiBaseUrl(builder.Configuration, builder.Environment);
@@ -80,21 +59,24 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 	options.KnownProxies.Clear();
 });
 
-var allowedOrigins = ResolveAllowedCorsOrigins(builder.Configuration, builder.Logging);
-
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy(FrontendCorsPolicy, policy =>
 	{
-		if (allowedOrigins.Length == 0)
-			return;
+		var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-		policy.WithOrigins(allowedOrigins)
-			.AllowAnyHeader()
-			.AllowAnyMethod()
-			.AllowCredentials();
+		if (allowedOrigins.Length > 0)
+		{
+			policy.WithOrigins(allowedOrigins)
+				.AllowAnyHeader()
+				.AllowAnyMethod()
+				.AllowCredentials();
+		}
 	});
 });
+
+// Required for UseAuthorization(); minimal APIs don't register this implicitly like AddControllers() does.
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -214,11 +196,19 @@ app.MapMethods("/{**path}", ["GET", "POST", "PUT", "DELETE", "PATCH"], async (
 		}
 	}
 
-	using var proxyResponse = await client.SendAsync(proxyRequest, cancellationToken);
-	var responseBody = await proxyResponse.Content.ReadAsStringAsync(cancellationToken);
-	var responseContentType = proxyResponse.Content.Headers.ContentType?.ToString() ?? "application/json";
+	// Catch failures here so the response still flows through the CORS middleware instead of a bare, header-less error.
+	try
+	{
+		using var proxyResponse = await client.SendAsync(proxyRequest, cancellationToken);
+		var responseBody = await proxyResponse.Content.ReadAsStringAsync(cancellationToken);
+		var responseContentType = proxyResponse.Content.Headers.ContentType?.ToString() ?? "application/json";
 
-	return Results.Content(responseBody, responseContentType, Encoding.UTF8, (int)proxyResponse.StatusCode);
+		return Results.Content(responseBody, responseContentType, Encoding.UTF8, (int)proxyResponse.StatusCode);
+	}
+	catch (Exception ex)
+	{
+		return Results.Problem($"Upstream API call failed: {ex.Message}", statusCode: StatusCodes.Status502BadGateway);
+	}
 }).RequireAuthorization();
 
 app.Run();
@@ -238,48 +228,6 @@ static string ResolvePerFiApiBaseUrl(IConfiguration configuration, IWebHostEnvir
 		throw new InvalidOperationException($"Invalid PerFiApi:BaseUrl value '{configuredBaseUrl}'. Configure an absolute URL.");
 
 	return configuredBaseUrl;
-}
-
-static string[] ResolveAllowedCorsOrigins(IConfiguration configuration, ILoggingBuilder logging)
-{
-	var loggerFactory = LoggerFactory.Create(builder =>
-	{
-		foreach (var provider in logging.Services)
-		{
-			builder.Services.Add(provider);
-		}
-	});
-	var logger = loggerFactory.CreateLogger("PerFi.Blazor.BFF.Cors");
-
-	var configuredOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-	var normalizedOrigins = new List<string>();
-
-	foreach (var configuredOrigin in configuredOrigins)
-	{
-		if (string.IsNullOrWhiteSpace(configuredOrigin))
-			continue;
-
-		var trimmedOrigin = configuredOrigin.Trim().TrimEnd('/');
-		if (!Uri.TryCreate(trimmedOrigin, UriKind.Absolute, out var parsedOrigin)
-			|| (parsedOrigin.Scheme != Uri.UriSchemeHttp && parsedOrigin.Scheme != Uri.UriSchemeHttps))
-		{
-			logger.LogWarning("Skipping invalid CORS origin '{Origin}'. Configure absolute http/https origins.", configuredOrigin);
-			continue;
-		}
-
-		normalizedOrigins.Add($"{parsedOrigin.Scheme}://{parsedOrigin.Authority}");
-	}
-
-	var distinctOrigins = normalizedOrigins
-		.Distinct(StringComparer.OrdinalIgnoreCase)
-		.ToArray();
-
-	if (distinctOrigins.Length == 0)
-		logger.LogWarning("No valid CORS origins configured in Cors:AllowedOrigins. Cross-origin browser requests will be blocked.");
-	else
-		logger.LogInformation("Configured CORS allowed origins: {Origins}", string.Join(", ", distinctOrigins));
-
-	return distinctOrigins;
 }
 
 static string? NormalizeUpstreamPath(string? path)
