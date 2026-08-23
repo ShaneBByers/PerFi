@@ -1,13 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
-    <NoWarn>$(NoWarn);NU1903</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
@@ -21,9 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../PerFi.API/PerFi.API.csproj" Aliases="global,ApiProgram" />
     <ProjectReference Include="../PerFi.Console/PerFi.Console.csproj" />
-    <ProjectReference Include="../PerFi.Domain/PerFi.Domain.csproj" />
-    <ProjectReference Include="../PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 using PerFi.Domain.Entities;
 using Xunit;
 
-namespace PerFi.Tests.Domain;
+namespace PerFi.Tests.Domain.Unit;
 
 public class AccountBalanceTests
 {

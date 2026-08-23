@@ -96,7 +96,8 @@ internal class AccountRepository(
             AccountType = accountType
         };
 
-        institution.Accounts.Add(newAccount);
+        // Add directly rather than via institution.Accounts, which isn't loaded when the institution query above doesn't Include it.
+        dbContext.Accounts.Add(newAccount);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

@@ -3,9 +3,10 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using PerFi.API.Requests;
+using PerFi.Tests.Shared;
 using Xunit;
 
-namespace PerFi.Tests.Integration;
+namespace PerFi.Tests.API.Integration;
 
 public class AccountsApiTests : IClassFixture<PerFiApiFactory>
 {

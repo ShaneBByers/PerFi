@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Needed for WebApplicationFactory/Identity types used by the shared test helpers. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PerFi.Domain/PerFi.Domain.csproj" />
+    <ProjectReference Include="../PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
+    <ProjectReference Include="../PerFi.API/PerFi.API.csproj" />
+  </ItemGroup>
+</Project>

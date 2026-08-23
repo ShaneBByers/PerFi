@@ -8,8 +8,10 @@ public sealed class DatabaseHealthCheck(PerFi.Infrastructure.PerFiDbContext dbCo
     {
         try
         {
-            await dbContext.Database.CanConnectAsync(cancellationToken);
-            return HealthCheckResult.Healthy("Database is reachable.");
+            var canConnect = await dbContext.Database.CanConnectAsync(cancellationToken);
+            return canConnect
+                ? HealthCheckResult.Healthy("Database is reachable.")
+                : HealthCheckResult.Unhealthy("Database is unavailable.");
         }
         catch (Exception ex)
         {

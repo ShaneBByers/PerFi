@@ -28,6 +28,10 @@ PerFi.Console/data/
 logs/
 webapp_logs.zip
 
+# Test output
+TestResults/
+*.trx
+
 # OS noise
 .DS_Store
 Thumbs.db

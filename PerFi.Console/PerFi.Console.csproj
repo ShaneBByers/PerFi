@@ -15,4 +15,9 @@
     <ProjectReference Include="../PerFi.Bootstrapper/PerFi.Bootstrapper.csproj" />
     <ProjectReference Include="../PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Allows PerFi.Tests.Console.Unit to test internal ConsoleCommand parsing directly. -->
+    <InternalsVisibleTo Include="PerFi.Tests.Console.Unit" />
+  </ItemGroup>
 </Project>

@@ -7,5 +7,12 @@
   <Project Path="PerFi.Console/PerFi.Console.csproj" />
   <Project Path="PerFi.Domain/PerFi.Domain.csproj" />
   <Project Path="PerFi.Infrastructure/PerFi.Infrastructure.csproj" />
-  <Project Path="PerFi.Tests/PerFi.Tests.csproj" />
+  <Project Path="PerFi.Tests.API.Integration/PerFi.Tests.API.Integration.csproj" />
+  <Project Path="PerFi.Tests.API.Unit/PerFi.Tests.API.Unit.csproj" />
+  <Project Path="PerFi.Tests.Application.Unit/PerFi.Tests.Application.Unit.csproj" />
+  <Project Path="PerFi.Tests.Console.Integration/PerFi.Tests.Console.Integration.csproj" />
+  <Project Path="PerFi.Tests.Console.Unit/PerFi.Tests.Console.Unit.csproj" />
+  <Project Path="PerFi.Tests.Domain.Unit/PerFi.Tests.Domain.Unit.csproj" />
+  <Project Path="PerFi.Tests.Infrastructure.Integration/PerFi.Tests.Infrastructure.Integration.csproj" />
+  <Project Path="PerFi.Tests.Shared/PerFi.Tests.Shared.csproj" />
 </Solution>

@@ -1,5 +1,3 @@
-extern alias ApiProgram;
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -12,9 +10,9 @@ using Microsoft.Extensions.Hosting;
 using PerFi.Infrastructure;
 using PerFi.Infrastructure.Entities;
 
-namespace PerFi.Tests.Integration;
+namespace PerFi.Tests.Shared;
 
-public sealed class PerFiApiFactory : WebApplicationFactory<ApiProgram::Program>
+public sealed class PerFiApiFactory : WebApplicationFactory<Program>
 {
     public const string TestUsername = "test-user";
     public const string TestPassword = "Test-Password1!";
@@ -68,4 +66,3 @@ public sealed class PerFiApiFactory : WebApplicationFactory<ApiProgram::Program>
         return host;
     }
 }
-

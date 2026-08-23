@@ -8,7 +8,7 @@ using PerFi.Domain.Entities;
 using PerFi.Domain.Results;
 using Xunit;
 
-namespace PerFi.Tests.API;
+namespace PerFi.Tests.API.Unit;
 
 public sealed class OrderingControllersTests
 {

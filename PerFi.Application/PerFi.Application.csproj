@@ -6,4 +6,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Allows PerFi.Tests.Application.Unit to instantiate the internal service classes directly. -->
+    <InternalsVisibleTo Include="PerFi.Tests.Application.Unit" />
+  </ItemGroup>
 </Project>

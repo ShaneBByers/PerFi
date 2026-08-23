@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("PerFi.Tests")]
+[assembly: InternalsVisibleTo("PerFi.Tests.Infrastructure.Integration")]
