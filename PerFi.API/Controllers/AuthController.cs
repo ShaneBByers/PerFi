@@ -7,15 +7,15 @@ namespace PerFi.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public sealed class AuthController(JwtTokenService tokenService) : ControllerBase
+public sealed class AuthController(IJwtTokenService tokenService) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         if (request.Username == "demo" && request.Password == "demo")
         {
-            var token = tokenService.GenerateToken(request.Username);
+            var token = await tokenService.GenerateTokenAsync(request.Username, cancellationToken);
             return Ok(new { token });
         }
 

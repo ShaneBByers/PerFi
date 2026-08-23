@@ -5,16 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace PerFi.API.Infrastructure.Authentication;
 
-public sealed class JwtTokenService(IConfiguration configuration)
+// HMAC signing fallback for Development/Testing only; Production signs via KeyVaultJwtTokenService.
+public sealed class SymmetricJwtTokenService(string key, string issuer, string audience, int expiryMinutes) : IJwtTokenService
 {
-    public string GenerateToken(string username)
+    public Task<string> GenerateTokenAsync(string username, CancellationToken cancellationToken = default)
     {
-        var jwtSettings = configuration.GetSection("Jwt");
-        var key = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT signing key is not configured.");
-        var issuer = jwtSettings["Issuer"] ?? "PerFi";
-        var audience = jwtSettings["Audience"] ?? "PerFi-Clients";
-        var expiryMinutes = int.TryParse(jwtSettings["ExpiryMinutes"], out var parsedExpiry) ? parsedExpiry : 60;
-
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
@@ -32,6 +27,6 @@ public sealed class JwtTokenService(IConfiguration configuration)
             expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
             signingCredentials: credentials);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
     }
 }
