@@ -10,11 +10,11 @@ namespace PerFi.API.Infrastructure.Authentication;
 // Signs the header.payload digest via Key Vault's Sign operation so the RSA private key never leaves the vault.
 public sealed class KeyVaultJwtTokenService(CryptographyClient cryptographyClient, string issuer, string audience, int expiryMinutes) : IJwtTokenService
 {
-    public async Task<string> GenerateTokenAsync(string username, CancellationToken cancellationToken = default)
+    public async Task<string> GenerateTokenAsync(string userId, string username, CancellationToken cancellationToken = default)
     {
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, username),
+            new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Name, username),
             new Claim(ClaimTypes.Role, "User")
         };

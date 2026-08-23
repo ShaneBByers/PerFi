@@ -28,7 +28,7 @@ public sealed class FinanceSnapshotRepositoryTests
 
         await using (var throwingContext = new ThrowAfterSavePerFiDbContext(options))
         {
-            var repository = new FinanceSnapshotRepository(throwingContext);
+            var repository = new FinanceSnapshotRepository(throwingContext, new FakeCurrentUserService());
 
             var result = await repository.UpdateSnapshotCellsAsync(
                 [new SnapshotCellUpdate(1, 1, 99m)]);
@@ -50,10 +50,13 @@ public sealed class FinanceSnapshotRepositoryTests
 
     private static async Task SeedSnapshotGraphAsync(PerFiDbContext dbContext)
     {
+        dbContext.Users.Add(new ApplicationUser { Id = FakeCurrentUserService.DefaultUserId, UserName = "test-user" });
+
         var group = new AccountTypeGroupEntity
         {
             Id = 1,
             Name = "Assets",
+            UserId = FakeCurrentUserService.DefaultUserId,
             AccountTypes = []
         };
 
@@ -72,6 +75,7 @@ public sealed class FinanceSnapshotRepositoryTests
         {
             Id = 1,
             Name = "Test Bank",
+            UserId = FakeCurrentUserService.DefaultUserId,
             Accounts = []
         };
 
@@ -92,6 +96,7 @@ public sealed class FinanceSnapshotRepositoryTests
         {
             Id = 1,
             Date = new DateOnly(2026, 8, 9),
+            UserId = FakeCurrentUserService.DefaultUserId,
             AccountBalances =
             [
                 new AccountBalanceEntity

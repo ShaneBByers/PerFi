@@ -26,7 +26,7 @@ public sealed class InstitutionRepositoryTests
         }
 
         await using var verifyContext = new PerFiDbContext(options);
-        var repository = new InstitutionRepository(verifyContext);
+        var repository = new InstitutionRepository(verifyContext, new FakeCurrentUserService());
 
         var institutions = await repository.GetAllInstitutionsAsync();
 
@@ -38,11 +38,14 @@ public sealed class InstitutionRepositoryTests
 
     private static async Task SeedInstitutionsAsync(PerFiDbContext dbContext)
     {
+        dbContext.Users.Add(new ApplicationUser { Id = FakeCurrentUserService.DefaultUserId, UserName = "test-user" });
+
         var group = new AccountTypeGroupEntity
         {
             Id = 1,
             Name = "Assets",
             DisplayOrder = 1,
+            UserId = FakeCurrentUserService.DefaultUserId,
             AccountTypes = []
         };
 
@@ -63,6 +66,7 @@ public sealed class InstitutionRepositoryTests
             Id = 2,
             Name = "First Bank",
             DisplayOrder = 1,
+            UserId = FakeCurrentUserService.DefaultUserId,
             Accounts = []
         };
 
@@ -71,6 +75,7 @@ public sealed class InstitutionRepositoryTests
             Id = 1,
             Name = "Second Bank",
             DisplayOrder = 2,
+            UserId = FakeCurrentUserService.DefaultUserId,
             Accounts = []
         };
 

@@ -1,24 +1,35 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Storage;
 using PerFi.Application.Commands;
 using Microsoft.EntityFrameworkCore;
 using PerFi.Console.Import;
 using PerFi.Application.Interfaces;
 using PerFi.Infrastructure;
+using PerFi.Infrastructure.Entities;
 
 namespace PerFi.Console.Operations;
 
 public sealed class ImportNetWorthCsvOperation(
     PerFiDbContext dbContext,
     NetWorthCsvParser csvParser,
+    UserManager<ApplicationUser> userManager,
+    ConsoleCurrentUserService currentUser,
     IInstitutionService institutionService,
     IAccountTypeGroupService accountTypeGroupService,
     IAccountTypeService accountTypeService,
     IAccountService accountService,
     IFinanceSnapshotService financeSnapshotService)
 {
-    public async Task ExecuteAsync(string csvPath, bool dryRun, CancellationToken cancellationToken = default)
+    public async Task ExecuteAsync(string csvPath, string username, bool dryRun, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(csvPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(username);
+
+        var user = await userManager.FindByNameAsync(username);
+        if (user is null)
+            throw new InvalidOperationException($"User '{username}' was not found. Run 'create-user {username} <password>' first.");
+
+        currentUser.UserId = user.Id;
 
         var resolvedPath = Path.GetFullPath(csvPath);
 
@@ -28,6 +39,7 @@ public sealed class ImportNetWorthCsvOperation(
         }
 
         System.Console.WriteLine($"Import path: {resolvedPath}");
+        System.Console.WriteLine($"Importing for user: {username}");
         System.Console.WriteLine($"Mode: {(dryRun ? "dry-run" : "import")}");
         System.Console.WriteLine();
 
@@ -44,7 +56,7 @@ public sealed class ImportNetWorthCsvOperation(
         if (hasExistingData)
         {
             throw new InvalidOperationException(
-                "Import requires an empty database. Existing institutions, account metadata, accounts, or snapshots were detected.");
+                $"Import requires an empty account for user '{username}'. Existing institutions or snapshots were detected.");
         }
 
         if (dryRun)
@@ -69,11 +81,8 @@ public sealed class ImportNetWorthCsvOperation(
     }
 
     public async Task<bool> DatabaseHasExistingDataAsync(CancellationToken cancellationToken = default)
-        => await dbContext.Institutions.AnyAsync(cancellationToken)
-            || await dbContext.AccountTypeGroups.AnyAsync(cancellationToken)
-            || await dbContext.AccountTypes.AnyAsync(cancellationToken)
-            || await dbContext.Accounts.AnyAsync(cancellationToken)
-            || await dbContext.FinanceSnapshots.AnyAsync(cancellationToken);
+        => await dbContext.Institutions.AnyAsync(i => i.UserId == currentUser.UserId, cancellationToken)
+            || await dbContext.FinanceSnapshots.AnyAsync(s => s.UserId == currentUser.UserId, cancellationToken);
 
     private async Task ImportAsync(ImportPlan importPlan, CancellationToken cancellationToken)
     {
@@ -117,8 +126,18 @@ public sealed class ImportNetWorthCsvOperation(
     {
         var groupIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
+        // Reuse this user's existing account type group by name instead of creating a duplicate.
+        var existingGroups = await accountTypeGroupService.GetAllAccountTypeGroupsAsync(cancellationToken);
+        var existingGroupsByKey = existingGroups.ToDictionary(group => NormalizeKey(group.Name), group => group.Id, StringComparer.OrdinalIgnoreCase);
+
         foreach (var groupName in groupNames)
         {
+            if (existingGroupsByKey.TryGetValue(NormalizeKey(groupName), out var existingGroupId))
+            {
+                groupIds[NormalizeKey(groupName)] = existingGroupId;
+                continue;
+            }
+
             var result = await accountTypeGroupService.CreateAccountTypeGroupAsync(
                 new CreateAccountTypeGroupCommand(groupName),
                 cancellationToken);
@@ -139,8 +158,22 @@ public sealed class ImportNetWorthCsvOperation(
     {
         var accountTypeIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
+        // Reuse this user's existing (group, type) pair instead of creating a duplicate.
+        var existingTypes = await accountTypeService.GetAllAccountTypesAsync(cancellationToken);
+        var existingTypesByKey = existingTypes.ToDictionary(
+            type => MakeAccountTypeKey(type.Group.Name, type.Name),
+            type => type.Id,
+            StringComparer.OrdinalIgnoreCase);
+
         foreach (var accountType in accountTypes)
         {
+            var accountTypeKey = MakeAccountTypeKey(accountType.GroupName, accountType.TypeName);
+            if (existingTypesByKey.TryGetValue(accountTypeKey, out var existingTypeId))
+            {
+                accountTypeIds[accountTypeKey] = existingTypeId;
+                continue;
+            }
+
             var groupId = accountTypeGroupIds[NormalizeKey(accountType.GroupName)];
             var result = await accountTypeService.CreateAccountTypeAsync(
                 new CreateAccountTypeCommand(accountType.TypeName, groupId),
@@ -152,7 +185,7 @@ public sealed class ImportNetWorthCsvOperation(
                     $"Failed to create account type '{accountType.TypeName}': {result.Error}");
             }
 
-            accountTypeIds[MakeAccountTypeKey(accountType.GroupName, accountType.TypeName)] = result.Value.Id;
+            accountTypeIds[accountTypeKey] = result.Value.Id;
         }
 
         return accountTypeIds;

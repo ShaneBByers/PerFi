@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PerFi.Infrastructure;
 
@@ -11,9 +12,11 @@ using PerFi.Infrastructure;
 namespace PerFi.Infrastructure.Migrations
 {
     [DbContext(typeof(PerFiDbContext))]
-    partial class PerFiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260823012314_AddIdentityAndUserOwnership")]
+    partial class AddIdentityAndUserOwnership
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,13 +254,7 @@ namespace PerFi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("AccountTypeGroups");
                 });
@@ -473,15 +470,6 @@ namespace PerFi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AccountTypeGroup");
-                });
-
-            modelBuilder.Entity("PerFi.Infrastructure.Entities.AccountTypeGroupEntity", b =>
-                {
-                    b.HasOne("PerFi.Infrastructure.Entities.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("PerFi.Infrastructure.Entities.FinanceSnapshotEntity", b =>

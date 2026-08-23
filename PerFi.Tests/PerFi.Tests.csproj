@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../PerFi.API/PerFi.API.csproj" />
+    <ProjectReference Include="../PerFi.API/PerFi.API.csproj" Aliases="global,ApiProgram" />
     <ProjectReference Include="../PerFi.Console/PerFi.Console.csproj" />
     <ProjectReference Include="../PerFi.Domain/PerFi.Domain.csproj" />
     <ProjectReference Include="../PerFi.Infrastructure/PerFi.Infrastructure.csproj" />

@@ -22,7 +22,7 @@ public class AccountsApiTests : IClassFixture<PerFiApiFactory>
     [Fact]
     public async Task PostAccount_WithMissingName_ReturnsBadRequest()
     {
-        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { username = "demo", password = "demo" });
+        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { username = PerFiApiFactory.TestUsername, password = PerFiApiFactory.TestPassword });
         var token = (await loginResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString();
 
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -43,7 +43,7 @@ public class AccountsApiTests : IClassFixture<PerFiApiFactory>
     [Fact]
     public async Task Login_WithValidCredentials_ReturnsToken()
     {
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new { username = "demo", password = "demo" });
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new { username = PerFiApiFactory.TestUsername, password = PerFiApiFactory.TestPassword });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

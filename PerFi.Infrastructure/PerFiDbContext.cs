@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PerFi.Infrastructure.Entities;
 
 namespace PerFi.Infrastructure;
 
 public class PerFiDbContext(DbContextOptions<PerFiDbContext> options)
-   : DbContext(options)
+   : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<AccountTypeGroupEntity> AccountTypeGroups { get; set; }
     public DbSet<InstitutionEntity> Institutions { get; set; }
@@ -55,6 +56,35 @@ public class PerFiDbContext(DbContextOptions<PerFiDbContext> options)
             entity.HasOne(balance => balance.FinanceSnapshot)
                 .WithMany(snapshot => snapshot.AccountBalances)
                 .HasForeignKey(balance => balance.FinanceSnapshotId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<InstitutionEntity>(entity =>
+        {
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(institution => institution.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<AccountTypeGroupEntity>(entity =>
+        {
+            // Restrict (not Cascade) to avoid multiple cascade paths converging on AccountBalances
+            // via AspNetUsers -> FinanceSnapshots -> AccountBalances and AspNetUsers -> AccountTypeGroups -> AccountTypes -> Accounts -> AccountBalances.
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(group => group.UserId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<FinanceSnapshotEntity>(entity =>
+        {
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(snapshot => snapshot.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });

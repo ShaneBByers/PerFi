@@ -7,13 +7,15 @@ using PerFi.Infrastructure.Entities;
 namespace PerFi.Infrastructure.Services;
 
 internal class AccountRepository(
-    PerFiDbContext dbContext)
+    PerFiDbContext dbContext,
+    ICurrentUserService currentUserService)
     : IAccountRepository
 {
     public async Task<IReadOnlyList<Account>> GetAllAccountsAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Accounts
             .AsNoTracking()
+            .Where(a => a.Institution!.UserId == currentUserService.UserId)
             .Include(a => a.AccountType)
                 .ThenInclude(t => t.AccountTypeGroup)
             .OrderBy(a => a.DisplayOrder)
@@ -45,7 +47,7 @@ internal class AccountRepository(
             .AsNoTracking()
             .Include(a => a.AccountType)
                 .ThenInclude(t => t.AccountTypeGroup)
-            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(a => a.Id == id && a.Institution!.UserId == currentUserService.UserId, cancellationToken);
 
         if (accountEntity == null)
             return null;
@@ -69,7 +71,7 @@ internal class AccountRepository(
     public async Task<Result<int>> AddAccountAsync(Account account, int institutionId, CancellationToken cancellationToken = default)
     {
         var institution = await dbContext.Institutions
-            .FirstOrDefaultAsync(i => i.Id == institutionId, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == institutionId && i.UserId == currentUserService.UserId, cancellationToken);
 
         if (institution == null)
             return Result<int>.Failure($"Institution with ID '{institutionId}' does not exist.");
@@ -81,6 +83,7 @@ internal class AccountRepository(
             return Result<int>.Failure($"Account type with ID '{account.Type.Id}' does not exist.");
 
         var nextDisplayOrder = await dbContext.Accounts
+            .Where(accountEntity => accountEntity.Institution!.UserId == currentUserService.UserId)
             .Select(accountEntity => (int?)accountEntity.DisplayOrder)
             .MaxAsync(cancellationToken) ?? 0;
 
@@ -104,13 +107,13 @@ internal class AccountRepository(
     {
         var accountEntity = await dbContext.Accounts
             .Include(a => a.AccountType)
-            .FirstOrDefaultAsync(a => a.Id == account.Id, cancellationToken);
+            .FirstOrDefaultAsync(a => a.Id == account.Id && a.Institution!.UserId == currentUserService.UserId, cancellationToken);
 
         if (accountEntity is null)
             return Result.Failure($"Account with ID '{account.Id}' not found.");
 
         var institution = await dbContext.Institutions
-            .FirstOrDefaultAsync(i => i.Id == institutionId, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == institutionId && i.UserId == currentUserService.UserId, cancellationToken);
 
         if (institution is null)
             return Result.Failure($"Institution with ID '{institutionId}' does not exist.");
@@ -134,7 +137,7 @@ internal class AccountRepository(
     public async Task<Result> DeleteAccountAsync(int accountId, CancellationToken cancellationToken = default)
     {
         var accountEntity = await dbContext.Accounts
-            .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.Institution!.UserId == currentUserService.UserId, cancellationToken);
 
         if (accountEntity is null)
             return Result.Failure($"Account with ID '{accountId}' not found.");
@@ -158,7 +161,7 @@ internal class AccountRepository(
             return Result.Failure("Account reorder list contains duplicate IDs.");
 
         var accountEntities = await dbContext.Accounts
-            .Where(account => normalizedIds.Contains(account.Id))
+            .Where(account => normalizedIds.Contains(account.Id) && account.Institution!.UserId == currentUserService.UserId)
             .ToListAsync(cancellationToken);
 
         if (accountEntities.Count != normalizedIds.Count)

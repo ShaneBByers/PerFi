@@ -75,7 +75,9 @@
       "program": "${workspaceFolder}/PerFi.Console/bin/Debug/net10.0/PerFi.Console.dll",
       "args": [
         "import-net-worth",
-        "data/Net Worth 2026-Net Worth.csv"
+        "data/Net Worth 2026-Net Worth.csv",
+        "--username",
+        "shane@shane-byers.com"
       ],
       "cwd": "${workspaceFolder}/PerFi.Console",
       "env": {

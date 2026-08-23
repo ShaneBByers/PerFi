@@ -6,6 +6,7 @@ using PerFi.Bootstrapper;
 using PerFi.Console;
 using PerFi.Console.Import;
 using PerFi.Console.Operations;
+using PerFi.Domain.Interfaces;
 
 var contentRootPath = ResolveContentRootPath();
 var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
@@ -38,6 +39,10 @@ var command = ConsoleCommand.Parse(args);
 builder.Services.AddPerFiBootstrapper(builder.Configuration);
 builder.Services.AddScoped<NetWorthCsvParser>();
 builder.Services.AddScoped<ImportNetWorthCsvOperation>();
+builder.Services.AddScoped<CreateUserOperation>();
+builder.Services.AddScoped<ResetDatabaseOperation>();
+builder.Services.AddScoped<ConsoleCurrentUserService>();
+builder.Services.AddScoped<ICurrentUserService>(sp => sp.GetRequiredService<ConsoleCurrentUserService>());
 
 using var host = builder.Build();
 using var scope = host.Services.CreateScope();
@@ -51,7 +56,19 @@ try
         case "import-net-worth":
         {
             var operation = scope.ServiceProvider.GetRequiredService<ImportNetWorthCsvOperation>();
-            await operation.ExecuteAsync(command.CsvPath, command.DryRun);
+            await operation.ExecuteAsync(command.CsvPath!, command.Username!, command.DryRun);
+            break;
+        }
+        case "create-user":
+        {
+            var operation = scope.ServiceProvider.GetRequiredService<CreateUserOperation>();
+            await operation.ExecuteAsync(command.Username!, command.Password!);
+            break;
+        }
+        case "reset-database":
+        {
+            var operation = scope.ServiceProvider.GetRequiredService<ResetDatabaseOperation>();
+            await operation.ExecuteAsync(command.SkipConfirmation);
             break;
         }
         default:

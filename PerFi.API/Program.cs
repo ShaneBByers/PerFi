@@ -6,6 +6,7 @@ using PerFi.API.Infrastructure.Authentication;
 using PerFi.API.Infrastructure.ExceptionHandling;
 using PerFi.API.Infrastructure.HealthChecks;
 using PerFi.Bootstrapper;
+using PerFi.Domain.Interfaces;
 using PerFi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddLogging();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddPerFiAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddCors(options =>
 {

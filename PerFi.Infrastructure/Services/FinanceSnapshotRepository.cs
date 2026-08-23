@@ -6,13 +6,16 @@ using PerFi.Infrastructure.Entities;
 
 namespace PerFi.Infrastructure.Services;
 
-internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
+internal class FinanceSnapshotRepository(
+    PerFiDbContext dbContext,
+    ICurrentUserService currentUserService)
     : IFinanceSnapshotRepository
 {
     public async Task<IReadOnlyList<FinanceSnapshot>> GetAllSnapshotsAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.FinanceSnapshots
             .AsNoTracking()
+            .Where(s => s.UserId == currentUserService.UserId)
             .OrderBy(s => s.Date)
             .Include(s => s.AccountBalances)
                 .ThenInclude(ab => ab.Account)
@@ -52,7 +55,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
                 .ThenInclude(ab => ab.Account)
                     .ThenInclude(a => a.AccountType)
                         .ThenInclude(t => t.AccountTypeGroup)
-            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == id && s.UserId == currentUserService.UserId, cancellationToken);
 
         if (snapshotEntity == null)
             return null;
@@ -84,12 +87,16 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
     public async Task<Result<int>> AddSnapshotAsync(FinanceSnapshot snapshot, CancellationToken cancellationToken = default)
     {
         var existingAccounts = await dbContext.Accounts
-            .Where(a => snapshot.AccountBalances.Select(ab => ab.Account.Id).Contains(a.Id))
+            .Where(a => snapshot.AccountBalances.Select(ab => ab.Account.Id).Contains(a.Id) && a.Institution!.UserId == currentUserService.UserId)
             .ToListAsync(cancellationToken);
+
+        if (existingAccounts.Count != snapshot.AccountBalances.Select(ab => ab.Account.Id).Distinct().Count())
+            return Result<int>.Failure("One or more accounts in the snapshot do not exist.");
 
         var snapshotEntity = new FinanceSnapshotEntity
         {
             Date = snapshot.Date,
+            UserId = currentUserService.UserId,
             AccountBalances = [.. snapshot.AccountBalances.Select(ab => new AccountBalanceEntity
             {
                 AccountId = ab.Account.Id,
@@ -108,14 +115,14 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
     {
         var snapshotEntity = await dbContext.FinanceSnapshots
             .Include(s => s.AccountBalances)
-            .FirstOrDefaultAsync(s => s.Id == snapshot.Id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == snapshot.Id && s.UserId == currentUserService.UserId, cancellationToken);
 
         if (snapshotEntity is null)
             return Result.Failure($"Snapshot with ID '{snapshot.Id}' not found.");
 
         var accountIds = snapshot.AccountBalances.Select(ab => ab.Account.Id).Distinct().ToList();
         var existingAccounts = await dbContext.Accounts
-            .Where(a => accountIds.Contains(a.Id))
+            .Where(a => accountIds.Contains(a.Id) && a.Institution!.UserId == currentUserService.UserId)
             .ToListAsync(cancellationToken);
 
         if (existingAccounts.Count != accountIds.Count)
@@ -158,7 +165,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
 
             var snapshotEntities = await dbContext.FinanceSnapshots
                 .Include(snapshot => snapshot.AccountBalances)
-                .Where(snapshot => snapshotIds.Contains(snapshot.Id))
+                .Where(snapshot => snapshotIds.Contains(snapshot.Id) && snapshot.UserId == currentUserService.UserId)
                 .ToListAsync(cancellationToken);
 
             if (snapshotEntities.Count != snapshotIds.Count)
@@ -170,7 +177,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
             }
 
             var existingAccounts = await dbContext.Accounts
-                .Where(account => accountIds.Contains(account.Id))
+                .Where(account => accountIds.Contains(account.Id) && account.Institution!.UserId == currentUserService.UserId)
                 .ToDictionaryAsync(account => account.Id, cancellationToken);
 
             if (existingAccounts.Count != accountIds.Count)
@@ -218,7 +225,7 @@ internal class FinanceSnapshotRepository(PerFiDbContext dbContext)
     {
         var snapshotEntity = await dbContext.FinanceSnapshots
             .Include(s => s.AccountBalances)
-            .FirstOrDefaultAsync(s => s.Id == snapshotId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == snapshotId && s.UserId == currentUserService.UserId, cancellationToken);
 
         if (snapshotEntity is null)
             return Result.Failure($"Snapshot with ID '{snapshotId}' not found.");

@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PerFi.Domain.Interfaces;
+using PerFi.Infrastructure.Entities;
 using PerFi.Infrastructure.Services;
 
 namespace PerFi.Infrastructure.Extensions;
@@ -23,6 +25,17 @@ public static class ServiceCollectionExtensions
                         maxRetryDelay: TimeSpan.FromSeconds(30),
                         errorNumbersToAdd: null);
                 }));
+
+        // Web hosts register this automatically; non-web hosts (e.g. PerFi.Console) need it explicitly
+        // for AddDefaultTokenProviders' DataProtectorTokenProvider to resolve IDataProtectionProvider.
+        services.AddDataProtection();
+
+        services.AddIdentityCore<ApplicationUser>(options =>
+            {
+                options.Password.RequiredLength = 8;
+            })
+            .AddEntityFrameworkStores<PerFiDbContext>()
+            .AddDefaultTokenProviders();
 
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IAccountTypeGroupRepository, AccountTypeGroupRepository>();

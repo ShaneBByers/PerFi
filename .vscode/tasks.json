@@ -63,6 +63,61 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "Migrate Remote DB (Azure SQL)",
+      "type": "shell",
+      "command": "bash ./scripts/migrate-remote-db.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Create User Account (Remote DB)",
+      "type": "shell",
+      "command": "bash ./scripts/create-user.sh '${input:perfiNewUsername}' '${input:perfiNewPassword}'",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Delete All Data (Remote DB)",
+      "type": "shell",
+      "command": "bash ./scripts/reset-remote-db.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "perfiNewUsername",
+      "type": "promptString",
+      "description": "Username for the new PerFi login"
+    },
+    {
+      "id": "perfiNewPassword",
+      "type": "promptString",
+      "description": "Password for the new PerFi login",
+      "password": true
     }
   ]
 }

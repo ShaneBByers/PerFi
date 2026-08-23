@@ -7,13 +7,15 @@ using PerFi.Infrastructure.Entities;
 namespace PerFi.Infrastructure.Services;
 
 internal class AccountTypeGroupRepository(
-    PerFiDbContext dbContext)
+    PerFiDbContext dbContext,
+    ICurrentUserService currentUserService)
     : IAccountTypeGroupRepository
 {
     public async Task<IReadOnlyList<AccountTypeGroup>> GetAllAccountTypeGroupsAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.AccountTypeGroups
             .AsNoTracking()
+            .Where(group => group.UserId == currentUserService.UserId)
             .OrderBy(group => group.DisplayOrder)
             .ThenBy(group => group.Name)
             .ThenBy(group => group.Id)
@@ -28,17 +30,18 @@ internal class AccountTypeGroupRepository(
     {
         var groupEntity = await dbContext.AccountTypeGroups
             .AsNoTracking()
-            .FirstOrDefaultAsync(group => group.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(group => group.Id == id && group.UserId == currentUserService.UserId, cancellationToken);
 
         return groupEntity is null ? null : new AccountTypeGroup(groupEntity.Id, groupEntity.Name);
     }
 
     public async Task<Result<int>> AddAccountTypeGroupAsync(AccountTypeGroup accountTypeGroup, CancellationToken cancellationToken = default)
     {
-        if (await dbContext.AccountTypeGroups.AnyAsync(group => group.Name == accountTypeGroup.Name, cancellationToken))
+        if (await dbContext.AccountTypeGroups.AnyAsync(group => group.Name == accountTypeGroup.Name && group.UserId == currentUserService.UserId, cancellationToken))
             return Result<int>.Failure($"An account type group with name '{accountTypeGroup.Name}' already exists.");
 
         var nextDisplayOrder = await dbContext.AccountTypeGroups
+            .Where(group => group.UserId == currentUserService.UserId)
             .Select(group => (int?)group.DisplayOrder)
             .MaxAsync(cancellationToken) ?? 0;
 
@@ -46,6 +49,7 @@ internal class AccountTypeGroupRepository(
         {
             Name = accountTypeGroup.Name,
             DisplayOrder = nextDisplayOrder + 1,
+            UserId = currentUserService.UserId,
             AccountTypes = []
         };
 
@@ -58,13 +62,13 @@ internal class AccountTypeGroupRepository(
     public async Task<Result> UpdateAccountTypeGroupAsync(AccountTypeGroup accountTypeGroup, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.AccountTypeGroups
-            .FirstOrDefaultAsync(group => group.Id == accountTypeGroup.Id, cancellationToken);
+            .FirstOrDefaultAsync(group => group.Id == accountTypeGroup.Id && group.UserId == currentUserService.UserId, cancellationToken);
 
         if (entity is null)
             return Result.Failure($"Account type group with ID '{accountTypeGroup.Id}' not found.");
 
         var hasDuplicateName = await dbContext.AccountTypeGroups
-            .AnyAsync(group => group.Id != accountTypeGroup.Id && group.Name == accountTypeGroup.Name, cancellationToken);
+            .AnyAsync(group => group.Id != accountTypeGroup.Id && group.Name == accountTypeGroup.Name && group.UserId == currentUserService.UserId, cancellationToken);
 
         if (hasDuplicateName)
             return Result.Failure($"An account type group with name '{accountTypeGroup.Name}' already exists.");
@@ -78,7 +82,7 @@ internal class AccountTypeGroupRepository(
     public async Task<Result> DeleteAccountTypeGroupAsync(int accountTypeGroupId, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.AccountTypeGroups
-            .FirstOrDefaultAsync(group => group.Id == accountTypeGroupId, cancellationToken);
+            .FirstOrDefaultAsync(group => group.Id == accountTypeGroupId && group.UserId == currentUserService.UserId, cancellationToken);
 
         if (entity is null)
             return Result.Failure($"Account type group with ID '{accountTypeGroupId}' not found.");
@@ -102,7 +106,7 @@ internal class AccountTypeGroupRepository(
             return Result.Failure("Account type group reorder list contains duplicate IDs.");
 
         var entities = await dbContext.AccountTypeGroups
-            .Where(group => normalizedIds.Contains(group.Id))
+            .Where(group => normalizedIds.Contains(group.Id) && group.UserId == currentUserService.UserId)
             .ToListAsync(cancellationToken);
 
         if (entities.Count != normalizedIds.Count)

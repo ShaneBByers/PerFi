@@ -7,13 +7,15 @@ using PerFi.Infrastructure.Entities;
 namespace PerFi.Infrastructure.Services;
 
 internal class InstitutionRepository(
-    PerFiDbContext dbContext)
+    PerFiDbContext dbContext,
+    ICurrentUserService currentUserService)
     : IInstitutionRepository
 {
     public async Task<IReadOnlyList<Institution>> GetAllInstitutionsAsync(CancellationToken cancellationToken = default)
     {
         var institutionEntities = await dbContext.Institutions
             .AsNoTracking()
+            .Where(i => i.UserId == currentUserService.UserId)
             .OrderBy(i => i.DisplayOrder)
             .ThenBy(i => i.Name)
             .ThenBy(i => i.Id)
@@ -31,6 +33,7 @@ internal class InstitutionRepository(
 
         var accountRows = await dbContext.Accounts
             .AsNoTracking()
+            .Where(account => account.Institution!.UserId == currentUserService.UserId)
             .OrderBy(account => account.DisplayOrder)
             .ThenBy(account => account.Name)
             .ThenBy(account => account.Id)
@@ -67,7 +70,7 @@ internal class InstitutionRepository(
     {
         var institutionEntity = await dbContext.Institutions
             .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == currentUserService.UserId, cancellationToken);
 
         if (institutionEntity == null)
             return null;
@@ -112,10 +115,11 @@ internal class InstitutionRepository(
 
     public async Task<Result<int>> AddInstitutionAsync(Institution institution, CancellationToken cancellationToken = default)
     {
-        if (await dbContext.Institutions.AnyAsync(i => i.Name == institution.Name, cancellationToken))
+        if (await dbContext.Institutions.AnyAsync(i => i.Name == institution.Name && i.UserId == currentUserService.UserId, cancellationToken))
             return Result<int>.Failure($"An institution with name '{institution.Name}' already exists.");
 
         var nextDisplayOrder = await dbContext.Institutions
+            .Where(i => i.UserId == currentUserService.UserId)
             .Select(institutionEntity => (int?)institutionEntity.DisplayOrder)
             .MaxAsync(cancellationToken) ?? 0;
 
@@ -123,6 +127,7 @@ internal class InstitutionRepository(
         {
             Name = institution.Name,
             DisplayOrder = nextDisplayOrder + 1,
+            UserId = currentUserService.UserId,
             Accounts = [.. institution.Accounts.Select(a => new AccountEntity
             {
                 Name = a.Name,
@@ -135,6 +140,7 @@ internal class InstitutionRepository(
                     {
                         Name = a.Type.Group.Name,
                         DisplayOrder = a.Type.Group.DisplayOrder,
+                        UserId = currentUserService.UserId,
                         AccountTypes = []
                     }
                 }
@@ -151,13 +157,13 @@ internal class InstitutionRepository(
     public async Task<Result> UpdateInstitutionAsync(Institution institution, CancellationToken cancellationToken = default)
     {
         var institutionEntity = await dbContext.Institutions
-            .FirstOrDefaultAsync(i => i.Id == institution.Id, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == institution.Id && i.UserId == currentUserService.UserId, cancellationToken);
 
         if (institutionEntity is null)
             return Result.Failure($"Institution with ID '{institution.Id}' not found.");
 
         var hasDuplicateName = await dbContext.Institutions
-            .AnyAsync(i => i.Id != institution.Id && i.Name == institution.Name, cancellationToken);
+            .AnyAsync(i => i.Id != institution.Id && i.Name == institution.Name && i.UserId == currentUserService.UserId, cancellationToken);
 
         if (hasDuplicateName)
             return Result.Failure($"An institution with name '{institution.Name}' already exists.");
@@ -171,7 +177,7 @@ internal class InstitutionRepository(
     public async Task<Result> DeleteInstitutionAsync(int institutionId, CancellationToken cancellationToken = default)
     {
         var institutionEntity = await dbContext.Institutions
-            .FirstOrDefaultAsync(i => i.Id == institutionId, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == institutionId && i.UserId == currentUserService.UserId, cancellationToken);
 
         if (institutionEntity is null)
             return Result.Failure($"Institution with ID '{institutionId}' not found.");
@@ -195,7 +201,7 @@ internal class InstitutionRepository(
             return Result.Failure("Institution reorder list contains duplicate IDs.");
 
         var institutionEntities = await dbContext.Institutions
-            .Where(institution => normalizedIds.Contains(institution.Id))
+            .Where(institution => normalizedIds.Contains(institution.Id) && institution.UserId == currentUserService.UserId)
             .ToListAsync(cancellationToken);
 
         if (institutionEntities.Count != normalizedIds.Count)
