@@ -105,6 +105,48 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "Migrate Local DB (SQL Server)",
+      "type": "shell",
+      "command": "ASPNETCORE_ENVIRONMENT=Development dotnet dotnet-ef database update --project \"${workspaceFolder}/PerFi.Infrastructure/PerFi.Infrastructure.csproj\" --startup-project \"${workspaceFolder}/PerFi.API/PerFi.API.csproj\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Create User Account (Local DB)",
+      "type": "shell",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- create-user \"${input:perfiNewUsername}\" \"${input:perfiNewPassword}\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Delete All Data (Local DB)",
+      "type": "shell",
+      "command": "docker compose down -v && docker compose up -d",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ],
   "inputs": [

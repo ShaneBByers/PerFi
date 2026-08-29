@@ -14,9 +14,12 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var useLocalConnection = configuration.GetValue<bool>("Database:UseLocalConnection");
+        var connectionStringName = useLocalConnection ? "LocalConnection" : "DefaultConnection";
+
         services.AddDbContext<PerFiDbContext>(options =>
             options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
+                configuration.GetConnectionString(connectionStringName),
                 sqlServerOptions =>
                 {
                     sqlServerOptions.CommandTimeout(60);

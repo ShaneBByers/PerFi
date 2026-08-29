@@ -26,12 +26,14 @@ builder.Configuration
 
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
 
-var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+var useLocalConnection = builder.Configuration.GetValue<bool>("Database:UseLocalConnection");
+var connectionStringName = useLocalConnection ? "LocalConnection" : "DefaultConnection";
+var selectedConnection = builder.Configuration.GetConnectionString(connectionStringName);
 
-if (string.IsNullOrWhiteSpace(defaultConnection))
+if (string.IsNullOrWhiteSpace(selectedConnection))
 {
     throw new InvalidOperationException(
-        $"ConnectionStrings:DefaultConnection is missing. Checked content root: {contentRootPath}");
+    $"ConnectionStrings:{connectionStringName} is missing. Checked content root: {contentRootPath}");
 }
 
 var command = ConsoleCommand.Parse(args);
