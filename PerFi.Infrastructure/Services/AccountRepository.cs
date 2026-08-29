@@ -91,6 +91,7 @@ internal class AccountRepository(
         {
             Name = account.Name,
             DisplayOrder = nextDisplayOrder + 1,
+            UserId = currentUserService.UserId,
             InstitutionId = institution.Id,
             AccountTypeId = accountType.Id,
             AccountType = accountType

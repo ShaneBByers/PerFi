@@ -107,6 +107,20 @@
       }
     },
     {
+      "label": "Add EF Core Migration",
+      "type": "shell",
+      "command": "ASPNETCORE_ENVIRONMENT=Development dotnet ef migrations add \"${input:perfiMigrationName}\" --project \"${workspaceFolder}/PerFi.Infrastructure/PerFi.Infrastructure.csproj\" --startup-project \"${workspaceFolder}/PerFi.API/PerFi.API.csproj\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
       "label": "Migrate Local DB (SQL Server)",
       "type": "shell",
       "command": "ASPNETCORE_ENVIRONMENT=Development dotnet dotnet-ef database update --project \"${workspaceFolder}/PerFi.Infrastructure/PerFi.Infrastructure.csproj\" --startup-project \"${workspaceFolder}/PerFi.API/PerFi.API.csproj\"",
@@ -150,6 +164,11 @@
     }
   ],
   "inputs": [
+    {
+      "id": "perfiMigrationName",
+      "type": "promptString",
+      "description": "Name for the new EF Core migration"
+    },
     {
       "id": "perfiNewUsername",
       "type": "promptString",

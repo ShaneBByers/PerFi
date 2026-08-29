@@ -55,6 +55,7 @@ public sealed class InstitutionRepositoryTests
             Id = 1,
             Name = "Checking",
             DisplayOrder = 1,
+            UserId = FakeCurrentUserService.DefaultUserId,
             AccountTypeGroupId = 1,
             AccountTypeGroup = group,
             Accounts = []
@@ -85,6 +86,7 @@ public sealed class InstitutionRepositoryTests
             Id = 1,
             Name = "Alpha",
             DisplayOrder = 1,
+            UserId = FakeCurrentUserService.DefaultUserId,
             InstitutionId = firstInstitution.Id,
             Institution = firstInstitution,
             AccountTypeId = accountType.Id,
@@ -96,6 +98,7 @@ public sealed class InstitutionRepositoryTests
             Id = 2,
             Name = "Zeta",
             DisplayOrder = 2,
+            UserId = FakeCurrentUserService.DefaultUserId,
             InstitutionId = firstInstitution.Id,
             Institution = firstInstitution,
             AccountTypeId = accountType.Id,
@@ -107,6 +110,7 @@ public sealed class InstitutionRepositoryTests
             Id = 3,
             Name = "Beta",
             DisplayOrder = 1,
+            UserId = FakeCurrentUserService.DefaultUserId,
             InstitutionId = secondInstitution.Id,
             Institution = secondInstitution,
             AccountTypeId = accountType.Id,
@@ -274,10 +278,10 @@ public sealed class InstitutionRepositoryTests
         await using (var setupContext = new PerFiDbContext(options))
         {
             var group = new AccountTypeGroupEntity { Name = "Assets", UserId = FakeCurrentUserService.DefaultUserId, AccountTypes = [] };
-            var type = new AccountTypeEntity { Name = "Checking", AccountTypeGroup = group, Accounts = [] };
+            var type = new AccountTypeEntity { Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroup = group, Accounts = [] };
             group.AccountTypes.Add(type);
             var institution = new InstitutionEntity { Name = "First Bank", UserId = FakeCurrentUserService.DefaultUserId, Accounts = [] };
-            institution.Accounts.Add(new AccountEntity { Name = "Checking", Institution = institution, AccountType = type });
+            institution.Accounts.Add(new AccountEntity { Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type });
 
             setupContext.AccountTypeGroups.Add(group);
             setupContext.AccountTypes.Add(type);

@@ -101,6 +101,7 @@ internal class FinanceSnapshotRepository(
             {
                 AccountId = ab.Account.Id,
                 Account = existingAccounts.First(a => a.Id == ab.Account.Id),
+                UserId = currentUserService.UserId,
                 Balance = ab.Balance
             })]
         };
@@ -136,6 +137,7 @@ internal class FinanceSnapshotRepository(
             AccountId = ab.Account.Id,
             Account = existingAccounts.First(a => a.Id == ab.Account.Id),
             FinanceSnapshotId = snapshotEntity.Id,
+            UserId = currentUserService.UserId,
             Balance = ab.Balance
         })];
 
@@ -205,6 +207,7 @@ internal class FinanceSnapshotRepository(
                     AccountId = update.AccountId,
                     Account = existingAccounts[update.AccountId],
                     FinanceSnapshotId = snapshot.Id,
+                    UserId = currentUserService.UserId,
                     Balance = update.Balance
                 });
             }

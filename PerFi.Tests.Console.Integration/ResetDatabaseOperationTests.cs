@@ -22,16 +22,16 @@ public sealed class ResetDatabaseOperationTests
             setupContext.Users.Add(new ApplicationUser { Id = "user-1", UserName = "test-user" });
 
             var group = new AccountTypeGroupEntity { Name = "Assets", UserId = "user-1", AccountTypes = [] };
-            var type = new AccountTypeEntity { Name = "Checking", AccountTypeGroup = group, Accounts = [] };
+            var type = new AccountTypeEntity { Name = "Checking", UserId = "user-1", AccountTypeGroup = group, Accounts = [] };
             group.AccountTypes.Add(type);
             var institution = new InstitutionEntity { Name = "Bank", UserId = "user-1", Accounts = [] };
-            var account = new AccountEntity { Name = "Checking", Institution = institution, AccountType = type };
+            var account = new AccountEntity { Name = "Checking", UserId = "user-1", Institution = institution, AccountType = type };
             institution.Accounts.Add(account);
             var snapshot = new FinanceSnapshotEntity
             {
                 Date = new DateOnly(2026, 1, 1),
                 UserId = "user-1",
-                AccountBalances = [new AccountBalanceEntity { Account = account, Balance = 10m }]
+                AccountBalances = [new AccountBalanceEntity { Account = account, UserId = "user-1", Balance = 10m }]
             };
 
             setupContext.AccountTypeGroups.Add(group);

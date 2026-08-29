@@ -65,6 +65,7 @@ public sealed class FinanceSnapshotRepositoryTests
         {
             Id = 1,
             Name = "Checking",
+            UserId = FakeCurrentUserService.DefaultUserId,
             AccountTypeGroupId = 1,
             AccountTypeGroup = group,
             Accounts = []
@@ -84,6 +85,7 @@ public sealed class FinanceSnapshotRepositoryTests
         {
             Id = 1,
             Name = "Main Checking",
+            UserId = FakeCurrentUserService.DefaultUserId,
             InstitutionId = 1,
             Institution = institution,
             AccountTypeId = 1,
@@ -106,6 +108,7 @@ public sealed class FinanceSnapshotRepositoryTests
                     AccountId = 1,
                     Account = account,
                     FinanceSnapshotId = 1,
+                    UserId = FakeCurrentUserService.DefaultUserId,
                     Balance = 10m
                 }
             ]
@@ -166,10 +169,10 @@ public sealed class FinanceSnapshotRepositoryTests
             setupContext.Users.Add(new ApplicationUser { Id = FakeCurrentUserService.DefaultUserId, UserName = "test-user" });
 
             var group = new AccountTypeGroupEntity { Name = "Assets", UserId = FakeCurrentUserService.DefaultUserId, AccountTypes = [] };
-            var type = new AccountTypeEntity { Name = "Checking", AccountTypeGroup = group, Accounts = [] };
+            var type = new AccountTypeEntity { Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroup = group, Accounts = [] };
             group.AccountTypes.Add(type);
             var institution = new InstitutionEntity { Name = "Test Bank", UserId = FakeCurrentUserService.DefaultUserId, Accounts = [] };
-            var account = new AccountEntity { Name = "Checking", Institution = institution, AccountType = type };
+            var account = new AccountEntity { Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
             institution.Accounts.Add(account);
 
             setupContext.AccountTypeGroups.Add(group);

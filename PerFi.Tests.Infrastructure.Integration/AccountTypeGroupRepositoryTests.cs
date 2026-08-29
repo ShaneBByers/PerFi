@@ -109,7 +109,7 @@ public sealed class AccountTypeGroupRepositoryTests
         {
             var group = new AccountTypeGroupEntity { Id = 1, Name = "Assets", UserId = FakeCurrentUserService.DefaultUserId, AccountTypes = [] };
             dbContext.AccountTypeGroups.Add(group);
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
             return Task.CompletedTask;
         });
 

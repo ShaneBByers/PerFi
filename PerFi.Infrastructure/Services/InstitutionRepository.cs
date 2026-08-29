@@ -132,10 +132,12 @@ internal class InstitutionRepository(
             {
                 Name = a.Name,
                 DisplayOrder = a.DisplayOrder,
+                UserId = currentUserService.UserId,
                 AccountType = new AccountTypeEntity
                 {
                     Name = a.Type.Name,
                     DisplayOrder = a.Type.DisplayOrder,
+                    UserId = currentUserService.UserId,
                     AccountTypeGroup = new AccountTypeGroupEntity
                     {
                         Name = a.Type.Group.Name,

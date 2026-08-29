@@ -29,7 +29,7 @@ public sealed class AccountRepositoryTests
     private static (AccountTypeGroupEntity Group, AccountTypeEntity Type, InstitutionEntity Institution) SeedBaseGraph(PerFiDbContext dbContext, string userId = FakeCurrentUserService.DefaultUserId)
     {
         var group = new AccountTypeGroupEntity { Name = "Assets", UserId = userId, AccountTypes = [] };
-        var type = new AccountTypeEntity { Name = "Checking", AccountTypeGroup = group, Accounts = [] };
+        var type = new AccountTypeEntity { Name = "Checking", UserId = userId, AccountTypeGroup = group, Accounts = [] };
         group.AccountTypes.Add(type);
         var institution = new InstitutionEntity { Name = "First Bank", UserId = userId, Accounts = [] };
 
@@ -46,11 +46,11 @@ public sealed class AccountRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var (_, type, institution) = SeedBaseGraph(dbContext);
-            institution.Accounts.Add(new AccountEntity { Name = "Mine", Institution = institution, AccountType = type });
+            institution.Accounts.Add(new AccountEntity { Name = "Mine", UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type });
 
             dbContext.Users.Add(new ApplicationUser { Id = "other-user", UserName = "other" });
             var (_, otherType, otherInstitution) = SeedBaseGraph(dbContext, "other-user");
-            otherInstitution.Accounts.Add(new AccountEntity { Name = "TheirsToo", Institution = otherInstitution, AccountType = otherType });
+            otherInstitution.Accounts.Add(new AccountEntity { Name = "TheirsToo", UserId = "other-user", Institution = otherInstitution, AccountType = otherType });
 
             return Task.CompletedTask;
         });
@@ -71,7 +71,7 @@ public sealed class AccountRepositoryTests
         {
             dbContext.Users.Add(new ApplicationUser { Id = "other-user", UserName = "other" });
             var (_, type, institution) = SeedBaseGraph(dbContext, "other-user");
-            institution.Accounts.Add(new AccountEntity { Id = 1, Name = "Theirs", Institution = institution, AccountType = type });
+            institution.Accounts.Add(new AccountEntity { Id = 1, Name = "Theirs", UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type });
             return Task.CompletedTask;
         });
 
@@ -103,7 +103,7 @@ public sealed class AccountRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var (_, type, institution) = SeedBaseGraph(dbContext);
-            institution.Accounts.Add(new AccountEntity { Name = "Existing", DisplayOrder = 1, Institution = institution, AccountType = type });
+            institution.Accounts.Add(new AccountEntity { Name = "Existing", DisplayOrder = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type });
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             institutionId = institution.Id;
             accountTypeId = type.Id;
@@ -141,7 +141,7 @@ public sealed class AccountRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var (_, type, institution) = SeedBaseGraph(dbContext);
-            var account = new AccountEntity { Name = "Checking", Institution = institution, AccountType = type };
+            var account = new AccountEntity { Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
             institution.Accounts.Add(account);
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             accountId = account.Id;
@@ -150,7 +150,7 @@ public sealed class AccountRepositoryTests
             {
                 Date = new DateOnly(2026, 1, 1),
                 UserId = FakeCurrentUserService.DefaultUserId,
-                AccountBalances = [new AccountBalanceEntity { AccountId = accountId, Account = account, Balance = 5m }]
+                AccountBalances = [new AccountBalanceEntity { AccountId = accountId, Account = account, UserId = FakeCurrentUserService.DefaultUserId, Balance = 5m }]
             });
 
             return Task.CompletedTask;
@@ -172,7 +172,7 @@ public sealed class AccountRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var (_, type, institution) = SeedBaseGraph(dbContext);
-            var account = new AccountEntity { Name = "Checking", Institution = institution, AccountType = type };
+            var account = new AccountEntity { Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
             institution.Accounts.Add(account);
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             accountId = account.Id;
@@ -194,8 +194,8 @@ public sealed class AccountRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var (_, type, institution) = SeedBaseGraph(dbContext);
-            var first = new AccountEntity { Name = "First", DisplayOrder = 1, Institution = institution, AccountType = type };
-            var second = new AccountEntity { Name = "Second", DisplayOrder = 2, Institution = institution, AccountType = type };
+            var first = new AccountEntity { Name = "First", DisplayOrder = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
+            var second = new AccountEntity { Name = "Second", DisplayOrder = 2, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
             institution.Accounts.Add(first);
             institution.Accounts.Add(second);
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();

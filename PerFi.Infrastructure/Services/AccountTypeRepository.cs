@@ -73,6 +73,7 @@ internal class AccountTypeRepository(
         {
             Name = accountType.Name,
             DisplayOrder = nextDisplayOrder + 1,
+            UserId = currentUserService.UserId,
             AccountTypeGroupId = accountTypeGroup.Id,
             AccountTypeGroup = accountTypeGroup
         };

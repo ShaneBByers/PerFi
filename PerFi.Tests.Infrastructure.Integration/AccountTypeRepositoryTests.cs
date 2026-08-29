@@ -69,7 +69,7 @@ public sealed class AccountTypeRepositoryTests
             dbContext.Users.Add(new ApplicationUser { Id = "other-user", UserName = "other" });
             var group = new AccountTypeGroupEntity { Id = 1, Name = "Assets", UserId = "other-user", AccountTypes = [] };
             dbContext.AccountTypeGroups.Add(group);
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", UserId = "other-user", AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
             return Task.CompletedTask;
         });
 
@@ -99,7 +99,7 @@ public sealed class AccountTypeRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var group = SeedGroup(dbContext);
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
             return Task.CompletedTask;
         });
 
@@ -118,7 +118,7 @@ public sealed class AccountTypeRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var group = SeedGroup(dbContext);
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
             return Task.CompletedTask;
         });
 
@@ -150,8 +150,8 @@ public sealed class AccountTypeRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var group = SeedGroup(dbContext);
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", DisplayOrder = 1, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 2, Name = "Savings", DisplayOrder = 2, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", DisplayOrder = 1, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 2, Name = "Savings", DisplayOrder = 2, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
             return Task.CompletedTask;
         });
 
