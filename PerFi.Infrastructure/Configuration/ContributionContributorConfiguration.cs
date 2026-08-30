@@ -4,9 +4,9 @@ using PerFi.Infrastructure.Entities;
 
 namespace PerFi.Infrastructure.Configuration;
 
-internal sealed class ContributorConfiguration : IEntityTypeConfiguration<ContributorEntity>
+internal sealed class ContributionContributorConfiguration : IEntityTypeConfiguration<ContributionContributorEntity>
 {
-    public void Configure(EntityTypeBuilder<ContributorEntity> entity)
+    public void Configure(EntityTypeBuilder<ContributionContributorEntity> entity)
     {
         entity.Property(contributor => contributor.Name)
             .HasMaxLength(200);

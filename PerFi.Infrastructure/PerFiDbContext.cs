@@ -16,7 +16,7 @@ public class PerFiDbContext(DbContextOptions<PerFiDbContext> options)
     public DbSet<TransactionCategoryGroupEntity> TransactionCategoryGroups { get; set; }
     public DbSet<TransactionCategoryEntity> TransactionCategories { get; set; }
     public DbSet<TransactionEntity> Transactions { get; set; }
-    public DbSet<ContributorEntity> Contributors { get; set; }
+    public DbSet<ContributionContributorEntity> ContributionContributors { get; set; }
     public DbSet<ContributionEntity> Contributions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

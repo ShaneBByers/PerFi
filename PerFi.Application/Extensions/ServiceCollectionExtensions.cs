@@ -11,9 +11,14 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services)
     {
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IContributionContributorService, ContributionContributorService>();
+        services.AddScoped<IContributionService, ContributionService>();
+        services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
+        services.AddScoped<ITransactionCategoryGroupService, TransactionCategoryGroupService>();
         services.AddScoped<IAccountTypeGroupService, AccountTypeGroupService>();
         services.AddScoped<IAccountTypeService, AccountTypeService>();
         services.AddScoped<IInstitutionService, InstitutionService>();
+        services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IFinanceSnapshotService, FinanceSnapshotService>();
 
         return services;
