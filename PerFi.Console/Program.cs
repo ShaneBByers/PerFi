@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PerFi.Bootstrapper;
 using PerFi.Console;
-using PerFi.Console.Import;
 using PerFi.Console.Operations;
 using PerFi.Domain.Interfaces;
 
@@ -39,12 +38,8 @@ if (string.IsNullOrWhiteSpace(selectedConnection))
 var command = ConsoleCommand.Parse(args);
 
 builder.Services.AddPerFiBootstrapper(builder.Configuration);
-builder.Services.AddScoped<NetWorthCsvParser>();
-builder.Services.AddScoped<ImportNetWorthCsvOperation>();
-builder.Services.AddScoped<TransactionCsvParser>();
-builder.Services.AddScoped<ImportTransactionsCsvOperation>();
-builder.Services.AddScoped<ContributionCsvParser>();
-builder.Services.AddScoped<ImportContributionsCsvOperation>();
+builder.Services.AddScoped<ExportBackupOperation>();
+builder.Services.AddScoped<ImportBackupOperation>();
 builder.Services.AddScoped<CreateUserOperation>();
 builder.Services.AddScoped<ResetDatabaseOperation>();
 builder.Services.AddScoped<ConsoleCurrentUserService>();
@@ -59,21 +54,15 @@ try
 
     switch (command.Verb.ToLowerInvariant())
     {
-        case "import-net-worth":
+        case "export-backup":
         {
-            var operation = scope.ServiceProvider.GetRequiredService<ImportNetWorthCsvOperation>();
-            await operation.ExecuteAsync(command.CsvPath!, command.Username!, command.DryRun);
+            var operation = scope.ServiceProvider.GetRequiredService<ExportBackupOperation>();
+            await operation.ExecuteAsync(command.CsvPath!, command.Username!);
             break;
         }
-        case "import-transactions":
+        case "import-backup":
         {
-            var operation = scope.ServiceProvider.GetRequiredService<ImportTransactionsCsvOperation>();
-            await operation.ExecuteAsync(command.CsvPath!, command.Username!, command.DryRun);
-            break;
-        }
-        case "import-contributions":
-        {
-            var operation = scope.ServiceProvider.GetRequiredService<ImportContributionsCsvOperation>();
+            var operation = scope.ServiceProvider.GetRequiredService<ImportBackupOperation>();
             await operation.ExecuteAsync(command.CsvPath!, command.Username!, command.DryRun);
             break;
         }

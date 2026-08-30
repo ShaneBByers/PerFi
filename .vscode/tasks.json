@@ -149,9 +149,9 @@
       }
     },
     {
-      "label": "Import Example Data (Local DB)",
+      "label": "Export Backup (Local DB)",
       "type": "shell",
-      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-net-worth \"${input:perfiImportFile}\" --username \"${input:perfiImportUsername}\"",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- export-backup \"${input:perfiBackupFile}\" --username \"${input:perfiImportUsername}\"",
       "options": {
         "cwd": "${workspaceFolder}/PerFi.Console"
       },
@@ -163,9 +163,9 @@
       }
     },
     {
-      "label": "Import Example Data (Remote DB)",
+      "label": "Export Backup (Remote DB)",
       "type": "shell",
-      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=false dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-net-worth \"${input:perfiImportFile}\" --username \"${input:perfiImportUsername}\"",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=false dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- export-backup \"${input:perfiBackupFile}\" --username \"${input:perfiImportUsername}\"",
       "options": {
         "cwd": "${workspaceFolder}/PerFi.Console"
       },
@@ -177,9 +177,9 @@
       }
     },
     {
-      "label": "Import Transactions (Local DB)",
+      "label": "Import Backup (Local DB)",
       "type": "shell",
-      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-transactions \"${input:perfiTransactionsImportFile}\" --username \"${input:perfiImportUsername}\"",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-backup \"${input:perfiBackupFile}\" --username \"${input:perfiImportUsername}\"",
       "options": {
         "cwd": "${workspaceFolder}/PerFi.Console"
       },
@@ -191,37 +191,9 @@
       }
     },
     {
-      "label": "Import Transactions (Remote DB)",
+      "label": "Import Backup (Remote DB)",
       "type": "shell",
-      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=false dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-transactions \"${input:perfiTransactionsImportFile}\" --username \"${input:perfiImportUsername}\"",
-      "options": {
-        "cwd": "${workspaceFolder}/PerFi.Console"
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Import Contributions (Local DB)",
-      "type": "shell",
-      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-contributions \"${input:perfiContributionsImportFile}\" --username \"${input:perfiImportUsername}\"",
-      "options": {
-        "cwd": "${workspaceFolder}/PerFi.Console"
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Import Contributions (Remote DB)",
-      "type": "shell",
-      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=false dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-contributions \"${input:perfiContributionsImportFile}\" --username \"${input:perfiImportUsername}\"",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=false dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-backup \"${input:perfiBackupFile}\" --username \"${input:perfiImportUsername}\"",
       "options": {
         "cwd": "${workspaceFolder}/PerFi.Console"
       },
@@ -259,34 +231,22 @@
       "description": "Username for the new PerFi login"
     },
     {
-      "id": "perfiImportFile",
-      "type": "promptString",
-      "description": "CSV file to import for net worth",
-      "default": "data/Net Worth 2026-Net Worth.csv"
-    },
-    {
       "id": "perfiImportUsername",
       "type": "promptString",
-      "description": "PerFi username to import the net worth data for",
+      "description": "PerFi username to import/export data for",
       "default": "shane@shane-byers.com"
-    },
-    {
-      "id": "perfiTransactionsImportFile",
-      "type": "promptString",
-      "description": "CSV file to import for transactions",
-      "default": "data/ShaneTransactions.csv"
-    },
-    {
-      "id": "perfiContributionsImportFile",
-      "type": "promptString",
-      "description": "CSV file to import for contributions",
-      "default": "data/ShaneContributions.csv"
     },
     {
       "id": "perfiNewPassword",
       "type": "promptString",
       "description": "Password for the new PerFi login",
       "password": true
+    },
+    {
+      "id": "perfiBackupFile",
+      "type": "promptString",
+      "description": "Backup JSON file path to export to / import from",
+      "default": "data/backup.json"
     }
   ]
 }
