@@ -26,6 +26,9 @@ public sealed record NetWorthCsvParseResult(
 
 public sealed class NetWorthCsvParser
 {
+    private const int MaxNameLength = 200;
+    private static readonly string[] SupportedDateFormats = ["M/d/yyyy", "M/d/yy", "MM/dd/yyyy", "yyyy-MM-dd"];
+
     private static readonly string[] RequiredHeaders =
     [
         "Institution",
@@ -112,6 +115,7 @@ public sealed class NetWorthCsvParser
 
         ValidateDuplicateLogicalAccounts(rows, errors);
         ValidateAccountTypeNames(rows, errors);
+        ValidateFieldLengths(rows, errors);
 
         if (errors.Count > 0)
             return new NetWorthCsvParseResult(null, errors, warnings);
@@ -136,7 +140,7 @@ public sealed class NetWorthCsvParser
 
         for (var index = 0; index < RequiredHeaders.Length; index++)
         {
-            var actualHeader = headers[index].Trim();
+            var actualHeader = NormalizeHeaderValue(headers[index]);
             if (!string.Equals(actualHeader, RequiredHeaders[index], StringComparison.OrdinalIgnoreCase))
             {
                 errors.Add(
@@ -149,14 +153,14 @@ public sealed class NetWorthCsvParser
 
         for (var index = RequiredHeaders.Length; index < headers.Count; index++)
         {
-            var rawHeader = headers[index].Trim();
+            var rawHeader = NormalizeHeaderValue(headers[index]);
             if (string.IsNullOrWhiteSpace(rawHeader))
             {
                 errors.Add($"Column {index + 1} has an empty snapshot date header.");
                 continue;
             }
 
-            if (!DateOnly.TryParseExact(rawHeader, "M/d/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var snapshotDate))
+            if (!DateOnly.TryParseExact(rawHeader, SupportedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var snapshotDate))
             {
                 errors.Add($"Column {index + 1} has an invalid snapshot date header '{rawHeader}'.");
                 continue;
@@ -253,14 +257,69 @@ public sealed class NetWorthCsvParser
 
     private static bool TryParseCurrency(string rawValue, out decimal balance)
     {
-        var sanitizedValue = rawValue.Trim().Replace("$", string.Empty).Replace(",", string.Empty);
+        var sanitizedValue = rawValue.Trim();
+        var isNegative = false;
 
-        return decimal.TryParse(
+        if (sanitizedValue.StartsWith('(') && sanitizedValue.EndsWith(')'))
+        {
+            sanitizedValue = sanitizedValue[1..^1];
+            isNegative = true;
+        }
+
+        if (sanitizedValue.EndsWith('-'))
+        {
+            sanitizedValue = sanitizedValue[..^1];
+            isNegative = true;
+        }
+
+        sanitizedValue = sanitizedValue
+            .Replace("$", string.Empty)
+            .Replace(",", string.Empty)
+            .Replace(" ", string.Empty);
+
+        var isParsed = decimal.TryParse(
             sanitizedValue,
             NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
             CultureInfo.InvariantCulture,
             out balance);
+
+        if (!isParsed)
+            return false;
+
+        if (isNegative && balance > 0)
+            balance = -balance;
+
+        return true;
     }
+
+    private static void ValidateFieldLengths(
+        IReadOnlyList<NetWorthCsvAccountRow> rows,
+        ICollection<string> errors)
+    {
+        foreach (var row in rows)
+        {
+            ValidateFieldLength(row.InstitutionName, "Institution", row.SourceRowNumber, errors);
+            ValidateFieldLength(row.AccountTypeGroupName, "Account Type Group", row.SourceRowNumber, errors);
+            ValidateFieldLength(row.AccountTypeName, "Account Type", row.SourceRowNumber, errors);
+            ValidateFieldLength(row.AccountName, "Account Name", row.SourceRowNumber, errors);
+        }
+    }
+
+    private static void ValidateFieldLength(
+        string value,
+        string fieldName,
+        int sourceRowNumber,
+        ICollection<string> errors)
+    {
+        if (value.Length <= MaxNameLength)
+            return;
+
+        errors.Add(
+            $"Row {sourceRowNumber} field '{fieldName}' exceeds the maximum length of {MaxNameLength} characters.");
+    }
+
+    private static string NormalizeHeaderValue(string header)
+        => header.Trim().TrimStart('\uFEFF');
 
     private static string MakeAccountKey(
         string institutionName,

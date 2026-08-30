@@ -67,7 +67,7 @@
     {
       "label": "Migrate Remote DB (Azure SQL)",
       "type": "shell",
-      "command": "bash ./scripts/migrate-remote-db.sh",
+      "command": "Database__UseLocalConnection=false bash ./scripts/migrate-remote-db.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -81,7 +81,7 @@
     {
       "label": "Create User Account (Remote DB)",
       "type": "shell",
-      "command": "bash ./scripts/create-user.sh '${input:perfiNewUsername}' '${input:perfiNewPassword}'",
+      "command": "Database__UseLocalConnection=false bash ./scripts/create-user.sh '${input:perfiNewUsername}' '${input:perfiNewPassword}'",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -95,7 +95,7 @@
     {
       "label": "Delete All Data (Remote DB)",
       "type": "shell",
-      "command": "bash ./scripts/reset-remote-db.sh",
+      "command": "Database__UseLocalConnection=false bash ./scripts/reset-remote-db.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -123,7 +123,7 @@
     {
       "label": "Migrate Local DB (SQL Server)",
       "type": "shell",
-      "command": "ASPNETCORE_ENVIRONMENT=Development dotnet dotnet-ef database update --project \"${workspaceFolder}/PerFi.Infrastructure/PerFi.Infrastructure.csproj\" --startup-project \"${workspaceFolder}/PerFi.API/PerFi.API.csproj\"",
+      "command": "ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet dotnet-ef database update --project \"${workspaceFolder}/PerFi.Infrastructure/PerFi.Infrastructure.csproj\" --startup-project \"${workspaceFolder}/PerFi.API/PerFi.API.csproj\"",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -137,7 +137,7 @@
     {
       "label": "Create User Account (Local DB)",
       "type": "shell",
-      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- create-user \"${input:perfiNewUsername}\" \"${input:perfiNewPassword}\"",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- create-user \"${input:perfiNewUsername}\" \"${input:perfiNewPassword}\"",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -149,9 +149,37 @@
       }
     },
     {
+      "label": "Import Example Data (Local DB)",
+      "type": "shell",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=true dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-net-worth \"${input:perfiImportFile}\" --username \"${input:perfiImportUsername}\"",
+      "options": {
+        "cwd": "${workspaceFolder}/PerFi.Console"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Import Example Data (Remote DB)",
+      "type": "shell",
+      "command": "DOTNET_ENVIRONMENT=Development ASPNETCORE_ENVIRONMENT=Development Database__UseLocalConnection=false dotnet run --project \"${workspaceFolder}/PerFi.Console/PerFi.Console.csproj\" -- import-net-worth \"${input:perfiImportFile}\" --username \"${input:perfiImportUsername}\"",
+      "options": {
+        "cwd": "${workspaceFolder}/PerFi.Console"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
       "label": "Delete All Data (Local DB)",
       "type": "shell",
-      "command": "docker compose down -v && docker compose up -d",
+      "command": "Database__UseLocalConnection=true docker compose down -v && docker compose up -d",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -173,6 +201,18 @@
       "id": "perfiNewUsername",
       "type": "promptString",
       "description": "Username for the new PerFi login"
+    },
+    {
+      "id": "perfiImportFile",
+      "type": "promptString",
+      "description": "CSV file to import for net worth",
+      "default": "data/Net Worth 2026-Net Worth.csv"
+    },
+    {
+      "id": "perfiImportUsername",
+      "type": "promptString",
+      "description": "PerFi username to import the net worth data for",
+      "default": "shane@shane-byers.com"
     },
     {
       "id": "perfiNewPassword",

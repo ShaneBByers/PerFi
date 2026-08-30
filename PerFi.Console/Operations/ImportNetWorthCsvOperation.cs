@@ -158,17 +158,19 @@ public sealed class ImportNetWorthCsvOperation(
     {
         var accountTypeIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        // Reuse this user's existing (group, type) pair instead of creating a duplicate.
+        // Reuse this user's existing type name instead of creating a duplicate.
+        // Account type names are unique per user in the repository layer.
         var existingTypes = await accountTypeService.GetAllAccountTypesAsync(cancellationToken);
-        var existingTypesByKey = existingTypes.ToDictionary(
-            type => MakeAccountTypeKey(type.Group.Name, type.Name),
-            type => type.Id,
-            StringComparer.OrdinalIgnoreCase);
+        var existingTypesByName = existingTypes
+            .GroupBy(type => NormalizeKey(type.Name), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First().Id, StringComparer.OrdinalIgnoreCase);
 
         foreach (var accountType in accountTypes)
         {
             var accountTypeKey = MakeAccountTypeKey(accountType.GroupName, accountType.TypeName);
-            if (existingTypesByKey.TryGetValue(accountTypeKey, out var existingTypeId))
+            var normalizedTypeName = NormalizeKey(accountType.TypeName);
+
+            if (existingTypesByName.TryGetValue(normalizedTypeName, out var existingTypeId))
             {
                 accountTypeIds[accountTypeKey] = existingTypeId;
                 continue;

@@ -200,4 +200,52 @@ Bank A,Investments,IRA,Primary,$100.00
             File.Delete(filePath);
         }
     }
+
+    [Fact]
+    public void Parse_WithUtf8BomInInstitutionHeader_Succeeds()
+    {
+        var csv = """
+__BOM__Institution,Account Type Group,Account Type,Account Name,1/1/2026
+Bank A,Investments,IRA,Primary,$100.00
+""".Replace("__BOM__", "\uFEFF", StringComparison.Ordinal);
+        var filePath = CreateTempCsv(csv);
+        var parser = new NetWorthCsvParser();
+
+        try
+        {
+            var result = parser.Parse(filePath);
+
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Document);
+            Assert.Single(result.Document!.Rows);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [Fact]
+    public void Parse_WithParenthesesAndTrailingMinusBalances_Succeeds()
+    {
+        var csv = """
+Institution,Account Type Group,Account Type,Account Name,1/1/2026,2/1/2026
+Bank A,Loans,Loan,Primary,"($1,234.56)",123.45-
+""";
+        var filePath = CreateTempCsv(csv);
+        var parser = new NetWorthCsvParser();
+
+        try
+        {
+            var result = parser.Parse(filePath);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(-1234.56m, result.Document!.Rows[0].BalancesByDate[new DateOnly(2026, 1, 1)]);
+            Assert.Equal(-123.45m, result.Document.Rows[0].BalancesByDate[new DateOnly(2026, 2, 1)]);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
 }
