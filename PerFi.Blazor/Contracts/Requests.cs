@@ -22,3 +22,21 @@ public sealed record CreateFinanceSnapshotRequest(DateOnly SnapshotDate, IReadOn
 public sealed record UpdateFinanceSnapshotRequest(DateOnly SnapshotDate, IReadOnlyDictionary<int, decimal> AccountIdToBalanceMap);
 public sealed record BulkUpdateFinanceSnapshotCellsRequest(IReadOnlyList<SnapshotCellUpdateRequest> Updates);
 public sealed record SnapshotCellUpdateRequest(int SnapshotId, int AccountId, decimal Balance);
+
+public sealed record CreateContributionContributorRequest(string Name);
+public sealed record UpdateContributionContributorRequest(string Name);
+public sealed record ReorderContributionContributorsRequest(IReadOnlyList<int> OrderedContributionContributorIds);
+
+public sealed record CreateContributionRequest(DateOnly Date, decimal Amount, int ContributionContributorId, int AccountId);
+public sealed record UpdateContributionRequest(DateOnly Date, decimal Amount, int ContributionContributorId, int AccountId);
+
+public sealed record CreateTransactionCategoryGroupRequest(string Name);
+public sealed record UpdateTransactionCategoryGroupRequest(string Name);
+public sealed record ReorderTransactionCategoryGroupsRequest(IReadOnlyList<int> OrderedTransactionCategoryGroupIds);
+
+public sealed record CreateTransactionCategoryRequest(string Name, int TransactionCategoryGroupId);
+public sealed record UpdateTransactionCategoryRequest(string Name, int TransactionCategoryGroupId);
+public sealed record ReorderTransactionCategoriesRequest(IReadOnlyList<int> OrderedTransactionCategoryIds);
+
+public sealed record CreateTransactionRequest(DateOnly Date, string CounterpartyName, decimal Amount, int TransactionCategoryId, int AccountId, string? Description);
+public sealed record UpdateTransactionRequest(DateOnly Date, string CounterpartyName, decimal Amount, int TransactionCategoryId, int AccountId, string? Description);

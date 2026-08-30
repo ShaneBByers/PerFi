@@ -65,6 +65,36 @@ builder.Services.AddHttpClient<ISnapshotsApiClient, SnapshotsApiClient>(client =
 }).AddHttpMessageHandler<CookieRequestHandler>()
 	.AddHttpMessageHandler<AuthMessageHandler>();
 
+builder.Services.AddHttpClient<IContributionContributorsApiClient, ContributionContributorsApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
+builder.Services.AddHttpClient<IContributionsApiClient, ContributionsApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
+builder.Services.AddHttpClient<ITransactionCategoryGroupsApiClient, TransactionCategoryGroupsApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
+builder.Services.AddHttpClient<ITransactionCategoriesApiClient, TransactionCategoriesApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
+builder.Services.AddHttpClient<ITransactionsApiClient, TransactionsApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
 await builder.Build().RunAsync();
 
 static string ResolveApiBaseUrl(string? configuredBaseUrl, IWebAssemblyHostEnvironment hostEnvironment)

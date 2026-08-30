@@ -4,6 +4,9 @@
 @inject IInstitutionsApiClient InstitutionsApiClient
 @inject IAccountTypesApiClient AccountTypesApiClient
 @inject IAccountTypeGroupsApiClient AccountTypeGroupsApiClient
+@inject ITransactionCategoryGroupsApiClient TransactionCategoryGroupsApiClient
+@inject ITransactionCategoriesApiClient TransactionCategoriesApiClient
+@inject IContributionContributorsApiClient ContributionContributorsApiClient
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Config</PageTitle>
@@ -46,6 +49,18 @@
             <strong>@accountTypeGroups.Count</strong>
         </article>
         <article class="summary-card">
+            <span class="summary-label">Transaction Category Groups</span>
+            <strong>@transactionCategoryGroups.Count</strong>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Transaction Categories</span>
+            <strong>@transactionCategories.Count</strong>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Contribution Contributors</span>
+            <strong>@contributionContributors.Count</strong>
+        </article>
+        <article class="summary-card">
             <span class="summary-label">Relationships</span>
             <strong>Institution &rarr; Account &rarr; Type &rarr; Group</strong>
         </article>
@@ -65,6 +80,9 @@
             <button class="tab-button @(activeTab == "accounts" ? "active" : null)" type="button" @onclick='() => SetTab("accounts")'>Accounts</button>
             <button class="tab-button @(activeTab == "account-types" ? "active" : null)" type="button" @onclick='() => SetTab("account-types")'>Account Types</button>
             <button class="tab-button @(activeTab == "account-type-groups" ? "active" : null)" type="button" @onclick='() => SetTab("account-type-groups")'>Type Groups</button>
+            <button class="tab-button @(activeTab == "transaction-category-groups" ? "active" : null)" type="button" @onclick='() => SetTab("transaction-category-groups")'>Txn Category Groups</button>
+            <button class="tab-button @(activeTab == "transaction-categories" ? "active" : null)" type="button" @onclick='() => SetTab("transaction-categories")'>Txn Categories</button>
+            <button class="tab-button @(activeTab == "contribution-contributors" ? "active" : null)" type="button" @onclick='() => SetTab("contribution-contributors")'>Contributors</button>
         </div>
 
         @if (activeTab == "relationships")
@@ -711,6 +729,347 @@
                 </div>
             </div>
         }
+
+        @if (activeTab == "transaction-category-groups")
+        {
+            <div class="mt-1">
+                <div class="section-header">
+                    <h2>Transaction Category Groups</h2>
+                    <p>Create the higher-level buckets used to roll up transaction categories in Cash Flow.</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="panel nested-panel h-100">
+                            <div class="section-header">
+                                <h3>@(editTransactionCategoryGroupModel is null ? "Add Group" : "Edit Group")</h3>
+                            </div>
+
+                            @if (editTransactionCategoryGroupModel is null)
+                            {
+                                <EditForm Model="createTransactionCategoryGroupModel" OnValidSubmit="CreateTransactionCategoryGroupAsync">
+                                    <DataAnnotationsValidator />
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-8">
+                                            <label class="form-label" for="transactionCategoryGroupName">Name</label>
+                                            <InputText id="transactionCategoryGroupName" class="form-control" @bind-Value="createTransactionCategoryGroupModel.Name" />
+                                        </div>
+                                        <div class="col-md-4 d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Group</button>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            }
+                            else
+                            {
+                                <EditForm Model="editTransactionCategoryGroupModel" OnValidSubmit="UpdateTransactionCategoryGroupAsync">
+                                    <DataAnnotationsValidator />
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-8">
+                                            <label class="form-label" for="editTransactionCategoryGroupName">Name</label>
+                                            <InputText id="editTransactionCategoryGroupName" class="form-control" @bind-Value="editTransactionCategoryGroupModel.Name" />
+                                        </div>
+                                        <div class="col-md-4 d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                                            <button class="btn btn-outline-secondary" type="button" @onclick="CancelTransactionCategoryGroupEdit">Cancel</button>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="panel nested-panel h-100">
+                            <div class="section-header">
+                                <h3>Group Catalog</h3>
+                                <p>Each transaction category must map to one of these groups.</p>
+                            </div>
+
+                            <LoadingState IsVisible="@isLoading" />
+                            <EmptyState IsVisible="@(!isLoading && transactionCategoryGroups.Count == 0)" Message="No transaction category groups yet." />
+
+                            @if (transactionCategoryGroups.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Order</th>
+                                                <th>Name</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in transactionCategoryGroups)
+                                            {
+                                                <tr>
+                                                    <td>@item.DisplayOrder</td>
+                                                    <td>@item.Name</td>
+                                                    <td class="text-end">
+                                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEditTransactionCategoryGroup(item)">Edit</button>
+                                                        <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteTransactionCategoryGroupAsync(item.Id)">Delete</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => MoveTransactionCategoryGroupAsync(item.Id, -1)">Up</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="() => MoveTransactionCategoryGroupAsync(item.Id, 1)">Down</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="panel nested-panel h-100 detail-panel">
+                            <div class="section-header">
+                                <h3>Usage</h3>
+                                <p>How many transaction categories are currently assigned to each group.</p>
+                            </div>
+
+                            <ul class="mb-0">
+                                @foreach (var item in transactionCategoryGroups)
+                                {
+                                    <li>@item.Name (@transactionCategories.Count(category => category.Group.Id == item.Id) categories)</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (activeTab == "transaction-categories")
+        {
+            <div class="mt-1">
+                <div class="section-header">
+                    <h2>Transaction Categories</h2>
+                    <p>Define the categories used to classify transactions in Cash Flow.</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="panel nested-panel h-100">
+                            <div class="section-header">
+                                <h3>@(editTransactionCategoryModel is null ? "Add Category" : "Edit Category")</h3>
+                                <p>@(editTransactionCategoryModel is null ? "Use short, recognizable names like Groceries or Rent." : $"Updating category #{editTransactionCategoryModel.Id}.")</p>
+                            </div>
+
+                            @if (editTransactionCategoryModel is null)
+                            {
+                                <EditForm Model="createTransactionCategoryModel" OnValidSubmit="CreateTransactionCategoryAsync">
+                                    <DataAnnotationsValidator />
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="transactionCategoryName">Name</label>
+                                            <InputText id="transactionCategoryName" class="form-control" @bind-Value="createTransactionCategoryModel.Name" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="transactionCategoryGroup">Group</label>
+                                            <InputSelect id="transactionCategoryGroup" class="form-select" @bind-Value="createTransactionCategoryModel.TransactionCategoryGroupId">
+                                                <option value="0">Select group</option>
+                                                @foreach (var group in transactionCategoryGroups)
+                                                {
+                                                    <option value="@group.Id">@group.Name</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-md-4 d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Category</button>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            }
+                            else
+                            {
+                                <EditForm Model="editTransactionCategoryModel" OnValidSubmit="UpdateTransactionCategoryAsync">
+                                    <DataAnnotationsValidator />
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="editTransactionCategoryName">Name</label>
+                                            <InputText id="editTransactionCategoryName" class="form-control" @bind-Value="editTransactionCategoryModel.Name" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="editTransactionCategoryGroup">Group</label>
+                                            <InputSelect id="editTransactionCategoryGroup" class="form-select" @bind-Value="editTransactionCategoryModel.TransactionCategoryGroupId">
+                                                <option value="0">Select group</option>
+                                                @foreach (var group in transactionCategoryGroups)
+                                                {
+                                                    <option value="@group.Id">@group.Name</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-md-4 d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                                            <button class="btn btn-outline-secondary" type="button" @onclick="CancelTransactionCategoryEdit">Cancel</button>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="panel nested-panel h-100">
+                            <div class="section-header">
+                                <h3>Catalog</h3>
+                                <p>Manage all available transaction category labels.</p>
+                            </div>
+
+                            <LoadingState IsVisible="@isLoading" />
+                            <EmptyState IsVisible="@(!isLoading && transactionCategories.Count == 0)" Message="No transaction categories yet." />
+
+                            @if (transactionCategories.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Order</th>
+                                                <th>Name</th>
+                                                <th>Group</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in transactionCategories)
+                                            {
+                                                <tr>
+                                                    <td>@item.DisplayOrder</td>
+                                                    <td>@item.Name</td>
+                                                    <td>@item.Group.Name</td>
+                                                    <td class="text-end">
+                                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => LoadTransactionCategoryDetailAsync(item.Id)">Open</button>
+                                                        <button class="btn btn-sm btn-outline-primary ms-2" @onclick="() => StartEditTransactionCategory(item)">Edit</button>
+                                                        <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteTransactionCategoryAsync(item.Id)">Delete</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => MoveTransactionCategoryAsync(item.Id, -1)">Up</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="() => MoveTransactionCategoryAsync(item.Id, 1)">Down</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        @if (selectedTransactionCategory is not null)
+                        {
+                            <div class="panel nested-panel h-100 detail-panel">
+                                <div class="section-header">
+                                    <h3>Category Details</h3>
+                                    <p>Selected transaction category information.</p>
+                                </div>
+
+                                <dl>
+                                    <dt>Name</dt>
+                                    <dd>@selectedTransactionCategory.Name</dd>
+                                    <dt>Group</dt>
+                                    <dd>@selectedTransactionCategory.Group.Name</dd>
+                                </dl>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (activeTab == "contribution-contributors")
+        {
+            <div class="mt-1">
+                <div class="section-header">
+                    <h2>Contribution Contributors</h2>
+                    <p>Manage the people or sources credited for contributions in Cash Flow.</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="panel nested-panel h-100">
+                            <div class="section-header">
+                                <h3>@(editContributionContributorModel is null ? "Add Contributor" : "Edit Contributor")</h3>
+                            </div>
+
+                            @if (editContributionContributorModel is null)
+                            {
+                                <EditForm Model="createContributionContributorModel" OnValidSubmit="CreateContributionContributorAsync">
+                                    <DataAnnotationsValidator />
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-8">
+                                            <label class="form-label" for="contributorName">Name</label>
+                                            <InputText id="contributorName" class="form-control" @bind-Value="createContributionContributorModel.Name" />
+                                        </div>
+                                        <div class="col-md-4 d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Contributor</button>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            }
+                            else
+                            {
+                                <EditForm Model="editContributionContributorModel" OnValidSubmit="UpdateContributionContributorAsync">
+                                    <DataAnnotationsValidator />
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-8">
+                                            <label class="form-label" for="editContributorName">Name</label>
+                                            <InputText id="editContributorName" class="form-control" @bind-Value="editContributionContributorModel.Name" />
+                                        </div>
+                                        <div class="col-md-4 d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                                            <button class="btn btn-outline-secondary" type="button" @onclick="CancelContributionContributorEdit">Cancel</button>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="panel nested-panel h-100">
+                            <div class="section-header">
+                                <h3>Contributor Catalog</h3>
+                                <p>Reuse these labels when recording contributions in Cash Flow.</p>
+                            </div>
+
+                            <LoadingState IsVisible="@isLoading" />
+                            <EmptyState IsVisible="@(!isLoading && contributionContributors.Count == 0)" Message="No contribution contributors yet." />
+
+                            @if (contributionContributors.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Order</th>
+                                                <th>Name</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in contributionContributors)
+                                            {
+                                                <tr>
+                                                    <td>@item.DisplayOrder</td>
+                                                    <td>@item.Name</td>
+                                                    <td class="text-end">
+                                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEditContributionContributor(item)">Edit</button>
+                                                        <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteContributionContributorAsync(item.Id)">Delete</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => MoveContributionContributorAsync(item.Id, -1)">Up</button>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="() => MoveContributionContributorAsync(item.Id, 1)">Down</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     </section>
 </div>
 
@@ -719,10 +1078,16 @@
     private readonly CreateAccountModel createAccountModel = new();
     private readonly CreateAccountTypeModel createAccountTypeModel = new();
     private readonly CreateAccountTypeGroupModel createAccountTypeGroupModel = new();
+    private readonly CreateTransactionCategoryGroupModel createTransactionCategoryGroupModel = new();
+    private readonly CreateTransactionCategoryModel createTransactionCategoryModel = new();
+    private readonly CreateContributionContributorModel createContributionContributorModel = new();
     private readonly List<AccountResponse> accounts = [];
     private readonly List<InstitutionResponse> institutions = [];
     private readonly List<AccountTypeResponse> accountTypes = [];
     private readonly List<AccountTypeGroupResponse> accountTypeGroups = [];
+    private readonly List<TransactionCategoryGroupResponse> transactionCategoryGroups = [];
+    private readonly List<TransactionCategoryResponse> transactionCategories = [];
+    private readonly List<ContributionContributorResponse> contributionContributors = [];
     private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private bool isLoading = true;
     private bool isSubmitting;
@@ -732,10 +1097,14 @@
     private InstitutionResponse? selectedInstitution;
     private AccountResponse? selectedAccount;
     private AccountTypeResponse? selectedAccountType;
+    private TransactionCategoryResponse? selectedTransactionCategory;
     private EditInstitutionModel? editInstitutionModel;
     private EditAccountModel? editAccountModel;
     private EditAccountTypeModel? editAccountTypeModel;
     private EditAccountTypeGroupModel? editAccountTypeGroupModel;
+    private EditTransactionCategoryGroupModel? editTransactionCategoryGroupModel;
+    private EditTransactionCategoryModel? editTransactionCategoryModel;
+    private EditContributionContributorModel? editContributionContributorModel;
 
     protected override async Task OnInitializedAsync() => await LoadAllAsync();
 
@@ -757,6 +1126,15 @@
 
             accountTypeGroups.Clear();
             accountTypeGroups.AddRange(await AccountTypeGroupsApiClient.GetAllAsync());
+
+            transactionCategoryGroups.Clear();
+            transactionCategoryGroups.AddRange(await TransactionCategoryGroupsApiClient.GetAllAsync());
+
+            transactionCategories.Clear();
+            transactionCategories.AddRange(await TransactionCategoriesApiClient.GetAllAsync());
+
+            contributionContributors.Clear();
+            contributionContributors.AddRange(await ContributionContributorsApiClient.GetAllAsync());
         }
         catch (Exception ex)
         {
@@ -1145,6 +1523,269 @@
         await LoadAllAsync();
     }
 
+    private async Task CreateTransactionCategoryGroupAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await TransactionCategoryGroupsApiClient.CreateAsync(createTransactionCategoryGroupModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createTransactionCategoryGroupModel.Name = string.Empty;
+        successMessage = "Transaction category group saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateTransactionCategoryGroupAsync()
+    {
+        if (editTransactionCategoryGroupModel is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await TransactionCategoryGroupsApiClient.UpdateAsync(editTransactionCategoryGroupModel.Id, editTransactionCategoryGroupModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editTransactionCategoryGroupModel = null;
+        successMessage = "Transaction category group updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditTransactionCategoryGroup(TransactionCategoryGroupResponse group)
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+        editTransactionCategoryGroupModel = new EditTransactionCategoryGroupModel
+        {
+            Id = group.Id,
+            Name = group.Name
+        };
+        activeTab = "transaction-category-groups";
+    }
+
+    private void CancelTransactionCategoryGroupEdit() => editTransactionCategoryGroupModel = null;
+
+    private async Task DeleteTransactionCategoryGroupAsync(int id)
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this transaction category group? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await TransactionCategoryGroupsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Transaction category group deleted.";
+        await LoadAllAsync();
+    }
+
+    private async Task CreateTransactionCategoryAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await TransactionCategoriesApiClient.CreateAsync(createTransactionCategoryModel.Name, createTransactionCategoryModel.TransactionCategoryGroupId);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createTransactionCategoryModel.Name = string.Empty;
+        createTransactionCategoryModel.TransactionCategoryGroupId = 0;
+        successMessage = "Transaction category saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateTransactionCategoryAsync()
+    {
+        if (editTransactionCategoryModel is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await TransactionCategoriesApiClient.UpdateAsync(editTransactionCategoryModel.Id, editTransactionCategoryModel.Name, editTransactionCategoryModel.TransactionCategoryGroupId);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editTransactionCategoryModel = null;
+        successMessage = "Transaction category updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditTransactionCategory(TransactionCategoryResponse category)
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+        editTransactionCategoryModel = new EditTransactionCategoryModel
+        {
+            Id = category.Id,
+            Name = category.Name,
+            TransactionCategoryGroupId = category.Group.Id
+        };
+        activeTab = "transaction-categories";
+    }
+
+    private void CancelTransactionCategoryEdit() => editTransactionCategoryModel = null;
+
+    private async Task LoadTransactionCategoryDetailAsync(int id)
+    {
+        selectedTransactionCategory = await TransactionCategoriesApiClient.GetByIdAsync(id);
+        activeTab = "transaction-categories";
+    }
+
+    private async Task DeleteTransactionCategoryAsync(int id)
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this transaction category? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await TransactionCategoriesApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        if (selectedTransactionCategory?.Id == id)
+            selectedTransactionCategory = null;
+
+        successMessage = "Transaction category deleted.";
+        await LoadAllAsync();
+    }
+
+    private async Task CreateContributionContributorAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await ContributionContributorsApiClient.CreateAsync(createContributionContributorModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createContributionContributorModel.Name = string.Empty;
+        successMessage = "Contribution contributor saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateContributionContributorAsync()
+    {
+        if (editContributionContributorModel is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var result = await ContributionContributorsApiClient.UpdateAsync(editContributionContributorModel.Id, editContributionContributorModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editContributionContributorModel = null;
+        successMessage = "Contribution contributor updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditContributionContributor(ContributionContributorResponse contributor)
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+        editContributionContributorModel = new EditContributionContributorModel
+        {
+            Id = contributor.Id,
+            Name = contributor.Name
+        };
+        activeTab = "contribution-contributors";
+    }
+
+    private void CancelContributionContributorEdit() => editContributionContributorModel = null;
+
+    private async Task DeleteContributionContributorAsync(int id)
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this contribution contributor? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await ContributionContributorsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Contribution contributor deleted.";
+        await LoadAllAsync();
+    }
+
     private async Task MoveInstitutionAsync(int id, int delta)
         => await MoveAndPersistAsync(institutions, id, delta, item => item.Id, orderedIds => InstitutionsApiClient.ReorderAsync(orderedIds), "institution order updated.");
 
@@ -1156,6 +1797,15 @@
 
     private async Task MoveAccountTypeGroupAsync(int id, int delta)
         => await MoveAndPersistAsync(accountTypeGroups, id, delta, item => item.Id, orderedIds => AccountTypeGroupsApiClient.ReorderAsync(orderedIds), "account type group order updated.");
+
+    private async Task MoveTransactionCategoryGroupAsync(int id, int delta)
+        => await MoveAndPersistAsync(transactionCategoryGroups, id, delta, item => item.Id, orderedIds => TransactionCategoryGroupsApiClient.ReorderAsync(orderedIds), "transaction category group order updated.");
+
+    private async Task MoveTransactionCategoryAsync(int id, int delta)
+        => await MoveAndPersistAsync(transactionCategories, id, delta, item => item.Id, orderedIds => TransactionCategoriesApiClient.ReorderAsync(orderedIds), "transaction category order updated.");
+
+    private async Task MoveContributionContributorAsync(int id, int delta)
+        => await MoveAndPersistAsync(contributionContributors, id, delta, item => item.Id, orderedIds => ContributionContributorsApiClient.ReorderAsync(orderedIds), "contribution contributor order updated.");
 
     private async Task MoveAndPersistAsync<T>(List<T> items, int id, int delta, Func<T, int> idSelector, Func<IReadOnlyList<int>, Task<ApiResult>> persistAsync, string successText)
     {
@@ -1236,6 +1886,41 @@
     }
 
     private sealed class EditAccountTypeGroupModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class CreateTransactionCategoryGroupModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class EditTransactionCategoryGroupModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class CreateTransactionCategoryModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public int TransactionCategoryGroupId { get; set; }
+    }
+
+    private sealed class EditTransactionCategoryModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int TransactionCategoryGroupId { get; set; }
+    }
+
+    private sealed class CreateContributionContributorModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class EditContributionContributorModel
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

@@ -84,7 +84,7 @@ public sealed class NetWorthCsvParser
                 if (string.IsNullOrWhiteSpace(rawValue))
                     continue;
 
-                if (!TryParseCurrency(rawValue, out var balance))
+                if (!CsvCurrencyParser.TryParse(rawValue, out var balance))
                 {
                     errors.Add(
                         $"Row {sourceRowNumber} has an invalid balance '{rawValue}' for snapshot date {dateColumn.Date:M/d/yyyy}.");
@@ -253,43 +253,6 @@ public sealed class NetWorthCsvParser
                     $"Account type '{sample.AccountTypeName}' appears under multiple account type groups ({string.Join(", ", distinctGroups)}). The current data model requires account type names to be globally unique.");
             }
         }
-    }
-
-    private static bool TryParseCurrency(string rawValue, out decimal balance)
-    {
-        var sanitizedValue = rawValue.Trim();
-        var isNegative = false;
-
-        if (sanitizedValue.StartsWith('(') && sanitizedValue.EndsWith(')'))
-        {
-            sanitizedValue = sanitizedValue[1..^1];
-            isNegative = true;
-        }
-
-        if (sanitizedValue.EndsWith('-'))
-        {
-            sanitizedValue = sanitizedValue[..^1];
-            isNegative = true;
-        }
-
-        sanitizedValue = sanitizedValue
-            .Replace("$", string.Empty)
-            .Replace(",", string.Empty)
-            .Replace(" ", string.Empty);
-
-        var isParsed = decimal.TryParse(
-            sanitizedValue,
-            NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
-            CultureInfo.InvariantCulture,
-            out balance);
-
-        if (!isParsed)
-            return false;
-
-        if (isNegative && balance > 0)
-            balance = -balance;
-
-        return true;
     }
 
     private static void ValidateFieldLengths(

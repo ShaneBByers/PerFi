@@ -41,6 +41,10 @@ var command = ConsoleCommand.Parse(args);
 builder.Services.AddPerFiBootstrapper(builder.Configuration);
 builder.Services.AddScoped<NetWorthCsvParser>();
 builder.Services.AddScoped<ImportNetWorthCsvOperation>();
+builder.Services.AddScoped<TransactionCsvParser>();
+builder.Services.AddScoped<ImportTransactionsCsvOperation>();
+builder.Services.AddScoped<ContributionCsvParser>();
+builder.Services.AddScoped<ImportContributionsCsvOperation>();
 builder.Services.AddScoped<CreateUserOperation>();
 builder.Services.AddScoped<ResetDatabaseOperation>();
 builder.Services.AddScoped<ConsoleCurrentUserService>();
@@ -58,6 +62,18 @@ try
         case "import-net-worth":
         {
             var operation = scope.ServiceProvider.GetRequiredService<ImportNetWorthCsvOperation>();
+            await operation.ExecuteAsync(command.CsvPath!, command.Username!, command.DryRun);
+            break;
+        }
+        case "import-transactions":
+        {
+            var operation = scope.ServiceProvider.GetRequiredService<ImportTransactionsCsvOperation>();
+            await operation.ExecuteAsync(command.CsvPath!, command.Username!, command.DryRun);
+            break;
+        }
+        case "import-contributions":
+        {
+            var operation = scope.ServiceProvider.GetRequiredService<ImportContributionsCsvOperation>();
             await operation.ExecuteAsync(command.CsvPath!, command.Username!, command.DryRun);
             break;
         }
