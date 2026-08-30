@@ -24,4 +24,12 @@
     <ProjectReference Include="../PerFi.Application/PerFi.Application.csproj" />
     <ProjectReference Include="../PerFi.Tests.Shared/PerFi.Tests.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Single source of truth is the tracked example file under PerFi.Console; linked here so tests
+         read a stable copy from their own output directory regardless of working directory. -->
+    <Content Include="../PerFi.Console/ExampleData/example_backup.json" Link="TestData/example_backup.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

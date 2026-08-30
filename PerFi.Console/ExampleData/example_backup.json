@@ -1,0 +1,4271 @@
+{
+  "schemaVersion": "1.0",
+  "exportedAtUtc": "2026-01-01T00:00:00+00:00",
+  "username": "example",
+  "accountTypeGroups": [
+    {
+      "name": "Assets",
+      "displayOrder": 1,
+      "accountTypes": [
+        {
+          "name": "Checking",
+          "displayOrder": 1
+        },
+        {
+          "name": "Savings",
+          "displayOrder": 2
+        },
+        {
+          "name": "Money Market",
+          "displayOrder": 3
+        }
+      ]
+    },
+    {
+      "name": "Liabilities",
+      "displayOrder": 2,
+      "accountTypes": [
+        {
+          "name": "Credit Card",
+          "displayOrder": 4
+        },
+        {
+          "name": "Line of Credit",
+          "displayOrder": 5
+        }
+      ]
+    },
+    {
+      "name": "Investments",
+      "displayOrder": 3,
+      "accountTypes": [
+        {
+          "name": "Brokerage",
+          "displayOrder": 6
+        }
+      ]
+    },
+    {
+      "name": "Retirement",
+      "displayOrder": 4,
+      "accountTypes": [
+        {
+          "name": "401k",
+          "displayOrder": 7
+        },
+        {
+          "name": "IRA",
+          "displayOrder": 8
+        }
+      ]
+    }
+  ],
+  "institutions": [
+    {
+      "name": "Crestwood Federal Bank",
+      "displayOrder": 1,
+      "accounts": [
+        {
+          "name": "Everyday Checking",
+          "displayOrder": 1,
+          "accountTypeGroup": "Assets",
+          "accountType": "Checking"
+        },
+        {
+          "name": "Emergency Fund",
+          "displayOrder": 2,
+          "accountTypeGroup": "Assets",
+          "accountType": "Savings"
+        }
+      ]
+    },
+    {
+      "name": "Bluepine Credit Union",
+      "displayOrder": 2,
+      "accounts": [
+        {
+          "name": "High-Yield Savings",
+          "displayOrder": 3,
+          "accountTypeGroup": "Assets",
+          "accountType": "Savings"
+        },
+        {
+          "name": "Cash Reserve",
+          "displayOrder": 4,
+          "accountTypeGroup": "Assets",
+          "accountType": "Money Market"
+        }
+      ]
+    },
+    {
+      "name": "Northgate Trust Bank",
+      "displayOrder": 3,
+      "accounts": [
+        {
+          "name": "Rewards Visa",
+          "displayOrder": 5,
+          "accountTypeGroup": "Liabilities",
+          "accountType": "Credit Card"
+        },
+        {
+          "name": "Home Equity Line",
+          "displayOrder": 6,
+          "accountTypeGroup": "Liabilities",
+          "accountType": "Line of Credit"
+        }
+      ]
+    },
+    {
+      "name": "Meridian Savings Bank",
+      "displayOrder": 4,
+      "accounts": [
+        {
+          "name": "Everyday Checking",
+          "displayOrder": 7,
+          "accountTypeGroup": "Assets",
+          "accountType": "Checking"
+        },
+        {
+          "name": "Travel Rewards Card",
+          "displayOrder": 8,
+          "accountTypeGroup": "Liabilities",
+          "accountType": "Credit Card"
+        }
+      ]
+    },
+    {
+      "name": "Silverbrook Financial",
+      "displayOrder": 5,
+      "accounts": [
+        {
+          "name": "Brokerage Account",
+          "displayOrder": 9,
+          "accountTypeGroup": "Investments",
+          "accountType": "Brokerage"
+        },
+        {
+          "name": "Roth IRA",
+          "displayOrder": 10,
+          "accountTypeGroup": "Retirement",
+          "accountType": "IRA"
+        }
+      ]
+    },
+    {
+      "name": "Cascade Investment Group",
+      "displayOrder": 6,
+      "accounts": [
+        {
+          "name": "401k Rollover",
+          "displayOrder": 11,
+          "accountTypeGroup": "Retirement",
+          "accountType": "401k"
+        },
+        {
+          "name": "Taxable Brokerage",
+          "displayOrder": 12,
+          "accountTypeGroup": "Investments",
+          "accountType": "Brokerage"
+        }
+      ]
+    }
+  ],
+  "financeSnapshots": [
+    {
+      "date": "2024-01-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3367.31
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 7857.5
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 14932.51
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 5916.96
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1020.94
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18203.01
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2570.62
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -476.08
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 41976.58
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 25858.94
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 87915.59
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 31001.61
+        }
+      ]
+    },
+    {
+      "date": "2024-01-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2631.84
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 7969.65
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15119.97
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6033.48
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -873.63
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18206.78
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2471.32
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -456.95
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 42416.75
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 26209.44
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 88402.08
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 31106.64
+        }
+      ]
+    },
+    {
+      "date": "2024-02-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3748.66
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8070.98
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15027.82
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 5919.01
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1069.25
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18241.12
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2468.55
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -678.92
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 42660.87
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 26441.93
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 88863.56
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 31435.61
+        }
+      ]
+    },
+    {
+      "date": "2024-02-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3595.29
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8215.56
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15333.51
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6083.21
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1033.87
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18103.75
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1773.48
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -551.82
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 42848.94
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 26369.84
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 89230.3
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 31563.39
+        }
+      ]
+    },
+    {
+      "date": "2024-03-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3362.82
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8199.45
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15261.05
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 5992.85
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -910.09
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18401
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2277.64
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -652.74
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 43201.34
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 26668.74
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 89699.02
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 31803.84
+        }
+      ]
+    },
+    {
+      "date": "2024-03-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3787.43
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8342
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15392.08
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6155.38
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1090.36
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18382.8
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1774.86
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -484.63
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 43569.64
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 26680.32
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 90163.29
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 32182.87
+        }
+      ]
+    },
+    {
+      "date": "2024-04-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3651.64
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8304.4
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15496.63
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6088.69
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1119.36
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18317.66
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1817.86
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -553.99
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 43968.41
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 26828.82
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 90725.38
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 32379.35
+        }
+      ]
+    },
+    {
+      "date": "2024-04-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3079.28
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8335.8
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15674.26
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6142.86
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -879.77
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18224.13
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1631.58
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -673.23
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 44362.62
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 27026.65
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 91019.06
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 32434.49
+        }
+      ]
+    },
+    {
+      "date": "2024-05-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3795.35
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8488.73
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15741.32
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6268.23
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -863.44
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18456.22
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2318.05
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -651.09
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 44530.05
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 27242.29
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 91483.47
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 32660.43
+        }
+      ]
+    },
+    {
+      "date": "2024-05-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3144.47
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8676.14
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15787.76
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6109.02
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1017.68
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18323.6
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2595.15
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -756.16
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 44864.53
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 27391.68
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 92082.69
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 32785.85
+        }
+      ]
+    },
+    {
+      "date": "2024-06-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3515.01
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8611.81
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15833.59
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6209.11
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -875.17
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18397.25
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1523.37
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -778.73
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 45363.62
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 27599.5
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 92442.25
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 32967.38
+        }
+      ]
+    },
+    {
+      "date": "2024-06-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3653.61
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8794.08
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15700.7
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6215.8
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -903.26
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18558.18
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2419
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -543.52
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 45567.58
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 27664.94
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 92879.52
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 33421.73
+        }
+      ]
+    },
+    {
+      "date": "2024-07-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3107.77
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8633.54
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15911.79
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6308.98
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -950.35
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18453.51
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2694.18
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -704.96
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 45881.43
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 27805.27
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 93286.3
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 33437.41
+        }
+      ]
+    },
+    {
+      "date": "2024-07-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3005.7
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8806.49
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 15894.03
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6176.07
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -918.8
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18579.33
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1774.73
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -786.63
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 46332.89
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 27821.26
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 93771.4
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 33780.69
+        }
+      ]
+    },
+    {
+      "date": "2024-08-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2857.08
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8729.69
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16180.65
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6301.31
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1046.8
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18655.39
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2469
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -577.12
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 46429.08
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 28079.32
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 94277.07
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 33930.11
+        }
+      ]
+    },
+    {
+      "date": "2024-08-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3474.89
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8952.01
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16270.25
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6179.53
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1033.29
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18551.79
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2534.01
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -599.6
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 46782.06
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 28234.58
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 94726.56
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 34083.56
+        }
+      ]
+    },
+    {
+      "date": "2024-09-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2899.77
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9086.98
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16182.94
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6428.4
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1085.1
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18495.18
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2699.14
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -780.81
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 47340.7
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 28527.91
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 95304.61
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 34259.89
+        }
+      ]
+    },
+    {
+      "date": "2024-09-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3182.77
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 8934.12
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16245.31
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6207.59
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1041.19
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18805.59
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1818.24
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -770.22
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 47511.5
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 28526.9
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 95787.2
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 34718.63
+        }
+      ]
+    },
+    {
+      "date": "2024-10-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3266.92
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9145.52
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16246.44
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6299.01
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1225.61
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18713.75
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2150.63
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -764.39
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 47717.15
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 28725.25
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 96100.86
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 34885.82
+        }
+      ]
+    },
+    {
+      "date": "2024-10-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2788.92
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9278.23
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16299.03
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6285.75
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1121.01
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18772.56
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1782.24
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -580.97
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 48292.09
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 28773.86
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 96578.36
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 35025.81
+        }
+      ]
+    },
+    {
+      "date": "2024-11-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3103.07
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9225.1
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16506.83
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6530.41
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1011.28
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18814.86
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1786.42
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -668.74
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 48551.51
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 28940
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 96944.85
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 35275.56
+        }
+      ]
+    },
+    {
+      "date": "2024-11-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2687.05
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9247.49
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16724.54
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6568.83
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -979.48
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18693.95
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1818.24
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -834.98
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 48939.26
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 29263.78
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 97410.86
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 35307.32
+        }
+      ]
+    },
+    {
+      "date": "2024-12-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3600.49
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9381.06
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16683.5
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6586.17
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1161.19
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18662.35
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2480.52
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -649.81
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 49199.02
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 29431.68
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 97790.29
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 35504.63
+        }
+      ]
+    },
+    {
+      "date": "2024-12-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2728.44
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9395.97
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16656.7
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6491.45
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1187.78
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18751.08
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2261.09
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -644.2
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 49471.56
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 29571.6
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 98453.83
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 35707.69
+        }
+      ]
+    },
+    {
+      "date": "2025-01-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3108.29
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9373
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16651.06
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6561.34
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1171.13
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18798.59
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2389.48
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -735.5
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 49778.31
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 29452.9
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 98672.57
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 36154.93
+        }
+      ]
+    },
+    {
+      "date": "2025-01-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3684.71
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9513.68
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16975.38
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6524.75
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1031.93
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18788.23
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1869.91
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -844.69
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 50213.84
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 29858.21
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 99369.68
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 36163.02
+        }
+      ]
+    },
+    {
+      "date": "2025-02-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2899.44
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9440.84
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17034.03
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6635.24
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1116.91
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18966.2
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1685.46
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -858.96
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 50559.38
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 30042.86
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 99793.23
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 36574.42
+        }
+      ]
+    },
+    {
+      "date": "2025-02-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2629.74
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9690.97
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 16974.66
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6669.24
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1243.17
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19069.22
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2472.9
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -665.04
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 50861.21
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 29932.43
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 100261.65
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 36777.58
+        }
+      ]
+    },
+    {
+      "date": "2025-03-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2866.92
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9774.98
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17088.09
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6501.56
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1248.6
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18908.28
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1528.4
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -647.94
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 51048.48
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 30309.31
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 100740.07
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 36813.74
+        }
+      ]
+    },
+    {
+      "date": "2025-03-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3369.78
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9709.9
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17319.34
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6590.86
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1299.27
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -18904.6
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2664.48
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -648.57
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 51563.76
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 30279.64
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 100932.52
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 37070.37
+        }
+      ]
+    },
+    {
+      "date": "2025-04-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3474.25
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9744.1
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17281.86
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6603.43
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1140.56
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19072.98
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1805.67
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -812.64
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 51600.51
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 30627.67
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 101511.54
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 37365.83
+        }
+      ]
+    },
+    {
+      "date": "2025-04-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3490.34
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9911.19
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17284.27
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6490.99
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1231.77
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19029.06
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1876.7
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -859.4
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 52140.93
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 30590.1
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 101892.79
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 37482.52
+        }
+      ]
+    },
+    {
+      "date": "2025-05-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3082.88
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9858.7
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17288.19
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6616.13
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1322.11
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19163.2
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2583.37
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -794.65
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 52340.28
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 30814.38
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 102250.12
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 37656.07
+        }
+      ]
+    },
+    {
+      "date": "2025-05-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3115.87
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10004
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17521.41
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6649.5
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1180.15
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19054.11
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2067.82
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -885.35
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 52813.81
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 30850.91
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 102725.44
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 37934.64
+        }
+      ]
+    },
+    {
+      "date": "2025-06-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3359.53
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 9990.56
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17645.53
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6755.34
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1256.84
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19087.39
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1738.96
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -627.33
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 52973.45
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 31092.54
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 103404.92
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 38011.85
+        }
+      ]
+    },
+    {
+      "date": "2025-06-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3097.33
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10138.93
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17533.33
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6758.91
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1210.81
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19123.2
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2287.27
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -626.66
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 53450.29
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 31331.01
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 103631.98
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 38327.54
+        }
+      ]
+    },
+    {
+      "date": "2025-07-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2811.06
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10297.39
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17705.39
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6585.07
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1144.76
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19334.5
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2047.75
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -870.42
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 53750.27
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 31546.37
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 104228.64
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 38695.01
+        }
+      ]
+    },
+    {
+      "date": "2025-07-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3669.71
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10253.8
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17840.78
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6741.43
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1326.67
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19274.36
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2576.65
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -858.1
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 54017.4
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 31477.76
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 104574.17
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 38811.3
+        }
+      ]
+    },
+    {
+      "date": "2025-08-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3518.98
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10286.39
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17888.02
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6692.38
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1108.25
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19225.72
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1826.06
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -735.91
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 54362.05
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 31591.51
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 105019.38
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 39038.18
+        }
+      ]
+    },
+    {
+      "date": "2025-08-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3447.7
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10209.27
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17897.28
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6792.78
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1217.23
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19232.05
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2004.17
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -916.45
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 54700.22
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 31908.66
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 105657.02
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 39269.68
+        }
+      ]
+    },
+    {
+      "date": "2025-09-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3056.46
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10251.77
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 17955.53
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6876.04
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1356.03
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19486.03
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2002.83
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -874.25
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 55013.84
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 32030.98
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 105916.16
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 39315.83
+        }
+      ]
+    },
+    {
+      "date": "2025-09-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3123
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10318.71
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 18025.84
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6873.74
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1228.8
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19279.51
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2060.87
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -693.29
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 55361.68
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 32008.09
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 106418.21
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 39629.32
+        }
+      ]
+    },
+    {
+      "date": "2025-10-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2632.52
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10562.82
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 18040.71
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6828.51
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1130.09
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19373.73
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 1753.99
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -758.05
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 55728.37
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 32263.74
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 106975.6
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 39919.58
+        }
+      ]
+    },
+    {
+      "date": "2025-10-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2902.73
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10454.57
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 18080.81
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6871.83
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1422.47
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19394.99
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2280.17
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -899.37
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 56020.53
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 32526.27
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 107484.88
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 39939.81
+        }
+      ]
+    },
+    {
+      "date": "2025-11-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2624.46
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10535.71
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 18187.87
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6930.84
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1299.19
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19385.39
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2339.36
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -900.07
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 56200.34
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 32632.17
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 107874.38
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 40124.36
+        }
+      ]
+    },
+    {
+      "date": "2025-11-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3583.16
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10839.42
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 18257.43
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6757.7
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1231.09
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19553.2
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2649.81
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -794
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 56689.5
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 32622.8
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 108307.18
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 40488.17
+        }
+      ]
+    },
+    {
+      "date": "2025-12-01",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 2722.28
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10841.74
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 18555.09
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 6950.12
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1181.32
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19675.15
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2439.16
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -784.16
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 56928.51
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 32861.17
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 108701.79
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 40612.37
+        }
+      ]
+    },
+    {
+      "date": "2025-12-15",
+      "accountBalances": [
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Everyday Checking",
+          "balance": 3619.49
+        },
+        {
+          "institution": "Crestwood Federal Bank",
+          "account": "Emergency Fund",
+          "balance": 10916.7
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "High-Yield Savings",
+          "balance": 18406.66
+        },
+        {
+          "institution": "Bluepine Credit Union",
+          "account": "Cash Reserve",
+          "balance": 7078.24
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Rewards Visa",
+          "balance": -1343.18
+        },
+        {
+          "institution": "Northgate Trust Bank",
+          "account": "Home Equity Line",
+          "balance": -19658.61
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Everyday Checking",
+          "balance": 2348.77
+        },
+        {
+          "institution": "Meridian Savings Bank",
+          "account": "Travel Rewards Card",
+          "balance": -815.65
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Brokerage Account",
+          "balance": 57345.14
+        },
+        {
+          "institution": "Silverbrook Financial",
+          "account": "Roth IRA",
+          "balance": 33189.64
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "401k Rollover",
+          "balance": 109081.02
+        },
+        {
+          "institution": "Cascade Investment Group",
+          "account": "Taxable Brokerage",
+          "balance": 40962.46
+        }
+      ]
+    }
+  ],
+  "transactionCategoryGroups": [
+    {
+      "name": "Housing",
+      "displayOrder": 1,
+      "categories": [
+        {
+          "name": "Rent/Mortgage",
+          "displayOrder": 1
+        },
+        {
+          "name": "Utilities",
+          "displayOrder": 2
+        },
+        {
+          "name": "Home Maintenance",
+          "displayOrder": 3
+        }
+      ]
+    },
+    {
+      "name": "Income",
+      "displayOrder": 2,
+      "categories": [
+        {
+          "name": "Paycheck",
+          "displayOrder": 4
+        },
+        {
+          "name": "Bonus",
+          "displayOrder": 5
+        },
+        {
+          "name": "Interest Income",
+          "displayOrder": 6
+        }
+      ]
+    },
+    {
+      "name": "Food & Dining",
+      "displayOrder": 3,
+      "categories": [
+        {
+          "name": "Groceries",
+          "displayOrder": 7
+        },
+        {
+          "name": "Restaurants",
+          "displayOrder": 8
+        },
+        {
+          "name": "Coffee Shops",
+          "displayOrder": 9
+        }
+      ]
+    },
+    {
+      "name": "Transportation",
+      "displayOrder": 4,
+      "categories": [
+        {
+          "name": "Gas",
+          "displayOrder": 10
+        },
+        {
+          "name": "Car Payment",
+          "displayOrder": 11
+        },
+        {
+          "name": "Public Transit",
+          "displayOrder": 12
+        }
+      ]
+    },
+    {
+      "name": "Entertainment",
+      "displayOrder": 5,
+      "categories": [
+        {
+          "name": "Streaming Services",
+          "displayOrder": 13
+        },
+        {
+          "name": "Hobbies",
+          "displayOrder": 14
+        },
+        {
+          "name": "Travel",
+          "displayOrder": 15
+        }
+      ]
+    },
+    {
+      "name": "Shopping",
+      "displayOrder": 6,
+      "categories": [
+        {
+          "name": "Electronics",
+          "displayOrder": 16
+        },
+        {
+          "name": "Home Goods",
+          "displayOrder": 17
+        }
+      ]
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2024-01-03",
+      "counterparty": "Riverside Rentals LLC",
+      "amount": -1596.18,
+      "categoryGroup": "Housing",
+      "category": "Rent/Mortgage",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Monthly rent"
+    },
+    {
+      "date": "2024-01-12",
+      "counterparty": "Metro Power & Light",
+      "amount": -101.32,
+      "categoryGroup": "Housing",
+      "category": "Utilities",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2024-01-21",
+      "counterparty": "BuildRight Hardware",
+      "amount": -141.6,
+      "categoryGroup": "Housing",
+      "category": "Home Maintenance",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2024-02-03",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 3046.21,
+      "categoryGroup": "Income",
+      "category": "Paycheck",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Biweekly paycheck"
+    },
+    {
+      "date": "2024-02-12",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 768.4,
+      "categoryGroup": "Income",
+      "category": "Bonus",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Performance bonus"
+    },
+    {
+      "date": "2024-02-21",
+      "counterparty": "Bluepine Credit Union",
+      "amount": 39.51,
+      "categoryGroup": "Income",
+      "category": "Interest Income",
+      "institution": "Bluepine Credit Union",
+      "account": "High-Yield Savings"
+    },
+    {
+      "date": "2024-03-03",
+      "counterparty": "Green Valley Grocers",
+      "amount": -80.31,
+      "categoryGroup": "Food & Dining",
+      "category": "Groceries",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2024-03-12",
+      "counterparty": "Bella's Trattoria",
+      "amount": -88.93,
+      "categoryGroup": "Food & Dining",
+      "category": "Restaurants",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-03-21",
+      "counterparty": "Cascade Coffee Roasters",
+      "amount": -6.54,
+      "categoryGroup": "Food & Dining",
+      "category": "Coffee Shops",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-04-03",
+      "counterparty": "QuickStop Fuel",
+      "amount": -61.46,
+      "categoryGroup": "Transportation",
+      "category": "Gas",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2024-04-12",
+      "counterparty": "Northwind Auto Finance",
+      "amount": -410.71,
+      "categoryGroup": "Transportation",
+      "category": "Car Payment",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Auto loan payment"
+    },
+    {
+      "date": "2024-04-21",
+      "counterparty": "City Transit Authority",
+      "amount": -59.48,
+      "categoryGroup": "Transportation",
+      "category": "Public Transit",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2024-05-03",
+      "counterparty": "StreamMax Entertainment",
+      "amount": -20.07,
+      "categoryGroup": "Entertainment",
+      "category": "Streaming Services",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-05-12",
+      "counterparty": "Trailhead Outfitters",
+      "amount": -117.42,
+      "categoryGroup": "Entertainment",
+      "category": "Hobbies",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-05-21",
+      "counterparty": "Journey Airlines",
+      "amount": -250.05,
+      "categoryGroup": "Entertainment",
+      "category": "Travel",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card",
+      "description": "Vacation booking"
+    },
+    {
+      "date": "2024-06-03",
+      "counterparty": "Circuit Peak Electronics",
+      "amount": -384.54,
+      "categoryGroup": "Shopping",
+      "category": "Electronics",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-06-12",
+      "counterparty": "Homestead Furnishings",
+      "amount": -215.45,
+      "categoryGroup": "Shopping",
+      "category": "Home Goods",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2024-06-21",
+      "counterparty": "Riverside Rentals LLC",
+      "amount": -1570.22,
+      "categoryGroup": "Housing",
+      "category": "Rent/Mortgage",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Monthly rent"
+    },
+    {
+      "date": "2024-07-03",
+      "counterparty": "Sunset Cable & Internet",
+      "amount": -112.77,
+      "categoryGroup": "Housing",
+      "category": "Utilities",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2024-07-12",
+      "counterparty": "GreenScape Lawn Care",
+      "amount": -61.54,
+      "categoryGroup": "Housing",
+      "category": "Home Maintenance",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2024-07-21",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 3040.24,
+      "categoryGroup": "Income",
+      "category": "Paycheck",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Biweekly paycheck"
+    },
+    {
+      "date": "2024-08-03",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 776.27,
+      "categoryGroup": "Income",
+      "category": "Bonus",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Performance bonus"
+    },
+    {
+      "date": "2024-08-12",
+      "counterparty": "Bluepine Credit Union",
+      "amount": 8.38,
+      "categoryGroup": "Income",
+      "category": "Interest Income",
+      "institution": "Bluepine Credit Union",
+      "account": "High-Yield Savings"
+    },
+    {
+      "date": "2024-08-21",
+      "counterparty": "Harvest Market",
+      "amount": -66.23,
+      "categoryGroup": "Food & Dining",
+      "category": "Groceries",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2024-09-03",
+      "counterparty": "Cafe Luna",
+      "amount": -89.01,
+      "categoryGroup": "Food & Dining",
+      "category": "Restaurants",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-09-12",
+      "counterparty": "Cascade Coffee Roasters",
+      "amount": -8.64,
+      "categoryGroup": "Food & Dining",
+      "category": "Coffee Shops",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-09-21",
+      "counterparty": "QuickStop Fuel",
+      "amount": -52.9,
+      "categoryGroup": "Transportation",
+      "category": "Gas",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2024-10-03",
+      "counterparty": "Northwind Auto Finance",
+      "amount": -404.84,
+      "categoryGroup": "Transportation",
+      "category": "Car Payment",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Auto loan payment"
+    },
+    {
+      "date": "2024-10-12",
+      "counterparty": "City Transit Authority",
+      "amount": -55.47,
+      "categoryGroup": "Transportation",
+      "category": "Public Transit",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2024-10-21",
+      "counterparty": "StreamMax Entertainment",
+      "amount": -16.6,
+      "categoryGroup": "Entertainment",
+      "category": "Streaming Services",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-11-03",
+      "counterparty": "Trailhead Outfitters",
+      "amount": -75.83,
+      "categoryGroup": "Entertainment",
+      "category": "Hobbies",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-11-12",
+      "counterparty": "Summit Hotels & Resorts",
+      "amount": -277.32,
+      "categoryGroup": "Entertainment",
+      "category": "Travel",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card",
+      "description": "Vacation booking"
+    },
+    {
+      "date": "2024-11-21",
+      "counterparty": "Circuit Peak Electronics",
+      "amount": -416.5,
+      "categoryGroup": "Shopping",
+      "category": "Electronics",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2024-12-03",
+      "counterparty": "Homestead Furnishings",
+      "amount": -213.46,
+      "categoryGroup": "Shopping",
+      "category": "Home Goods",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2024-12-12",
+      "counterparty": "Riverside Rentals LLC",
+      "amount": -1580.82,
+      "categoryGroup": "Housing",
+      "category": "Rent/Mortgage",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Monthly rent"
+    },
+    {
+      "date": "2024-12-21",
+      "counterparty": "Metro Power & Light",
+      "amount": -115.5,
+      "categoryGroup": "Housing",
+      "category": "Utilities",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-01-03",
+      "counterparty": "BuildRight Hardware",
+      "amount": -115.32,
+      "categoryGroup": "Housing",
+      "category": "Home Maintenance",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-01-12",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 2994.65,
+      "categoryGroup": "Income",
+      "category": "Paycheck",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Biweekly paycheck"
+    },
+    {
+      "date": "2025-01-21",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 1030.92,
+      "categoryGroup": "Income",
+      "category": "Bonus",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Performance bonus"
+    },
+    {
+      "date": "2025-02-03",
+      "counterparty": "Bluepine Credit Union",
+      "amount": 23.74,
+      "categoryGroup": "Income",
+      "category": "Interest Income",
+      "institution": "Bluepine Credit Union",
+      "account": "High-Yield Savings"
+    },
+    {
+      "date": "2025-02-12",
+      "counterparty": "Green Valley Grocers",
+      "amount": -90.49,
+      "categoryGroup": "Food & Dining",
+      "category": "Groceries",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-02-21",
+      "counterparty": "Bella's Trattoria",
+      "amount": -71.84,
+      "categoryGroup": "Food & Dining",
+      "category": "Restaurants",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-03-03",
+      "counterparty": "Cascade Coffee Roasters",
+      "amount": -8.86,
+      "categoryGroup": "Food & Dining",
+      "category": "Coffee Shops",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-03-12",
+      "counterparty": "QuickStop Fuel",
+      "amount": -60.52,
+      "categoryGroup": "Transportation",
+      "category": "Gas",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2025-03-21",
+      "counterparty": "Northwind Auto Finance",
+      "amount": -414.97,
+      "categoryGroup": "Transportation",
+      "category": "Car Payment",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Auto loan payment"
+    },
+    {
+      "date": "2025-04-03",
+      "counterparty": "City Transit Authority",
+      "amount": -83.97,
+      "categoryGroup": "Transportation",
+      "category": "Public Transit",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2025-04-12",
+      "counterparty": "StreamMax Entertainment",
+      "amount": -22.5,
+      "categoryGroup": "Entertainment",
+      "category": "Streaming Services",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-04-21",
+      "counterparty": "Trailhead Outfitters",
+      "amount": -109.24,
+      "categoryGroup": "Entertainment",
+      "category": "Hobbies",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-05-03",
+      "counterparty": "Journey Airlines",
+      "amount": -398.14,
+      "categoryGroup": "Entertainment",
+      "category": "Travel",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card",
+      "description": "Vacation booking"
+    },
+    {
+      "date": "2025-05-12",
+      "counterparty": "Circuit Peak Electronics",
+      "amount": -175.61,
+      "categoryGroup": "Shopping",
+      "category": "Electronics",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-05-21",
+      "counterparty": "Homestead Furnishings",
+      "amount": -221.12,
+      "categoryGroup": "Shopping",
+      "category": "Home Goods",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2025-06-03",
+      "counterparty": "Riverside Rentals LLC",
+      "amount": -1628.36,
+      "categoryGroup": "Housing",
+      "category": "Rent/Mortgage",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Monthly rent"
+    },
+    {
+      "date": "2025-06-12",
+      "counterparty": "Sunset Cable & Internet",
+      "amount": -101.26,
+      "categoryGroup": "Housing",
+      "category": "Utilities",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-06-21",
+      "counterparty": "GreenScape Lawn Care",
+      "amount": -89.57,
+      "categoryGroup": "Housing",
+      "category": "Home Maintenance",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-07-03",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 3095.32,
+      "categoryGroup": "Income",
+      "category": "Paycheck",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Biweekly paycheck"
+    },
+    {
+      "date": "2025-07-12",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 1024.64,
+      "categoryGroup": "Income",
+      "category": "Bonus",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Performance bonus"
+    },
+    {
+      "date": "2025-07-21",
+      "counterparty": "Bluepine Credit Union",
+      "amount": 18.47,
+      "categoryGroup": "Income",
+      "category": "Interest Income",
+      "institution": "Bluepine Credit Union",
+      "account": "High-Yield Savings"
+    },
+    {
+      "date": "2025-08-03",
+      "counterparty": "Harvest Market",
+      "amount": -167.94,
+      "categoryGroup": "Food & Dining",
+      "category": "Groceries",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-08-12",
+      "counterparty": "Cafe Luna",
+      "amount": -81.41,
+      "categoryGroup": "Food & Dining",
+      "category": "Restaurants",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-08-21",
+      "counterparty": "Cascade Coffee Roasters",
+      "amount": -15.04,
+      "categoryGroup": "Food & Dining",
+      "category": "Coffee Shops",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-09-03",
+      "counterparty": "QuickStop Fuel",
+      "amount": -63.72,
+      "categoryGroup": "Transportation",
+      "category": "Gas",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2025-09-12",
+      "counterparty": "Northwind Auto Finance",
+      "amount": -419.72,
+      "categoryGroup": "Transportation",
+      "category": "Car Payment",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking",
+      "description": "Auto loan payment"
+    },
+    {
+      "date": "2025-09-21",
+      "counterparty": "City Transit Authority",
+      "amount": -63.29,
+      "categoryGroup": "Transportation",
+      "category": "Public Transit",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2025-10-03",
+      "counterparty": "StreamMax Entertainment",
+      "amount": -21.43,
+      "categoryGroup": "Entertainment",
+      "category": "Streaming Services",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-10-12",
+      "counterparty": "Trailhead Outfitters",
+      "amount": -32.31,
+      "categoryGroup": "Entertainment",
+      "category": "Hobbies",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-10-21",
+      "counterparty": "Summit Hotels & Resorts",
+      "amount": -389.92,
+      "categoryGroup": "Entertainment",
+      "category": "Travel",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card",
+      "description": "Vacation booking"
+    },
+    {
+      "date": "2025-11-03",
+      "counterparty": "Circuit Peak Electronics",
+      "amount": -198.93,
+      "categoryGroup": "Shopping",
+      "category": "Electronics",
+      "institution": "Northgate Trust Bank",
+      "account": "Rewards Visa"
+    },
+    {
+      "date": "2025-11-12",
+      "counterparty": "Homestead Furnishings",
+      "amount": -233.48,
+      "categoryGroup": "Shopping",
+      "category": "Home Goods",
+      "institution": "Meridian Savings Bank",
+      "account": "Travel Rewards Card"
+    },
+    {
+      "date": "2025-11-21",
+      "counterparty": "Riverside Rentals LLC",
+      "amount": -1563.15,
+      "categoryGroup": "Housing",
+      "category": "Rent/Mortgage",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Monthly rent"
+    },
+    {
+      "date": "2025-12-03",
+      "counterparty": "Metro Power & Light",
+      "amount": -100.73,
+      "categoryGroup": "Housing",
+      "category": "Utilities",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-12-12",
+      "counterparty": "BuildRight Hardware",
+      "amount": -62.91,
+      "categoryGroup": "Housing",
+      "category": "Home Maintenance",
+      "institution": "Meridian Savings Bank",
+      "account": "Everyday Checking"
+    },
+    {
+      "date": "2025-12-21",
+      "counterparty": "Alderwood Technologies Payroll",
+      "amount": 3014.81,
+      "categoryGroup": "Income",
+      "category": "Paycheck",
+      "institution": "Crestwood Federal Bank",
+      "account": "Everyday Checking",
+      "description": "Biweekly paycheck"
+    }
+  ],
+  "contributionContributors": [
+    {
+      "name": "Household",
+      "displayOrder": 1
+    },
+    {
+      "name": "Employer Match",
+      "displayOrder": 2
+    },
+    {
+      "name": "Bonus Contribution",
+      "displayOrder": 3
+    }
+  ],
+  "contributions": [
+    {
+      "date": "2024-01-15",
+      "amount": 446.94,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2024-02-15",
+      "amount": 294.05,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2024-03-15",
+      "amount": 218.44,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2024-04-15",
+      "amount": 405.14,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2024-05-15",
+      "amount": 344.11,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2024-06-15",
+      "amount": 247.77,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2024-07-15",
+      "amount": 482.21,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2024-08-15",
+      "amount": 290.07,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2024-09-15",
+      "amount": 207.41,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2024-10-15",
+      "amount": 462.94,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2024-11-15",
+      "amount": 255.36,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2024-12-15",
+      "amount": 214.92,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2024-12-20",
+      "amount": 750,
+      "contributor": "Bonus Contribution",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2025-01-15",
+      "amount": 456.28,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2025-02-15",
+      "amount": 280.38,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2025-03-15",
+      "amount": 299.39,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2025-04-15",
+      "amount": 411.85,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2025-05-15",
+      "amount": 326.44,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2025-06-15",
+      "amount": 260.63,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2025-07-15",
+      "amount": 479.07,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2025-08-15",
+      "amount": 272.57,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2025-09-15",
+      "amount": 252.26,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2025-10-15",
+      "amount": 445.05,
+      "contributor": "Household",
+      "institution": "Silverbrook Financial",
+      "account": "Roth IRA"
+    },
+    {
+      "date": "2025-11-15",
+      "amount": 294.27,
+      "contributor": "Employer Match",
+      "institution": "Cascade Investment Group",
+      "account": "401k Rollover"
+    },
+    {
+      "date": "2025-12-15",
+      "amount": 286.02,
+      "contributor": "Household",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    },
+    {
+      "date": "2025-12-20",
+      "amount": 800,
+      "contributor": "Bonus Contribution",
+      "institution": "Cascade Investment Group",
+      "account": "Taxable Brokerage"
+    }
+  ]
+}
