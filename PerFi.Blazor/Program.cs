@@ -65,12 +65,6 @@ builder.Services.AddHttpClient<ISnapshotsApiClient, SnapshotsApiClient>(client =
 }).AddHttpMessageHandler<CookieRequestHandler>()
 	.AddHttpMessageHandler<AuthMessageHandler>();
 
-builder.Services.AddHttpClient<IContributionContributorsApiClient, ContributionContributorsApiClient>(client =>
-{
-	client.BaseAddress = new Uri(apiBaseUrl);
-}).AddHttpMessageHandler<CookieRequestHandler>()
-	.AddHttpMessageHandler<AuthMessageHandler>();
-
 builder.Services.AddHttpClient<IContributionsApiClient, ContributionsApiClient>(client =>
 {
 	client.BaseAddress = new Uri(apiBaseUrl);

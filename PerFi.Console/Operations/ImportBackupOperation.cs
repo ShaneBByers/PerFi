@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using PerFi.Application.Commands;
 using PerFi.Application.Interfaces;
 using PerFi.Console.Backup;
+using PerFi.Domain.Entities;
 using PerFi.Infrastructure;
 using PerFi.Infrastructure.Entities;
 
@@ -22,7 +23,6 @@ public sealed class ImportBackupOperation(
     ITransactionCategoryGroupService transactionCategoryGroupService,
     ITransactionCategoryService transactionCategoryService,
     ITransactionService transactionService,
-    IContributionContributorService contributionContributorService,
     IContributionService contributionService)
 {
     public async Task ExecuteAsync(string backupPath, string username, bool dryRun, CancellationToken cancellationToken = default)
@@ -94,7 +94,6 @@ public sealed class ImportBackupOperation(
             || await dbContext.FinanceSnapshots.AnyAsync(s => s.UserId == currentUser.UserId, cancellationToken)
             || await dbContext.TransactionCategoryGroups.AnyAsync(g => g.UserId == currentUser.UserId, cancellationToken)
             || await dbContext.Transactions.AnyAsync(t => t.UserId == currentUser.UserId, cancellationToken)
-            || await dbContext.ContributionContributors.AnyAsync(c => c.UserId == currentUser.UserId, cancellationToken)
             || await dbContext.Contributions.AnyAsync(c => c.UserId == currentUser.UserId, cancellationToken);
 
     private async Task RestoreAsync(BackupDocument document, CancellationToken cancellationToken)
@@ -121,10 +120,7 @@ public sealed class ImportBackupOperation(
 
         await CreateTransactionsAsync(document.Transactions, categoryIds, accountIds, cancellationToken);
 
-        var contributorIds = await CreateContributionContributorsAsync(document.ContributionContributors, cancellationToken);
-        await ReorderContributionContributorsAsync(document.ContributionContributors, contributorIds, cancellationToken);
-
-        await CreateContributionsAsync(document.Contributions, contributorIds, accountIds, cancellationToken);
+        await CreateContributionsAsync(document.Contributions, accountIds, cancellationToken);
     }
 
     private async Task<Dictionary<string, int>> CreateAccountTypeGroupsAsync(
@@ -434,58 +430,20 @@ public sealed class ImportBackupOperation(
         System.Console.WriteLine($"Created {transactions.Count} transactions.");
     }
 
-    private async Task<Dictionary<string, int>> CreateContributionContributorsAsync(
-        IReadOnlyList<BackupContributionContributor> contributors,
-        CancellationToken cancellationToken)
-    {
-        var contributorIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var contributor in contributors)
-        {
-            var result = await contributionContributorService.CreateContributionContributorAsync(
-                new CreateContributionContributorCommand(contributor.Name),
-                cancellationToken);
-
-            if (result.IsFailure || result.Value is null)
-                throw new InvalidOperationException($"Failed to create contribution contributor '{contributor.Name}': {result.Error}");
-
-            contributorIds[NormalizeKey(contributor.Name)] = result.Value.Id;
-        }
-
-        return contributorIds;
-    }
-
-    private async Task ReorderContributionContributorsAsync(
-        IReadOnlyList<BackupContributionContributor> contributors,
-        IReadOnlyDictionary<string, int> contributorIds,
-        CancellationToken cancellationToken)
-    {
-        var orderedIds = contributors
-            .OrderBy(contributor => contributor.DisplayOrder)
-            .Select(contributor => contributorIds[NormalizeKey(contributor.Name)])
-            .ToList();
-
-        var result = await contributionContributorService.ReorderContributionContributorsAsync(
-            new ReorderContributionContributorsCommand(orderedIds),
-            cancellationToken);
-
-        if (result.IsFailure)
-            throw new InvalidOperationException($"Failed to restore contribution contributor order: {result.Error}");
-    }
-
     private async Task CreateContributionsAsync(
         IReadOnlyList<BackupContribution> contributions,
-        IReadOnlyDictionary<string, int> contributorIds,
         IReadOnlyDictionary<string, int> accountIds,
         CancellationToken cancellationToken)
     {
         foreach (var contribution in contributions.OrderBy(c => c.Date))
         {
-            var contributorId = contributorIds[NormalizeKey(contribution.Contributor)];
+            if (!Enum.TryParse<ContributionContributorType>(contribution.Contributor, ignoreCase: true, out var contributorType))
+                throw new InvalidOperationException($"Unknown contribution contributor '{contribution.Contributor}'. Expected one of: {string.Join(", ", Enum.GetNames<ContributionContributorType>())}.");
+
             var accountId = accountIds[MakeAccountKey(contribution.Institution, contribution.Account)];
 
             var result = await contributionService.CreateContributionAsync(
-                new CreateContributionCommand(contribution.Date, contribution.Amount, contributorId, accountId),
+                new CreateContributionCommand(contribution.Date, contribution.Amount, contributorType, accountId),
                 cancellationToken);
 
             if (result.IsFailure)
@@ -514,7 +472,6 @@ public sealed class ImportBackupOperation(
         System.Console.WriteLine($"Snapshots: {document.FinanceSnapshots.Count}");
         System.Console.WriteLine($"Transaction category groups: {document.TransactionCategoryGroups.Count}");
         System.Console.WriteLine($"Transactions: {document.Transactions.Count}");
-        System.Console.WriteLine($"Contribution contributors: {document.ContributionContributors.Count}");
         System.Console.WriteLine($"Contributions: {document.Contributions.Count}");
         System.Console.WriteLine();
     }

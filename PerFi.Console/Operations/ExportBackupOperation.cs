@@ -18,7 +18,6 @@ public sealed class ExportBackupOperation(
     ITransactionCategoryGroupService transactionCategoryGroupService,
     ITransactionCategoryService transactionCategoryService,
     ITransactionService transactionService,
-    IContributionContributorService contributionContributorService,
     IContributionService contributionService)
 {
     public async Task ExecuteAsync(string outputPath, string username, CancellationToken cancellationToken = default)
@@ -45,7 +44,6 @@ public sealed class ExportBackupOperation(
         var categoryGroups = await transactionCategoryGroupService.GetAllTransactionCategoryGroupsAsync(cancellationToken);
         var categories = await transactionCategoryService.GetAllTransactionCategoriesAsync(cancellationToken);
         var transactions = await transactionService.GetAllTransactionsAsync(cancellationToken);
-        var contributors = await contributionContributorService.GetAllContributionContributorsAsync(cancellationToken);
         var contributions = await contributionService.GetAllContributionsAsync(cancellationToken);
 
         var accountLookup = BuildAccountLookup(institutions);
@@ -59,7 +57,6 @@ public sealed class ExportBackupOperation(
             BuildFinanceSnapshots(snapshots, accountLookup),
             BuildTransactionCategoryGroups(categoryGroups, categories),
             BuildTransactions(transactions, accountLookup),
-            [.. contributors.Select(contributor => new BackupContributionContributor(contributor.Name, contributor.DisplayOrder))],
             BuildContributions(contributions, accountLookup));
 
         Directory.CreateDirectory(Path.GetDirectoryName(resolvedPath) is { Length: > 0 } directory ? directory : ".");
@@ -74,7 +71,6 @@ public sealed class ExportBackupOperation(
         System.Console.WriteLine($"Snapshots: {snapshots.Count}");
         System.Console.WriteLine($"Transaction category groups: {categoryGroups.Count}");
         System.Console.WriteLine($"Transactions: {transactions.Count}");
-        System.Console.WriteLine($"Contribution contributors: {contributors.Count}");
         System.Console.WriteLine($"Contributions: {contributions.Count}");
         System.Console.WriteLine();
         System.Console.WriteLine($"Backup written to {resolvedPath}");
@@ -171,7 +167,7 @@ public sealed class ExportBackupOperation(
                 return new BackupContribution(
                     contribution.Date,
                     contribution.Amount,
-                    contribution.Contributor.Name,
+                    contribution.Contributor.ToString(),
                     institutionName,
                     accountName);
             })];

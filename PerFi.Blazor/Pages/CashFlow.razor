@@ -4,7 +4,6 @@
 @inject IContributionsApiClient ContributionsApiClient
 @inject ITransactionCategoriesApiClient TransactionCategoriesApiClient
 @inject ITransactionCategoryGroupsApiClient TransactionCategoryGroupsApiClient
-@inject IContributionContributorsApiClient ContributionContributorsApiClient
 @inject IAccountsApiClient AccountsApiClient
 @inject IJSRuntime JSRuntime
 
@@ -348,11 +347,10 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label" for="contributionContributor">Contributor</label>
-                                            <InputSelect id="contributionContributor" class="form-select" @bind-Value="createContributionModel.ContributionContributorId">
-                                                <option value="0">Select contributor</option>
-                                                @foreach (var contributor in contributionContributors)
+                                            <InputSelect id="contributionContributor" class="form-select" @bind-Value="createContributionModel.Contributor">
+                                                @foreach (var contributorType in Enum.GetValues<ContributionContributorType>())
                                                 {
-                                                    <option value="@contributor.Id">@contributor.Name</option>
+                                                    <option value="@contributorType">@contributorType</option>
                                                 }
                                             </InputSelect>
                                         </div>
@@ -387,11 +385,10 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label" for="editContributionContributor">Contributor</label>
-                                            <InputSelect id="editContributionContributor" class="form-select" @bind-Value="editContributionModel.ContributionContributorId">
-                                                <option value="0">Select contributor</option>
-                                                @foreach (var contributor in contributionContributors)
+                                            <InputSelect id="editContributionContributor" class="form-select" @bind-Value="editContributionModel.Contributor">
+                                                @foreach (var contributorType in Enum.GetValues<ContributionContributorType>())
                                                 {
-                                                    <option value="@contributor.Id">@contributor.Name</option>
+                                                    <option value="@contributorType">@contributorType</option>
                                                 }
                                             </InputSelect>
                                         </div>
@@ -443,7 +440,7 @@
                                             {
                                                 <tr>
                                                     <td>@contribution.Date.ToString("MMM dd, yyyy")</td>
-                                                    <td>@contribution.Contributor.Name</td>
+                                                    <td>@contribution.Contributor</td>
                                                     <td>@contribution.Account.Name</td>
                                                     <td class="text-end">@FormatCurrency(contribution.Amount)</td>
                                                     <td class="text-end">
@@ -469,7 +466,6 @@
     private readonly CreateContributionModel createContributionModel = new();
     private readonly List<AccountResponse> accounts = [];
     private readonly List<TransactionCategoryResponse> transactionCategories = [];
-    private readonly List<ContributionContributorResponse> contributionContributors = [];
     private readonly List<TransactionResponse> transactions = [];
     private readonly List<ContributionResponse> contributions = [];
     private readonly List<TransactionResponse> filteredTransactions = [];
@@ -508,9 +504,6 @@
 
             transactionCategories.Clear();
             transactionCategories.AddRange(await TransactionCategoriesApiClient.GetAllAsync());
-
-            contributionContributors.Clear();
-            contributionContributors.AddRange(await ContributionContributorsApiClient.GetAllAsync());
 
             transactions.Clear();
             transactions.AddRange(await TransactionsApiClient.GetAllAsync());
@@ -629,7 +622,7 @@
             .OrderByDescending(point => point.Total));
 
         contributorBreakdownPoints.AddRange(filteredContributions
-            .GroupBy(c => c.Contributor.Name)
+            .GroupBy(c => c.Contributor.ToString())
             .Select(group => new CategoryBreakdownPoint(group.Key, group.Sum(c => c.Amount)))
             .OrderByDescending(point => point.Total));
     }
@@ -778,7 +771,7 @@
         var result = await ContributionsApiClient.CreateAsync(
             createContributionModel.Date,
             createContributionModel.Amount,
-            createContributionModel.ContributionContributorId,
+            createContributionModel.Contributor,
             createContributionModel.AccountId);
         isSubmitting = false;
 
@@ -790,7 +783,7 @@
         }
 
         createContributionModel.Amount = 0m;
-        createContributionModel.ContributionContributorId = 0;
+        createContributionModel.Contributor = ContributionContributorType.Self;
         createContributionModel.AccountId = 0;
         successMessage = "Contribution saved.";
         await LoadAllAsync();
@@ -810,7 +803,7 @@
             editContributionModel.Id,
             editContributionModel.Date,
             editContributionModel.Amount,
-            editContributionModel.ContributionContributorId,
+            editContributionModel.Contributor,
             editContributionModel.AccountId);
         isSubmitting = false;
 
@@ -836,7 +829,7 @@
             Id = contribution.Id,
             Date = contribution.Date,
             Amount = contribution.Amount,
-            ContributionContributorId = contribution.Contributor.Id,
+            Contributor = contribution.Contributor,
             AccountId = contribution.Account.Id
         };
     }
@@ -924,7 +917,7 @@
     {
         public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.Today);
         public decimal Amount { get; set; }
-        public int ContributionContributorId { get; set; }
+        public ContributionContributorType Contributor { get; set; }
         public int AccountId { get; set; }
     }
 
@@ -933,7 +926,7 @@
         public int Id { get; set; }
         public DateOnly Date { get; set; }
         public decimal Amount { get; set; }
-        public int ContributionContributorId { get; set; }
+        public ContributionContributorType Contributor { get; set; }
         public int AccountId { get; set; }
     }
 }

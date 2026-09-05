@@ -59,7 +59,7 @@ public sealed class ContributionsControllerTests
     {
         var controller = CreateController(new RecordingContributionService());
 
-        var result = await controller.Create(new CreateContributionRequest(default, 0m, 1, 1));
+        var result = await controller.Create(new CreateContributionRequest(default, 0m, ContributionContributorType.Self, 1));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -70,7 +70,7 @@ public sealed class ContributionsControllerTests
         var service = new RecordingContributionService { CreateResult = Result<Contribution>.Failure("nope") };
         var controller = CreateController(service);
 
-        var result = await controller.Create(new CreateContributionRequest(new DateOnly(2026, 8, 9), 25m, 1, 1));
+        var result = await controller.Create(new CreateContributionRequest(new DateOnly(2026, 8, 9), 25m, ContributionContributorType.Self, 1));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -81,7 +81,7 @@ public sealed class ContributionsControllerTests
         var service = new RecordingContributionService { CreateResult = Result<Contribution>.Success(BuildContribution(5)) };
         var controller = CreateController(service);
 
-        var result = await controller.Create(new CreateContributionRequest(new DateOnly(2026, 8, 9), 25m, 1, 1));
+        var result = await controller.Create(new CreateContributionRequest(new DateOnly(2026, 8, 9), 25m, ContributionContributorType.Self, 1));
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(ContributionsController.Get), created.ActionName);
@@ -92,7 +92,7 @@ public sealed class ContributionsControllerTests
     {
         var controller = CreateController(new RecordingContributionService());
 
-        var result = await controller.Update(1, new UpdateContributionRequest(default, 0m, 1, 1));
+        var result = await controller.Update(1, new UpdateContributionRequest(default, 0m, ContributionContributorType.Self, 1));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -103,7 +103,7 @@ public sealed class ContributionsControllerTests
         var service = new RecordingContributionService { UpdateResult = Result.Failure("Contribution with ID '1' not found.") };
         var controller = CreateController(service);
 
-        var result = await controller.Update(1, new UpdateContributionRequest(new DateOnly(2026, 8, 9), 25m, 1, 1));
+        var result = await controller.Update(1, new UpdateContributionRequest(new DateOnly(2026, 8, 9), 25m, ContributionContributorType.Self, 1));
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -114,7 +114,7 @@ public sealed class ContributionsControllerTests
         var service = new RecordingContributionService { UpdateResult = Result.Success() };
         var controller = CreateController(service);
 
-        var result = await controller.Update(1, new UpdateContributionRequest(new DateOnly(2026, 8, 9), 25m, 1, 1));
+        var result = await controller.Update(1, new UpdateContributionRequest(new DateOnly(2026, 8, 9), 25m, ContributionContributorType.Self, 1));
 
         Assert.IsType<NoContentResult>(result);
     }
@@ -142,7 +142,7 @@ public sealed class ContributionsControllerTests
     }
 
     private static Contribution BuildContribution(int id = 1)
-        => new(id, new DateOnly(2026, 8, 9), 25m, new ContributionContributor(1, "Alice"), 1);
+        => new(id, new DateOnly(2026, 8, 9), 25m, ContributionContributorType.Self, 1);
 
     private sealed class RecordingContributionService : IContributionService
     {

@@ -4070,200 +4070,186 @@
       "description": "Biweekly paycheck"
     }
   ],
-  "contributionContributors": [
-    {
-      "name": "Household",
-      "displayOrder": 1
-    },
-    {
-      "name": "Employer Match",
-      "displayOrder": 2
-    },
-    {
-      "name": "Bonus Contribution",
-      "displayOrder": 3
-    }
-  ],
   "contributions": [
     {
       "date": "2024-01-15",
       "amount": 446.94,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2024-02-15",
       "amount": 294.05,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2024-03-15",
       "amount": 218.44,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2024-04-15",
       "amount": 405.14,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2024-05-15",
       "amount": 344.11,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2024-06-15",
       "amount": 247.77,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2024-07-15",
       "amount": 482.21,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2024-08-15",
       "amount": 290.07,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2024-09-15",
       "amount": 207.41,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2024-10-15",
       "amount": 462.94,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2024-11-15",
       "amount": 255.36,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2024-12-15",
       "amount": 214.92,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2024-12-20",
       "amount": 750,
-      "contributor": "Bonus Contribution",
+      "contributor": "Other",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2025-01-15",
       "amount": 456.28,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2025-02-15",
       "amount": 280.38,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2025-03-15",
       "amount": 299.39,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2025-04-15",
       "amount": 411.85,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2025-05-15",
       "amount": 326.44,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2025-06-15",
       "amount": 260.63,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2025-07-15",
       "amount": 479.07,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2025-08-15",
       "amount": 272.57,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2025-09-15",
       "amount": 252.26,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2025-10-15",
       "amount": 445.05,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Silverbrook Financial",
       "account": "Roth IRA"
     },
     {
       "date": "2025-11-15",
       "amount": 294.27,
-      "contributor": "Employer Match",
+      "contributor": "Employer",
       "institution": "Cascade Investment Group",
       "account": "401k Rollover"
     },
     {
       "date": "2025-12-15",
       "amount": 286.02,
-      "contributor": "Household",
+      "contributor": "Self",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     },
     {
       "date": "2025-12-20",
       "amount": 800,
-      "contributor": "Bonus Contribution",
+      "contributor": "Other",
       "institution": "Cascade Investment Group",
       "account": "Taxable Brokerage"
     }

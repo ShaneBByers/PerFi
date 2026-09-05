@@ -23,12 +23,8 @@ public sealed record UpdateFinanceSnapshotRequest(DateOnly SnapshotDate, IReadOn
 public sealed record BulkUpdateFinanceSnapshotCellsRequest(IReadOnlyList<SnapshotCellUpdateRequest> Updates);
 public sealed record SnapshotCellUpdateRequest(int SnapshotId, int AccountId, decimal Balance);
 
-public sealed record CreateContributionContributorRequest(string Name);
-public sealed record UpdateContributionContributorRequest(string Name);
-public sealed record ReorderContributionContributorsRequest(IReadOnlyList<int> OrderedContributionContributorIds);
-
-public sealed record CreateContributionRequest(DateOnly Date, decimal Amount, int ContributionContributorId, int AccountId);
-public sealed record UpdateContributionRequest(DateOnly Date, decimal Amount, int ContributionContributorId, int AccountId);
+public sealed record CreateContributionRequest(DateOnly Date, decimal Amount, ContributionContributorType Contributor, int AccountId);
+public sealed record UpdateContributionRequest(DateOnly Date, decimal Amount, ContributionContributorType Contributor, int AccountId);
 
 public sealed record CreateTransactionCategoryGroupRequest(string Name);
 public sealed record UpdateTransactionCategoryGroupRequest(string Name);

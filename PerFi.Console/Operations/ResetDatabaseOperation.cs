@@ -18,7 +18,6 @@ public sealed class ResetDatabaseOperation(PerFiDbContext dbContext)
         var transactionCategoryCount = await dbContext.TransactionCategories.CountAsync(cancellationToken);
         var transactionCategoryGroupCount = await dbContext.TransactionCategoryGroups.CountAsync(cancellationToken);
         var contributionCount = await dbContext.Contributions.CountAsync(cancellationToken);
-        var contributionContributorCount = await dbContext.ContributionContributors.CountAsync(cancellationToken);
         var userConfigCount = await dbContext.UserConfigurations.CountAsync(cancellationToken);
         var userExpectationsCount = await dbContext.UserConfigurationExpectations.CountAsync(cancellationToken);
 
@@ -33,7 +32,6 @@ public sealed class ResetDatabaseOperation(PerFiDbContext dbContext)
         System.Console.WriteLine($"- AccountTypeGroups: {accountTypeGroupCount}");
         System.Console.WriteLine($"- TransactionCategories: {transactionCategoryCount}");
         System.Console.WriteLine($"- TransactionCategoryGroups: {transactionCategoryGroupCount}");
-        System.Console.WriteLine($"- ContributionContributors: {contributionContributorCount}");
         System.Console.WriteLine($"- UserConfigurations: {userConfigCount}");
         System.Console.WriteLine($"- UserConfigurationExpectations: {userExpectationsCount}");
         System.Console.WriteLine("User accounts (AspNetUsers) are not affected.");
@@ -62,7 +60,6 @@ public sealed class ResetDatabaseOperation(PerFiDbContext dbContext)
         await dbContext.AccountTypeGroups.ExecuteDeleteAsync(cancellationToken);
         await dbContext.TransactionCategories.ExecuteDeleteAsync(cancellationToken);
         await dbContext.TransactionCategoryGroups.ExecuteDeleteAsync(cancellationToken);
-        await dbContext.ContributionContributors.ExecuteDeleteAsync(cancellationToken);
         await dbContext.UserConfigurationExpectations.ExecuteDeleteAsync(cancellationToken);
         await dbContext.UserConfigurations.ExecuteDeleteAsync(cancellationToken);
 

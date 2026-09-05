@@ -27,7 +27,7 @@ public class ContributionsController(
             contribution.Id,
             contribution.Date,
             contribution.Amount,
-            new ContributionContributorIdentityResponse(contribution.Contributor.Id, contribution.Contributor.Name),
+            contribution.Contributor,
             new AccountIdentityResponse(contribution.AccountId, accountNameById.GetValueOrDefault(contribution.AccountId, "Unknown Account")))));
     }
 
@@ -46,19 +46,19 @@ public class ContributionsController(
             contribution.Id,
             contribution.Date,
             contribution.Amount,
-            new ContributionContributorIdentityResponse(contribution.Contributor.Id, contribution.Contributor.Name),
+            contribution.Contributor,
             new AccountIdentityResponse(contribution.AccountId, accountNameById.GetValueOrDefault(contribution.AccountId, "Unknown Account"))));
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateContributionRequest request)
     {
-        var validationErrors = RequestValidator.ValidateCreateContributionRequest(request.Date, request.Amount, request.ContributionContributorId, request.AccountId);
+        var validationErrors = RequestValidator.ValidateCreateContributionRequest(request.Date, request.Amount, request.Contributor, request.AccountId);
         if (validationErrors.Count > 0)
             return BadRequest(validationErrors.ToValidationProblemDetails());
 
         var result = await contributionService.CreateContributionAsync(
-            new CreateContributionCommand(request.Date, request.Amount, request.ContributionContributorId, request.AccountId),
+            new CreateContributionCommand(request.Date, request.Amount, request.Contributor, request.AccountId),
             HttpContext.RequestAborted);
 
         if (result.IsFailure)
@@ -76,12 +76,12 @@ public class ContributionsController(
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateContributionRequest request)
     {
-        var validationErrors = RequestValidator.ValidateUpdateContributionRequest(request.Date, request.Amount, request.ContributionContributorId, request.AccountId);
+        var validationErrors = RequestValidator.ValidateUpdateContributionRequest(request.Date, request.Amount, request.Contributor, request.AccountId);
         if (validationErrors.Count > 0)
             return BadRequest(validationErrors.ToValidationProblemDetails());
 
         var result = await contributionService.UpdateContributionAsync(
-            new UpdateContributionCommand(id, request.Date, request.Amount, request.ContributionContributorId, request.AccountId),
+            new UpdateContributionCommand(id, request.Date, request.Amount, request.Contributor, request.AccountId),
             HttpContext.RequestAborted);
 
         if (result.IsFailure)

@@ -39,7 +39,6 @@ public sealed class ImportExampleBackupTests
         Assert.Equal(6, await host.DbContext.TransactionCategoryGroups.CountAsync());
         Assert.Equal(17, await host.DbContext.TransactionCategories.CountAsync());
         Assert.Equal(72, await host.DbContext.Transactions.CountAsync());
-        Assert.Equal(3, await host.DbContext.ContributionContributors.CountAsync());
         Assert.Equal(26, await host.DbContext.Contributions.CountAsync());
 
         var rentPayments = await host.DbContext.Transactions

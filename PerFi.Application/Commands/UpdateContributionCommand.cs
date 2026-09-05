@@ -1,8 +1,10 @@
+using PerFi.Domain.Entities;
+
 namespace PerFi.Application.Commands;
 
 public sealed record UpdateContributionCommand(
     int ContributionId,
     DateOnly Date,
     decimal Amount,
-    int ContributionContributorId,
+    ContributionContributorType Contributor,
     int AccountId);

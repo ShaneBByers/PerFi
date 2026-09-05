@@ -2,6 +2,14 @@ namespace PerFi.Blazor.Contracts;
 
 public sealed record LoginResponse(string Token);
 
+// Mirrors PerFi.Domain.Entities.ContributionContributorType; ordinal values must stay in sync since the wire format is numeric.
+public enum ContributionContributorType
+{
+    Self,
+    Employer,
+    Other
+}
+
 public sealed record AccountTypeGroupResponse(int Id, string Name, int DisplayOrder);
 
 public sealed record AccountTypeResponse(int Id, string Name, int DisplayOrder, AccountTypeGroupResponse Group);
@@ -18,11 +26,7 @@ public sealed record FinanceSnapshotResponse(int Id, DateOnly Date, IReadOnlyLis
 
 public sealed record AccountIdentityResponse(int Id, string Name);
 
-public sealed record ContributionContributorResponse(int Id, string Name, int DisplayOrder);
-
-public sealed record ContributionContributorIdentityResponse(int Id, string Name);
-
-public sealed record ContributionResponse(int Id, DateOnly Date, decimal Amount, ContributionContributorIdentityResponse Contributor, AccountIdentityResponse Account);
+public sealed record ContributionResponse(int Id, DateOnly Date, decimal Amount, ContributionContributorType Contributor, AccountIdentityResponse Account);
 
 public sealed record TransactionCategoryGroupResponse(int Id, string Name, int DisplayOrder);
 

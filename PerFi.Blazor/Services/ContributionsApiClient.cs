@@ -11,9 +11,9 @@ public sealed class ContributionsApiClient(HttpClient httpClient) : IContributio
     public Task<ContributionResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         httpClient.GetFromJsonAsync<ContributionResponse>($"api/contributions/{id}", cancellationToken);
 
-    public async Task<ApiResult> CreateAsync(DateOnly date, decimal amount, int contributionContributorId, int accountId, CancellationToken cancellationToken = default)
+    public async Task<ApiResult> CreateAsync(DateOnly date, decimal amount, ContributionContributorType contributor, int accountId, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync("api/contributions", new CreateContributionRequest(date, amount, contributionContributorId, accountId), cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("api/contributions", new CreateContributionRequest(date, amount, contributor, accountId), cancellationToken);
 
         if (response.IsSuccessStatusCode)
             return ApiResult.Success();
@@ -21,9 +21,9 @@ public sealed class ContributionsApiClient(HttpClient httpClient) : IContributio
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
 
-    public async Task<ApiResult> UpdateAsync(int id, DateOnly date, decimal amount, int contributionContributorId, int accountId, CancellationToken cancellationToken = default)
+    public async Task<ApiResult> UpdateAsync(int id, DateOnly date, decimal amount, ContributionContributorType contributor, int accountId, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PutAsJsonAsync($"api/contributions/{id}", new UpdateContributionRequest(date, amount, contributionContributorId, accountId), cancellationToken);
+        var response = await httpClient.PutAsJsonAsync($"api/contributions/{id}", new UpdateContributionRequest(date, amount, contributor, accountId), cancellationToken);
 
         if (response.IsSuccessStatusCode)
             return ApiResult.Success();

@@ -18,15 +18,11 @@ internal class ContributionRepository(
             .Where(contribution => contribution.UserId == currentUserService.UserId)
             .OrderBy(contribution => contribution.Date)
             .ThenBy(contribution => contribution.Id)
-            .Include(contribution => contribution.Contributor)
             .Select(contribution => new Contribution(
                 contribution.Id,
                 contribution.Date,
                 contribution.Amount,
-                new ContributionContributor(contribution.Contributor.Id, contribution.Contributor.Name)
-                {
-                    DisplayOrder = contribution.Contributor.DisplayOrder
-                },
+                contribution.Contributor,
                 contribution.AccountId))
             .ToListAsync(cancellationToken);
     }
@@ -35,7 +31,6 @@ internal class ContributionRepository(
     {
         var contributionEntity = await dbContext.Contributions
             .AsNoTracking()
-            .Include(contribution => contribution.Contributor)
             .FirstOrDefaultAsync(
                 contribution => contribution.Id == id && contribution.UserId == currentUserService.UserId,
                 cancellationToken);
@@ -46,23 +41,12 @@ internal class ContributionRepository(
                 contributionEntity.Id,
                 contributionEntity.Date,
                 contributionEntity.Amount,
-                new ContributionContributor(contributionEntity.Contributor.Id, contributionEntity.Contributor.Name)
-                {
-                    DisplayOrder = contributionEntity.Contributor.DisplayOrder
-                },
+                contributionEntity.Contributor,
                 contributionEntity.AccountId);
     }
 
     public async Task<Result<int>> AddContributionAsync(Contribution contribution, CancellationToken cancellationToken = default)
     {
-        var contributor = await dbContext.ContributionContributors
-            .FirstOrDefaultAsync(
-                contributorEntity => contributorEntity.Id == contribution.Contributor.Id && contributorEntity.UserId == currentUserService.UserId,
-                cancellationToken);
-
-        if (contributor is null)
-            return Result<int>.Failure($"Contribution contributor with ID '{contribution.Contributor.Id}' does not exist.");
-
         var account = await dbContext.Accounts
             .FirstOrDefaultAsync(
                 accountEntity => accountEntity.Id == contribution.AccountId && accountEntity.Institution.UserId == currentUserService.UserId,
@@ -76,8 +60,7 @@ internal class ContributionRepository(
             Date = contribution.Date,
             Amount = contribution.Amount,
             UserId = currentUserService.UserId,
-            ContributorId = contributor.Id,
-            Contributor = contributor,
+            Contributor = contribution.Contributor,
             AccountId = account.Id,
             Account = account
         };
@@ -98,14 +81,6 @@ internal class ContributionRepository(
         if (entity is null)
             return Result.Failure($"Contribution with ID '{contribution.Id}' not found.");
 
-        var contributor = await dbContext.ContributionContributors
-            .FirstOrDefaultAsync(
-                contributorEntity => contributorEntity.Id == contribution.Contributor.Id && contributorEntity.UserId == currentUserService.UserId,
-                cancellationToken);
-
-        if (contributor is null)
-            return Result.Failure($"Contribution contributor with ID '{contribution.Contributor.Id}' does not exist.");
-
         var account = await dbContext.Accounts
             .FirstOrDefaultAsync(
                 accountEntity => accountEntity.Id == contribution.AccountId && accountEntity.Institution.UserId == currentUserService.UserId,
@@ -116,7 +91,7 @@ internal class ContributionRepository(
 
         entity.Date = contribution.Date;
         entity.Amount = contribution.Amount;
-        entity.ContributorId = contributor.Id;
+        entity.Contributor = contribution.Contributor;
         entity.AccountId = account.Id;
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -140,3 +115,4 @@ internal class ContributionRepository(
         return Result.Success();
     }
 }
+

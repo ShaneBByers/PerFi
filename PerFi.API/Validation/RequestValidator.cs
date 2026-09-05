@@ -1,3 +1,5 @@
+using PerFi.Domain.Entities;
+
 namespace PerFi.API.Validation;
 
 public static class RequestValidator
@@ -42,16 +44,6 @@ public static class RequestValidator
         return ValidateAccountTypeGroupName(name);
     }
 
-    public static IReadOnlyDictionary<string, string[]> ValidateCreateContributionContributorRequest(string? name)
-    {
-        return ValidateContributionContributorName(name);
-    }
-
-    public static IReadOnlyDictionary<string, string[]> ValidateUpdateContributionContributorRequest(string? name)
-    {
-        return ValidateContributionContributorName(name);
-    }
-
     public static IReadOnlyDictionary<string, string[]> ValidateCreateTransactionCategoryGroupRequest(string? name)
     {
         return ValidateTransactionCategoryGroupName(name);
@@ -62,14 +54,14 @@ public static class RequestValidator
         return ValidateTransactionCategoryGroupName(name);
     }
 
-    public static IReadOnlyDictionary<string, string[]> ValidateCreateContributionRequest(DateOnly date, decimal amount, int contributionContributorId, int accountId)
+    public static IReadOnlyDictionary<string, string[]> ValidateCreateContributionRequest(DateOnly date, decimal amount, ContributionContributorType contributor, int accountId)
     {
-        return ValidateContributionFields(date, amount, contributionContributorId, accountId);
+        return ValidateContributionFields(date, amount, contributor, accountId);
     }
 
-    public static IReadOnlyDictionary<string, string[]> ValidateUpdateContributionRequest(DateOnly date, decimal amount, int contributionContributorId, int accountId)
+    public static IReadOnlyDictionary<string, string[]> ValidateUpdateContributionRequest(DateOnly date, decimal amount, ContributionContributorType contributor, int accountId)
     {
-        return ValidateContributionFields(date, amount, contributionContributorId, accountId);
+        return ValidateContributionFields(date, amount, contributor, accountId);
     }
 
     public static IReadOnlyDictionary<string, string[]> ValidateCreateTransactionCategoryRequest(string? name, int transactionCategoryGroupId)
@@ -170,16 +162,6 @@ public static class RequestValidator
         return errors;
     }
 
-    private static IReadOnlyDictionary<string, string[]> ValidateContributionContributorName(string? name)
-    {
-        var errors = new Dictionary<string, string[]>();
-
-        if (string.IsNullOrWhiteSpace(name))
-            errors[nameof(name)] = ["Contribution contributor name is required."];
-
-        return errors;
-    }
-
     private static IReadOnlyDictionary<string, string[]> ValidateTransactionCategoryGroupName(string? name)
     {
         var errors = new Dictionary<string, string[]>();
@@ -190,7 +172,7 @@ public static class RequestValidator
         return errors;
     }
 
-    private static IReadOnlyDictionary<string, string[]> ValidateContributionFields(DateOnly date, decimal amount, int contributionContributorId, int accountId)
+    private static IReadOnlyDictionary<string, string[]> ValidateContributionFields(DateOnly date, decimal amount, ContributionContributorType contributor, int accountId)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -200,8 +182,8 @@ public static class RequestValidator
         if (amount == 0)
             errors[nameof(amount)] = ["Contribution amount is required."];
 
-        if (contributionContributorId <= 0)
-            errors[nameof(contributionContributorId)] = ["Contribution contributor ID must be greater than zero."];
+        if (!Enum.IsDefined(contributor))
+            errors[nameof(contributor)] = ["Contributor must be a valid contribution contributor type."];
 
         if (accountId <= 0)
             errors[nameof(accountId)] = ["Account ID must be greater than zero."];

@@ -15,7 +15,6 @@ public sealed record BackupDocument(
     IReadOnlyList<BackupFinanceSnapshot> FinanceSnapshots,
     IReadOnlyList<BackupTransactionCategoryGroup> TransactionCategoryGroups,
     IReadOnlyList<BackupTransaction> Transactions,
-    IReadOnlyList<BackupContributionContributor> ContributionContributors,
     IReadOnlyList<BackupContribution> Contributions)
 {
     public const string CurrentSchemaVersion = "1.0";
@@ -46,8 +45,6 @@ public sealed record BackupTransaction(
     string Institution,
     string Account,
     string? Description);
-
-public sealed record BackupContributionContributor(string Name, int DisplayOrder);
 
 public sealed record BackupContribution(
     DateOnly Date,

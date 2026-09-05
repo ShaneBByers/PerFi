@@ -8,7 +8,6 @@ namespace PerFi.Application.Services;
 
 internal class ContributionService(
     IContributionRepository contributionRepository,
-    IContributionContributorRepository contributionContributorRepository,
     IAccountRepository accountRepository)
     : IContributionService
 {
@@ -23,17 +22,13 @@ internal class ContributionService(
         if (command is null)
             return Result<Contribution>.Failure("Create contribution command cannot be null.");
 
-        var contributor = await contributionContributorRepository.GetContributionContributorByIdAsync(command.ContributionContributorId, cancellationToken);
-        if (contributor is null)
-            return Result<Contribution>.Failure($"Contribution contributor with ID '{command.ContributionContributorId}' not found.");
-
         var account = await accountRepository.GetAccountByIdAsync(command.AccountId, cancellationToken);
         if (account is null)
             return Result<Contribution>.Failure($"Account with ID '{command.AccountId}' not found.");
 
         try
         {
-            var contribution = new Contribution(command.Date, command.Amount, contributor, command.AccountId);
+            var contribution = new Contribution(command.Date, command.Amount, command.Contributor, command.AccountId);
             var result = await contributionRepository.AddContributionAsync(contribution, cancellationToken);
 
             if (!result.IsSuccess)
@@ -53,17 +48,13 @@ internal class ContributionService(
         if (command is null)
             return Result.Failure("Update contribution command cannot be null.");
 
-        var contributor = await contributionContributorRepository.GetContributionContributorByIdAsync(command.ContributionContributorId, cancellationToken);
-        if (contributor is null)
-            return Result.Failure($"Contribution contributor with ID '{command.ContributionContributorId}' not found.");
-
         var account = await accountRepository.GetAccountByIdAsync(command.AccountId, cancellationToken);
         if (account is null)
             return Result.Failure($"Account with ID '{command.AccountId}' not found.");
 
         try
         {
-            var contribution = new Contribution(command.ContributionId, command.Date, command.Amount, contributor, command.AccountId);
+            var contribution = new Contribution(command.ContributionId, command.Date, command.Amount, command.Contributor, command.AccountId);
             return await contributionRepository.UpdateContributionAsync(contribution, cancellationToken);
         }
         catch (ArgumentException ex)

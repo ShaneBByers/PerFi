@@ -5,15 +5,16 @@ public sealed record Contribution
     public int Id { get; set; }
     public DateOnly Date { get; }
     public decimal Amount { get; }
-    public ContributionContributor Contributor { get; }
+    public ContributionContributorType Contributor { get; }
     public int AccountId { get; }
 
-    public Contribution(DateOnly date, decimal amount, ContributionContributor contributor, int accountId)
+    public Contribution(DateOnly date, decimal amount, ContributionContributorType contributor, int accountId)
     {
         if (date == default)
             throw new ArgumentOutOfRangeException(nameof(date), "Contribution date must be provided.");
 
-        ArgumentNullException.ThrowIfNull(contributor);
+        if (!Enum.IsDefined(contributor))
+            throw new ArgumentOutOfRangeException(nameof(contributor), "Contributor must be a valid contribution contributor type.");
 
         if (accountId <= 0)
             throw new ArgumentOutOfRangeException(nameof(accountId), "Account ID must be greater than zero.");
@@ -24,7 +25,7 @@ public sealed record Contribution
         AccountId = accountId;
     }
 
-    public Contribution(int id, DateOnly date, decimal amount, ContributionContributor contributor, int accountId)
+    public Contribution(int id, DateOnly date, decimal amount, ContributionContributorType contributor, int accountId)
         : this(date, amount, contributor, accountId)
     {
         Id = id;

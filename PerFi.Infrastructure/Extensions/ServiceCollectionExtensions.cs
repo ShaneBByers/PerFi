@@ -47,7 +47,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFinanceSnapshotRepository, FinanceSnapshotRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IContributionRepository, ContributionRepository>();
-        services.AddScoped<IContributionContributorRepository, ContributionContributorRepository>();
         services.AddScoped<ITransactionCategoryGroupRepository, TransactionCategoryGroupRepository>();
         services.AddScoped<ITransactionCategoryRepository, TransactionCategoryRepository>();
         services.AddScoped<IUserConfigurationRepository, UserConfigurationRepository>();

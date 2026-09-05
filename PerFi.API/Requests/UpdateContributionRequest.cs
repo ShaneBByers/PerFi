@@ -1,7 +1,9 @@
+using PerFi.Domain.Entities;
+
 namespace PerFi.API.Requests;
 
 public sealed record UpdateContributionRequest(
     DateOnly Date,
     decimal Amount,
-    int ContributionContributorId,
+    ContributionContributorType Contributor,
     int AccountId);

@@ -27,7 +27,7 @@ public sealed class ContributionRepositoryTests
         return options;
     }
 
-    private static (AccountEntity Account, ContributionContributorEntity Contributor) SeedBaseGraph(
+    private static AccountEntity SeedBaseGraph(
         PerFiDbContext dbContext,
         string userId = FakeCurrentUserService.DefaultUserId,
         string namePrefix = "")
@@ -65,49 +65,37 @@ public sealed class ContributionRepositoryTests
         institution.Accounts.Add(account);
         accountType.Accounts.Add(account);
 
-        var contributor = new ContributionContributorEntity
-        {
-            Name = $"{namePrefix}Contributor",
-            UserId = userId,
-            DisplayOrder = 1,
-            Contributions = []
-        };
-
         dbContext.AccountTypeGroups.Add(accountTypeGroup);
         dbContext.AccountTypes.Add(accountType);
         dbContext.Institutions.Add(institution);
         dbContext.Accounts.Add(account);
-        dbContext.ContributionContributors.Add(contributor);
 
-        return (account, contributor);
+        return account;
     }
-
-    private static ContributionContributor CreateDomainContributor(int id, string name = "Contributor")
-        => new(id, name) { DisplayOrder = 1 };
 
     [Fact]
     public async Task GetAllContributionsAsync_OnlyReturnsCurrentUsersContributions()
     {
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
-            var (myAccount, myContributor) = SeedBaseGraph(dbContext);
+            var myAccount = SeedBaseGraph(dbContext);
             dbContext.Contributions.Add(new ContributionEntity
             {
                 Date = new DateOnly(2026, 1, 2),
                 Amount = 10m,
                 UserId = FakeCurrentUserService.DefaultUserId,
-                Contributor = myContributor,
+                Contributor = ContributionContributorType.Self,
                 Account = myAccount
             });
 
             dbContext.Users.Add(new ApplicationUser { Id = "other-user", UserName = "other" });
-            var (otherAccount, otherContributor) = SeedBaseGraph(dbContext, "other-user", "Other ");
+            var otherAccount = SeedBaseGraph(dbContext, "other-user", "Other ");
             dbContext.Contributions.Add(new ContributionEntity
             {
                 Date = new DateOnly(2026, 1, 3),
                 Amount = 99m,
                 UserId = "other-user",
-                Contributor = otherContributor,
+                Contributor = ContributionContributorType.Employer,
                 Account = otherAccount
             });
 
@@ -129,14 +117,14 @@ public sealed class ContributionRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             dbContext.Users.Add(new ApplicationUser { Id = "other-user", UserName = "other" });
-            var (otherAccount, otherContributor) = SeedBaseGraph(dbContext, "other-user", "Other ");
+            var otherAccount = SeedBaseGraph(dbContext, "other-user", "Other ");
             dbContext.Contributions.Add(new ContributionEntity
             {
                 Id = 1,
                 Date = new DateOnly(2026, 1, 1),
                 Amount = 5m,
                 UserId = "other-user",
-                Contributor = otherContributor,
+                Contributor = ContributionContributorType.Self,
                 Account = otherAccount
             });
 
@@ -152,39 +140,11 @@ public sealed class ContributionRepositoryTests
     }
 
     [Fact]
-    public async Task AddContributionAsync_WithMissingContributor_ReturnsFailure()
-    {
-        int accountId = 0;
-        var options = await CreateSeededOptionsAsync(dbContext =>
-        {
-            var (account, _) = SeedBaseGraph(dbContext);
-            dbContext.SaveChangesAsync().GetAwaiter().GetResult();
-            accountId = account.Id;
-            return Task.CompletedTask;
-        });
-
-        await using var dbContext = new PerFiDbContext(options);
-        var repository = new ContributionRepository(dbContext, new FakeCurrentUserService());
-
-        var result = await repository.AddContributionAsync(new Contribution(
-            new DateOnly(2026, 2, 1),
-            12.34m,
-            CreateDomainContributor(999),
-            accountId));
-
-        Assert.True(result.IsFailure);
-        Assert.Contains("Contribution contributor", result.Error);
-    }
-
-    [Fact]
     public async Task AddContributionAsync_WithMissingAccount_ReturnsFailure()
     {
-        int contributorId = 0;
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
-            var (_, contributor) = SeedBaseGraph(dbContext);
-            dbContext.SaveChangesAsync().GetAwaiter().GetResult();
-            contributorId = contributor.Id;
+            SeedBaseGraph(dbContext);
             return Task.CompletedTask;
         });
 
@@ -194,7 +154,7 @@ public sealed class ContributionRepositoryTests
         var result = await repository.AddContributionAsync(new Contribution(
             new DateOnly(2026, 2, 1),
             12.34m,
-            CreateDomainContributor(contributorId),
+            ContributionContributorType.Self,
             999));
 
         Assert.True(result.IsFailure);
@@ -205,13 +165,11 @@ public sealed class ContributionRepositoryTests
     public async Task AddContributionAsync_WithValidData_ReturnsSuccessAndPersistsRecord()
     {
         int accountId = 0;
-        int contributorId = 0;
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
-            var (account, contributor) = SeedBaseGraph(dbContext);
+            var account = SeedBaseGraph(dbContext);
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             accountId = account.Id;
-            contributorId = contributor.Id;
             return Task.CompletedTask;
         });
 
@@ -221,26 +179,25 @@ public sealed class ContributionRepositoryTests
         var result = await repository.AddContributionAsync(new Contribution(
             new DateOnly(2026, 2, 1),
             7.5m,
-            CreateDomainContributor(contributorId),
+            ContributionContributorType.Employer,
             accountId));
 
         Assert.True(result.IsSuccess);
         var created = await repository.GetContributionByIdAsync(result.Value);
         Assert.NotNull(created);
         Assert.Equal(7.5m, created!.Amount);
+        Assert.Equal(ContributionContributorType.Employer, created.Contributor);
     }
 
     [Fact]
     public async Task UpdateContributionAsync_WhenMissing_ReturnsFailure()
     {
         int accountId = 0;
-        int contributorId = 0;
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
-            var (account, contributor) = SeedBaseGraph(dbContext);
+            var account = SeedBaseGraph(dbContext);
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             accountId = account.Id;
-            contributorId = contributor.Id;
             return Task.CompletedTask;
         });
 
@@ -251,7 +208,7 @@ public sealed class ContributionRepositoryTests
             id: 999,
             date: new DateOnly(2026, 2, 1),
             amount: 1m,
-            contributor: CreateDomainContributor(contributorId),
+            contributor: ContributionContributorType.Self,
             accountId: accountId));
 
         Assert.True(result.IsFailure);
@@ -262,19 +219,18 @@ public sealed class ContributionRepositoryTests
     {
         int contributionId = 0;
         int updatedAccountId = 0;
-        int updatedContributorId = 0;
 
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
-            var (account, contributor) = SeedBaseGraph(dbContext);
-            var (secondAccount, secondContributor) = SeedBaseGraph(dbContext, namePrefix: "Second ");
+            var account = SeedBaseGraph(dbContext);
+            var secondAccount = SeedBaseGraph(dbContext, namePrefix: "Second ");
 
             dbContext.Contributions.Add(new ContributionEntity
             {
                 Date = new DateOnly(2026, 1, 1),
                 Amount = 2m,
                 UserId = FakeCurrentUserService.DefaultUserId,
-                Contributor = contributor,
+                Contributor = ContributionContributorType.Self,
                 Account = account
             });
 
@@ -282,7 +238,6 @@ public sealed class ContributionRepositoryTests
 
             contributionId = dbContext.Contributions.Single(c => c.Amount == 2m).Id;
             updatedAccountId = secondAccount.Id;
-            updatedContributorId = secondContributor.Id;
             return Task.CompletedTask;
         });
 
@@ -293,14 +248,14 @@ public sealed class ContributionRepositoryTests
             contributionId,
             new DateOnly(2026, 3, 3),
             88m,
-            CreateDomainContributor(updatedContributorId),
+            ContributionContributorType.Other,
             updatedAccountId));
 
         Assert.True(result.IsSuccess);
         var updated = await repository.GetContributionByIdAsync(contributionId);
         Assert.Equal(88m, updated!.Amount);
         Assert.Equal(updatedAccountId, updated.AccountId);
-        Assert.Equal(updatedContributorId, updated.Contributor.Id);
+        Assert.Equal(ContributionContributorType.Other, updated.Contributor);
     }
 
     [Fact]
@@ -326,14 +281,14 @@ public sealed class ContributionRepositoryTests
         int contributionId = 0;
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
-            var (account, contributor) = SeedBaseGraph(dbContext);
+            var account = SeedBaseGraph(dbContext);
 
             dbContext.Contributions.Add(new ContributionEntity
             {
                 Date = new DateOnly(2026, 1, 1),
                 Amount = 11m,
                 UserId = FakeCurrentUserService.DefaultUserId,
-                Contributor = contributor,
+                Contributor = ContributionContributorType.Self,
                 Account = account
             });
 
