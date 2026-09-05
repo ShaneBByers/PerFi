@@ -50,6 +50,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IContributionContributorRepository, ContributionContributorRepository>();
         services.AddScoped<ITransactionCategoryGroupRepository, TransactionCategoryGroupRepository>();
         services.AddScoped<ITransactionCategoryRepository, TransactionCategoryRepository>();
+        services.AddScoped<IUserConfigurationRepository, UserConfigurationRepository>();
+        services.AddScoped<IUserConfigurationExpectationsRepository, UserConfigurationExpectationsRepository>();
 
         return services;
     }

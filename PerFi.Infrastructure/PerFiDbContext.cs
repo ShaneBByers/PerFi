@@ -18,6 +18,8 @@ public class PerFiDbContext(DbContextOptions<PerFiDbContext> options)
     public DbSet<TransactionEntity> Transactions { get; set; }
     public DbSet<ContributionContributorEntity> ContributionContributors { get; set; }
     public DbSet<ContributionEntity> Contributions { get; set; }
+    public DbSet<UserConfigurationEntity> UserConfigurations { get; set; }
+    public DbSet<UserConfigurationExpectationsEntity> UserConfigurationExpectations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

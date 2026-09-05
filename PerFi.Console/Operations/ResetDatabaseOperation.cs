@@ -19,6 +19,8 @@ public sealed class ResetDatabaseOperation(PerFiDbContext dbContext)
         var transactionCategoryGroupCount = await dbContext.TransactionCategoryGroups.CountAsync(cancellationToken);
         var contributionCount = await dbContext.Contributions.CountAsync(cancellationToken);
         var contributionContributorCount = await dbContext.ContributionContributors.CountAsync(cancellationToken);
+        var userConfigCount = await dbContext.UserConfigurations.CountAsync(cancellationToken);
+        var userExpectationsCount = await dbContext.UserConfigurationExpectations.CountAsync(cancellationToken);
 
         System.Console.WriteLine("This will permanently delete ALL rows from:");
         System.Console.WriteLine($"- AccountBalances: {balanceCount}");
@@ -32,6 +34,8 @@ public sealed class ResetDatabaseOperation(PerFiDbContext dbContext)
         System.Console.WriteLine($"- TransactionCategories: {transactionCategoryCount}");
         System.Console.WriteLine($"- TransactionCategoryGroups: {transactionCategoryGroupCount}");
         System.Console.WriteLine($"- ContributionContributors: {contributionContributorCount}");
+        System.Console.WriteLine($"- UserConfigurations: {userConfigCount}");
+        System.Console.WriteLine($"- UserConfigurationExpectations: {userExpectationsCount}");
         System.Console.WriteLine("User accounts (AspNetUsers) are not affected.");
         System.Console.WriteLine();
 
@@ -59,6 +63,8 @@ public sealed class ResetDatabaseOperation(PerFiDbContext dbContext)
         await dbContext.TransactionCategories.ExecuteDeleteAsync(cancellationToken);
         await dbContext.TransactionCategoryGroups.ExecuteDeleteAsync(cancellationToken);
         await dbContext.ContributionContributors.ExecuteDeleteAsync(cancellationToken);
+        await dbContext.UserConfigurationExpectations.ExecuteDeleteAsync(cancellationToken);
+        await dbContext.UserConfigurations.ExecuteDeleteAsync(cancellationToken);
 
         System.Console.WriteLine("All financial data deleted.");
     }
