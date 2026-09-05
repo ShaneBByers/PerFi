@@ -10,7 +10,9 @@ public class AccountEntity
     public InstitutionEntity Institution { get; set; } = null!;
     public int AccountTypeId { get; set; }
     public AccountTypeEntity AccountType { get; set; } = null!;
+    public decimal ExpectedAnnualGrowthPercentage { get; set; }
     public ICollection<AccountBalanceEntity> AccountBalances { get; set; } = [];
     public ICollection<TransactionEntity> Transactions { get; set; } = [];
     public ICollection<ContributionEntity> Contributions { get; set; } = [];
+    public ICollection<AccountContributionPlanEntity> ContributionPlans { get; set; } = [];
 }

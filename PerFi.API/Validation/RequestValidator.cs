@@ -4,14 +4,14 @@ namespace PerFi.API.Validation;
 
 public static class RequestValidator
 {
-    public static IReadOnlyDictionary<string, string[]> ValidateCreateAccountRequest(string? accountName, int institutionId, int accountTypeId)
+    public static IReadOnlyDictionary<string, string[]> ValidateCreateAccountRequest(string? accountName, int institutionId, int accountTypeId, decimal expectedAnnualGrowthPercentage)
     {
-        return ValidateAccountFields(accountName, institutionId, accountTypeId);
+        return ValidateAccountFields(accountName, institutionId, accountTypeId, expectedAnnualGrowthPercentage);
     }
 
-    public static IReadOnlyDictionary<string, string[]> ValidateUpdateAccountRequest(string? accountName, int institutionId, int accountTypeId)
+    public static IReadOnlyDictionary<string, string[]> ValidateUpdateAccountRequest(string? accountName, int institutionId, int accountTypeId, decimal expectedAnnualGrowthPercentage)
     {
-        return ValidateAccountFields(accountName, institutionId, accountTypeId);
+        return ValidateAccountFields(accountName, institutionId, accountTypeId, expectedAnnualGrowthPercentage);
     }
 
     public static IReadOnlyDictionary<string, string[]> ValidateCreateInstitutionRequest(string? institutionName)
@@ -94,6 +94,64 @@ public static class RequestValidator
         return ValidateSnapshotFields(snapshotDate, accountIdToBalanceMap);
     }
 
+    public static IReadOnlyDictionary<string, string[]> ValidateCreateSalaryProgressionRequest(DateOnly effectiveDate, decimal annualSalary)
+    {
+        return ValidateSalaryProgressionFields(effectiveDate, annualSalary);
+    }
+
+    public static IReadOnlyDictionary<string, string[]> ValidateUpdateSalaryProgressionRequest(DateOnly effectiveDate, decimal annualSalary)
+    {
+        return ValidateSalaryProgressionFields(effectiveDate, annualSalary);
+    }
+
+    public static IReadOnlyDictionary<string, string[]> ValidateCreateAccountContributionPlanRequest(Requests.CreateAccountContributionPlanRequest request)
+    {
+        return ValidateAccountContributionPlanFields(
+            request.ContributorType,
+            request.DollarAmountPerPayCycle,
+            request.DollarAmountPerPayCycleAnnualIncrease,
+            request.DollarAmountAnnual,
+            request.DollarAmountAnnualIncrease,
+            request.PercentagePerPayCycle,
+            request.PercentagePerPayCycleAnnualIncrease,
+            request.PercentageAnnual,
+            request.PercentageAnnualIncrease);
+    }
+
+    public static IReadOnlyDictionary<string, string[]> ValidateUpdateAccountContributionPlanRequest(Requests.UpdateAccountContributionPlanRequest request)
+    {
+        return ValidateAccountContributionPlanFields(
+            request.ContributorType,
+            request.DollarAmountPerPayCycle,
+            request.DollarAmountPerPayCycleAnnualIncrease,
+            request.DollarAmountAnnual,
+            request.DollarAmountAnnualIncrease,
+            request.PercentagePerPayCycle,
+            request.PercentagePerPayCycleAnnualIncrease,
+            request.PercentageAnnual,
+            request.PercentageAnnualIncrease);
+    }
+
+    public static IReadOnlyDictionary<string, string[]> ValidateCreateUserConfigurationRequest(Requests.CreateUserConfigurationRequest request)
+    {
+        return ValidateUserConfigurationFields(
+            request.BirthDate,
+            request.PayCycleType,
+            request.ReferencePayDate,
+            request.ExpectedAnnualSalaryRaisePercentage,
+            request.ExpectedAnnualInflationPercentage);
+    }
+
+    public static IReadOnlyDictionary<string, string[]> ValidateUpdateUserConfigurationRequest(Requests.UpdateUserConfigurationRequest request)
+    {
+        return ValidateUserConfigurationFields(
+            request.BirthDate,
+            request.PayCycleType,
+            request.ReferencePayDate,
+            request.ExpectedAnnualSalaryRaisePercentage,
+            request.ExpectedAnnualInflationPercentage);
+    }
+
     public static IReadOnlyDictionary<string, string[]> ValidateBulkUpdateFinanceSnapshotCellsRequest(IReadOnlyList<Requests.SnapshotCellUpdateRequest>? updates)
     {
         var errors = new Dictionary<string, string[]>();
@@ -113,7 +171,7 @@ public static class RequestValidator
         return errors;
     }
 
-    private static IReadOnlyDictionary<string, string[]> ValidateAccountFields(string? accountName, int institutionId, int accountTypeId)
+    private static IReadOnlyDictionary<string, string[]> ValidateAccountFields(string? accountName, int institutionId, int accountTypeId, decimal expectedAnnualGrowthPercentage)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -125,6 +183,9 @@ public static class RequestValidator
 
         if (accountTypeId <= 0)
             errors[nameof(accountTypeId)] = ["Account type ID must be greater than zero."];
+
+        if (expectedAnnualGrowthPercentage is < -50 or > 100)
+            errors[nameof(expectedAnnualGrowthPercentage)] = ["Expected annual growth percentage must be between -50 and 100."];
 
         return errors;
     }
@@ -200,6 +261,89 @@ public static class RequestValidator
 
         if (transactionCategoryGroupId <= 0)
             errors[nameof(transactionCategoryGroupId)] = ["Transaction category group ID must be greater than zero."];
+
+        return errors;
+    }
+
+    private static IReadOnlyDictionary<string, string[]> ValidateSalaryProgressionFields(DateOnly effectiveDate, decimal annualSalary)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (effectiveDate == default)
+            errors[nameof(effectiveDate)] = ["Effective date is required."];
+
+        if (annualSalary < 0)
+            errors[nameof(annualSalary)] = ["Annual salary cannot be negative."];
+
+        return errors;
+    }
+
+    private static IReadOnlyDictionary<string, string[]> ValidateAccountContributionPlanFields(
+        ContributionContributorType contributorType,
+        decimal dollarAmountPerPayCycle,
+        decimal dollarAmountPerPayCycleAnnualIncrease,
+        decimal dollarAmountAnnual,
+        decimal dollarAmountAnnualIncrease,
+        decimal percentagePerPayCycle,
+        decimal percentagePerPayCycleAnnualIncrease,
+        decimal percentageAnnual,
+        decimal percentageAnnualIncrease)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (!Enum.IsDefined(contributorType))
+            errors[nameof(contributorType)] = ["Contributor type must be a valid contribution contributor type."];
+
+        if (dollarAmountPerPayCycle < 0)
+            errors[nameof(dollarAmountPerPayCycle)] = ["Dollar amount per pay cycle cannot be negative."];
+
+        if (dollarAmountPerPayCycleAnnualIncrease < 0)
+            errors[nameof(dollarAmountPerPayCycleAnnualIncrease)] = ["Dollar amount per pay cycle annual increase cannot be negative."];
+
+        if (dollarAmountAnnual < 0)
+            errors[nameof(dollarAmountAnnual)] = ["Dollar amount annual cannot be negative."];
+
+        if (dollarAmountAnnualIncrease < 0)
+            errors[nameof(dollarAmountAnnualIncrease)] = ["Dollar amount annual increase cannot be negative."];
+
+        if (percentagePerPayCycle < 0)
+            errors[nameof(percentagePerPayCycle)] = ["Percentage per pay cycle cannot be negative."];
+
+        if (percentagePerPayCycleAnnualIncrease < 0)
+            errors[nameof(percentagePerPayCycleAnnualIncrease)] = ["Percentage per pay cycle annual increase cannot be negative."];
+
+        if (percentageAnnual < 0)
+            errors[nameof(percentageAnnual)] = ["Percentage annual cannot be negative."];
+
+        if (percentageAnnualIncrease < 0)
+            errors[nameof(percentageAnnualIncrease)] = ["Percentage annual increase cannot be negative."];
+
+        return errors;
+    }
+
+    private static IReadOnlyDictionary<string, string[]> ValidateUserConfigurationFields(
+        DateOnly birthDate,
+        PayCycleType payCycleType,
+        DateOnly referencePayDate,
+        decimal expectedAnnualSalaryRaisePercentage,
+        decimal expectedAnnualInflationPercentage)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (birthDate == default)
+            errors[nameof(birthDate)] = ["Birth date is required."];
+
+        if (!Enum.IsDefined(payCycleType))
+            errors[nameof(payCycleType)] = ["Pay cycle type must be a valid pay cycle type."];
+
+        if (referencePayDate == default)
+            errors[nameof(referencePayDate)] = ["Reference pay date is required."];
+
+        if (expectedAnnualSalaryRaisePercentage is < -50 or > 100)
+            errors[nameof(expectedAnnualSalaryRaisePercentage)] = ["Expected annual salary raise percentage must be between -50 and 100."];
+
+        if (expectedAnnualInflationPercentage is < -50 or > 100)
+            errors[nameof(expectedAnnualInflationPercentage)] = ["Expected annual inflation percentage must be between -50 and 100."];
 
         return errors;
     }

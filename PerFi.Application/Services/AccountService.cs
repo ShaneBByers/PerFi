@@ -33,7 +33,10 @@ internal class AccountService(
 
         try
         {
-            var account = new Account(command.AccountName, accountType);
+            var account = new Account(command.AccountName, accountType)
+            {
+                ExpectedAnnualGrowthPercentage = command.ExpectedAnnualGrowthPercentage
+            };
             var result = await accountRepository.AddAccountAsync(account, command.InstitutionId, cancellationToken);
 
             if (!result.IsSuccess)
@@ -64,7 +67,10 @@ internal class AccountService(
 
         try
         {
-            var account = new Account(command.AccountId, command.AccountName, accountType);
+            var account = new Account(command.AccountId, command.AccountName, accountType)
+            {
+                ExpectedAnnualGrowthPercentage = command.ExpectedAnnualGrowthPercentage
+            };
             return await accountRepository.UpdateAccountAsync(account, command.InstitutionId, cancellationToken);
         }
         catch (ArgumentException ex)

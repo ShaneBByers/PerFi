@@ -11,9 +11,9 @@ public sealed class AccountsApiClient(HttpClient httpClient) : IAccountsApiClien
     public Task<AccountResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         httpClient.GetFromJsonAsync<AccountResponse>($"api/accounts/{id}", cancellationToken);
 
-    public async Task<ApiResult> CreateAsync(string accountName, int institutionId, int accountTypeId, CancellationToken cancellationToken = default)
+    public async Task<ApiResult> CreateAsync(string accountName, int institutionId, int accountTypeId, decimal expectedAnnualGrowthPercentage, CancellationToken cancellationToken = default)
     {
-        var request = new CreateAccountRequest(accountName, institutionId, accountTypeId);
+        var request = new CreateAccountRequest(accountName, institutionId, accountTypeId, expectedAnnualGrowthPercentage);
         var response = await httpClient.PostAsJsonAsync("api/accounts", request, cancellationToken);
 
         if (response.IsSuccessStatusCode)
@@ -22,9 +22,9 @@ public sealed class AccountsApiClient(HttpClient httpClient) : IAccountsApiClien
         return await ApiErrorParser.FromFailedResponseAsync(response);
     }
 
-    public async Task<ApiResult> UpdateAsync(int id, string accountName, int institutionId, int accountTypeId, CancellationToken cancellationToken = default)
+    public async Task<ApiResult> UpdateAsync(int id, string accountName, int institutionId, int accountTypeId, decimal expectedAnnualGrowthPercentage, CancellationToken cancellationToken = default)
     {
-        var request = new UpdateAccountRequest(accountName, institutionId, accountTypeId);
+        var request = new UpdateAccountRequest(accountName, institutionId, accountTypeId, expectedAnnualGrowthPercentage);
         var response = await httpClient.PutAsJsonAsync($"api/accounts/{id}", request, cancellationToken);
 
         if (response.IsSuccessStatusCode)

@@ -32,7 +32,8 @@ public class InstitutionsController(
                     a.Type.Id,
                     a.Type.Name,
                     a.Type.DisplayOrder,
-                        new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder))))]));
+                        new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder)),
+                a.ExpectedAnnualGrowthPercentage))]));
 
         return Ok(response);
     }
@@ -58,7 +59,8 @@ public class InstitutionsController(
                     a.Type.Id,
                     a.Type.Name,
                     a.Type.DisplayOrder,
-                        new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder))))]);
+                        new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder)),
+                a.ExpectedAnnualGrowthPercentage))]);
         return Ok(response);
     }
 

@@ -11,20 +11,15 @@ internal sealed class UserConfigurationConfiguration : IEntityTypeConfiguration<
         entity.HasIndex(configuration => configuration.UserId)
             .IsUnique();
 
-        entity.Property(configuration => configuration.CurrentAnnualSalary)
-            .HasColumnType("decimal(18,2)");
+        entity.Property(configuration => configuration.ExpectedAnnualSalaryRaisePercentage)
+            .HasColumnType("decimal(18,4)");
+        entity.Property(configuration => configuration.ExpectedAnnualInflationPercentage)
+            .HasColumnType("decimal(18,4)");
 
         entity.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(configuration => configuration.UserId)
             .OnDelete(DeleteBehavior.Restrict)
-            .IsRequired();
-
-        entity.HasOne(configuration => configuration.UserExpectations)
-            .WithOne()
-            .HasForeignKey<UserConfigurationExpectationsEntity>(expectations => expectations.UserId)
-            .HasPrincipalKey<UserConfigurationEntity>(configuration => configuration.UserId)
-            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
     }
 }

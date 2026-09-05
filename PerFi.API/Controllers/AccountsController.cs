@@ -34,7 +34,8 @@ public class AccountsController(
                 a.Type.Id,
                 a.Type.Name,
                 a.Type.DisplayOrder,
-                new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder))));
+                new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder)),
+            a.ExpectedAnnualGrowthPercentage));
         return Ok(response);
     }
 
@@ -59,18 +60,19 @@ public class AccountsController(
                 account.Type.Id,
                 account.Type.Name,
                 account.Type.DisplayOrder,
-                new AccountTypeGroupIdentityResponse(account.Type.Group.Id, account.Type.Group.Name, account.Type.Group.DisplayOrder)));
+                new AccountTypeGroupIdentityResponse(account.Type.Group.Id, account.Type.Group.Name, account.Type.Group.DisplayOrder)),
+            account.ExpectedAnnualGrowthPercentage);
         return Ok(response);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAccountRequest request)
     {
-        var validationErrors = RequestValidator.ValidateCreateAccountRequest(request.AccountName, request.InstitutionId, request.AccountTypeId);
+        var validationErrors = RequestValidator.ValidateCreateAccountRequest(request.AccountName, request.InstitutionId, request.AccountTypeId, request.ExpectedAnnualGrowthPercentage);
         if (validationErrors.Count > 0)
             return BadRequest(validationErrors.ToValidationProblemDetails());
 
-        var command = new CreateAccountCommand(request.AccountName, request.InstitutionId, request.AccountTypeId);
+        var command = new CreateAccountCommand(request.AccountName, request.InstitutionId, request.AccountTypeId, request.ExpectedAnnualGrowthPercentage);
         var result = await accountService.CreateAccountAsync(command, HttpContext.RequestAborted);
 
         if (result.IsFailure)
@@ -87,11 +89,11 @@ public class AccountsController(
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateAccountRequest request)
     {
-        var validationErrors = RequestValidator.ValidateUpdateAccountRequest(request.AccountName, request.InstitutionId, request.AccountTypeId);
+        var validationErrors = RequestValidator.ValidateUpdateAccountRequest(request.AccountName, request.InstitutionId, request.AccountTypeId, request.ExpectedAnnualGrowthPercentage);
         if (validationErrors.Count > 0)
             return BadRequest(validationErrors.ToValidationProblemDetails());
 
-        var command = new UpdateAccountCommand(id, request.AccountName, request.InstitutionId, request.AccountTypeId);
+        var command = new UpdateAccountCommand(id, request.AccountName, request.InstitutionId, request.AccountTypeId, request.ExpectedAnnualGrowthPercentage);
         var result = await accountService.UpdateAccountAsync(command, HttpContext.RequestAborted);
 
         if (result.IsFailure)

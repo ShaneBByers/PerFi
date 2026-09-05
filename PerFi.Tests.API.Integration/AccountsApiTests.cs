@@ -28,7 +28,7 @@ public class AccountsApiTests : IClassFixture<PerFiApiFactory>
 
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var response = await _client.PostAsJsonAsync("/api/accounts", new CreateAccountRequest("   ", 1, 1));
+        var response = await _client.PostAsJsonAsync("/api/accounts", new CreateAccountRequest("   ", 1, 1, 0m));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

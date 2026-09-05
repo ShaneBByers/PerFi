@@ -71,6 +71,24 @@ builder.Services.AddHttpClient<IContributionsApiClient, ContributionsApiClient>(
 }).AddHttpMessageHandler<CookieRequestHandler>()
 	.AddHttpMessageHandler<AuthMessageHandler>();
 
+builder.Services.AddHttpClient<ISalaryProgressionsApiClient, SalaryProgressionsApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
+builder.Services.AddHttpClient<IAccountContributionPlansApiClient, AccountContributionPlansApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
+builder.Services.AddHttpClient<IUserConfigurationApiClient, UserConfigurationApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
 builder.Services.AddHttpClient<ITransactionCategoryGroupsApiClient, TransactionCategoryGroupsApiClient>(client =>
 {
 	client.BaseAddress = new Uri(apiBaseUrl);

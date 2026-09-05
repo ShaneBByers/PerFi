@@ -11,6 +11,9 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<AccountEnt
         entity.Property(account => account.Name)
             .HasMaxLength(200);
 
+        entity.Property(account => account.ExpectedAnnualGrowthPercentage)
+            .HasColumnType("decimal(18,4)");
+
         entity.HasOne(account => account.AccountType)
             .WithMany(accountType => accountType.Accounts)
             .HasForeignKey(account => account.AccountTypeId)

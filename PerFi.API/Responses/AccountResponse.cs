@@ -5,4 +5,5 @@ public sealed record AccountResponse(
     string Name,
     int DisplayOrder,
     InstitutionIdentityResponse Institution,
-    AccountTypeResponse Type);
+    AccountTypeResponse Type,
+    decimal ExpectedAnnualGrowthPercentage);

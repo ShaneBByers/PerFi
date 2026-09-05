@@ -9,7 +9,7 @@ public class RequestValidatorTests
     [Fact]
     public void ValidateCreateAccountRequest_WithMissingName_ReturnsError()
     {
-        var errors = RequestValidator.ValidateCreateAccountRequest("   ", 1, 1);
+        var errors = RequestValidator.ValidateCreateAccountRequest("   ", 1, 1, 0m);
 
         Assert.True(errors.ContainsKey("accountName"));
     }
@@ -17,7 +17,7 @@ public class RequestValidatorTests
     [Fact]
     public void ValidateCreateAccountRequest_WithNonPositiveInstitutionId_ReturnsError()
     {
-        var errors = RequestValidator.ValidateCreateAccountRequest("Checking", 0, 1);
+        var errors = RequestValidator.ValidateCreateAccountRequest("Checking", 0, 1, 0m);
 
         Assert.True(errors.ContainsKey("institutionId"));
     }
@@ -25,7 +25,7 @@ public class RequestValidatorTests
     [Fact]
     public void ValidateCreateAccountRequest_WithNonPositiveAccountTypeId_ReturnsError()
     {
-        var errors = RequestValidator.ValidateCreateAccountRequest("Checking", 1, 0);
+        var errors = RequestValidator.ValidateCreateAccountRequest("Checking", 1, 0, 0m);
 
         Assert.True(errors.ContainsKey("accountTypeId"));
     }
@@ -33,7 +33,7 @@ public class RequestValidatorTests
     [Fact]
     public void ValidateCreateAccountRequest_WithValidInput_ReturnsNoErrors()
     {
-        var errors = RequestValidator.ValidateCreateAccountRequest("Checking", 1, 1);
+        var errors = RequestValidator.ValidateCreateAccountRequest("Checking", 1, 1, 0m);
 
         Assert.Empty(errors);
     }
@@ -41,7 +41,7 @@ public class RequestValidatorTests
     [Fact]
     public void ValidateUpdateAccountRequest_WithMissingName_ReturnsError()
     {
-        var errors = RequestValidator.ValidateUpdateAccountRequest(null, 1, 1);
+        var errors = RequestValidator.ValidateUpdateAccountRequest(null, 1, 1, 0m);
 
         Assert.True(errors.ContainsKey("accountName"));
     }

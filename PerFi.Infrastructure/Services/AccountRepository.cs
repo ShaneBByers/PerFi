@@ -36,7 +36,8 @@ internal class AccountRepository(
                 },
                 a.InstitutionId)
             {
-                DisplayOrder = a.DisplayOrder
+                DisplayOrder = a.DisplayOrder,
+                ExpectedAnnualGrowthPercentage = a.ExpectedAnnualGrowthPercentage
             })
             .ToListAsync(cancellationToken);
     }
@@ -64,7 +65,8 @@ internal class AccountRepository(
 
         return new Account(accountEntity.Id, accountEntity.Name, type, accountEntity.InstitutionId)
         {
-            DisplayOrder = accountEntity.DisplayOrder
+            DisplayOrder = accountEntity.DisplayOrder,
+            ExpectedAnnualGrowthPercentage = accountEntity.ExpectedAnnualGrowthPercentage
         };
     }
 
@@ -94,7 +96,8 @@ internal class AccountRepository(
             UserId = currentUserService.UserId,
             InstitutionId = institution.Id,
             AccountTypeId = accountType.Id,
-            AccountType = accountType
+            AccountType = accountType,
+            ExpectedAnnualGrowthPercentage = account.ExpectedAnnualGrowthPercentage
         };
 
         // Add directly rather than via institution.Accounts, which isn't loaded when the institution query above doesn't Include it.
@@ -130,6 +133,7 @@ internal class AccountRepository(
         accountEntity.AccountType = accountType;
         accountEntity.AccountTypeId = accountType.Id;
         accountEntity.InstitutionId = institution.Id;
+        accountEntity.ExpectedAnnualGrowthPercentage = account.ExpectedAnnualGrowthPercentage;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

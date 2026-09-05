@@ -14,8 +14,8 @@ public sealed record CreateInstitutionRequest(string InstitutionName);
 public sealed record UpdateInstitutionRequest(string InstitutionName);
 public sealed record ReorderInstitutionsRequest(IReadOnlyList<int> OrderedInstitutionIds);
 
-public sealed record CreateAccountRequest(string AccountName, int InstitutionId, int AccountTypeId);
-public sealed record UpdateAccountRequest(string AccountName, int InstitutionId, int AccountTypeId);
+public sealed record CreateAccountRequest(string AccountName, int InstitutionId, int AccountTypeId, decimal ExpectedAnnualGrowthPercentage);
+public sealed record UpdateAccountRequest(string AccountName, int InstitutionId, int AccountTypeId, decimal ExpectedAnnualGrowthPercentage);
 public sealed record ReorderAccountsRequest(IReadOnlyList<int> OrderedAccountIds);
 
 public sealed record CreateFinanceSnapshotRequest(DateOnly SnapshotDate, IReadOnlyDictionary<int, decimal> AccountIdToBalanceMap);
@@ -25,6 +25,45 @@ public sealed record SnapshotCellUpdateRequest(int SnapshotId, int AccountId, de
 
 public sealed record CreateContributionRequest(DateOnly Date, decimal Amount, ContributionContributorType Contributor, int AccountId);
 public sealed record UpdateContributionRequest(DateOnly Date, decimal Amount, ContributionContributorType Contributor, int AccountId);
+
+public sealed record CreateSalaryProgressionRequest(DateOnly EffectiveDate, decimal AnnualSalary);
+public sealed record UpdateSalaryProgressionRequest(DateOnly EffectiveDate, decimal AnnualSalary);
+
+public sealed record CreateUserConfigurationRequest(
+    DateOnly BirthDate,
+    PayCycleType PayCycleType,
+    DateOnly ReferencePayDate,
+    decimal ExpectedAnnualSalaryRaisePercentage,
+    decimal ExpectedAnnualInflationPercentage);
+
+public sealed record UpdateUserConfigurationRequest(
+    DateOnly BirthDate,
+    PayCycleType PayCycleType,
+    DateOnly ReferencePayDate,
+    decimal ExpectedAnnualSalaryRaisePercentage,
+    decimal ExpectedAnnualInflationPercentage);
+
+public sealed record CreateAccountContributionPlanRequest(
+    ContributionContributorType ContributorType,
+    decimal DollarAmountPerPayCycle,
+    decimal DollarAmountPerPayCycleAnnualIncrease,
+    decimal DollarAmountAnnual,
+    decimal DollarAmountAnnualIncrease,
+    decimal PercentagePerPayCycle,
+    decimal PercentagePerPayCycleAnnualIncrease,
+    decimal PercentageAnnual,
+    decimal PercentageAnnualIncrease);
+
+public sealed record UpdateAccountContributionPlanRequest(
+    ContributionContributorType ContributorType,
+    decimal DollarAmountPerPayCycle,
+    decimal DollarAmountPerPayCycleAnnualIncrease,
+    decimal DollarAmountAnnual,
+    decimal DollarAmountAnnualIncrease,
+    decimal PercentagePerPayCycle,
+    decimal PercentagePerPayCycleAnnualIncrease,
+    decimal PercentageAnnual,
+    decimal PercentageAnnualIncrease);
 
 public sealed record CreateTransactionCategoryGroupRequest(string Name);
 public sealed record UpdateTransactionCategoryGroupRequest(string Name);

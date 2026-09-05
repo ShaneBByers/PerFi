@@ -4,4 +4,5 @@ public record UpdateAccountCommand(
     int AccountId,
     string AccountName,
     int InstitutionId,
-    int AccountTypeId);
+    int AccountTypeId,
+    decimal ExpectedAnnualGrowthPercentage);

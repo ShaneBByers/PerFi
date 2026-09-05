@@ -77,7 +77,7 @@ public sealed class AccountsControllerTests
     {
         var controller = CreateController(new RecordingAccountService(), new RecordingInstitutionService());
 
-        var result = await controller.Create(new CreateAccountRequest("   ", 1, 1));
+        var result = await controller.Create(new CreateAccountRequest("   ", 1, 1, 0m));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -88,7 +88,7 @@ public sealed class AccountsControllerTests
         var accountService = new RecordingAccountService { CreateResult = Result<Account>.Failure("nope") };
         var controller = CreateController(accountService, new RecordingInstitutionService());
 
-        var result = await controller.Create(new CreateAccountRequest("Checking", 1, 1));
+        var result = await controller.Create(new CreateAccountRequest("Checking", 1, 1, 0m));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -99,7 +99,7 @@ public sealed class AccountsControllerTests
         var accountService = new RecordingAccountService { CreateResult = Result<Account>.Success(new Account(5, "Checking", BuildAccountType(), 1)) };
         var controller = CreateController(accountService, new RecordingInstitutionService());
 
-        var result = await controller.Create(new CreateAccountRequest("Checking", 1, 1));
+        var result = await controller.Create(new CreateAccountRequest("Checking", 1, 1, 0m));
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(AccountsController.Get), created.ActionName);
@@ -110,7 +110,7 @@ public sealed class AccountsControllerTests
     {
         var controller = CreateController(new RecordingAccountService(), new RecordingInstitutionService());
 
-        var result = await controller.Update(1, new UpdateAccountRequest("   ", 1, 1));
+        var result = await controller.Update(1, new UpdateAccountRequest("   ", 1, 1, 0m));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -121,7 +121,7 @@ public sealed class AccountsControllerTests
         var accountService = new RecordingAccountService { UpdateResult = Result.Failure("Account with ID '1' not found.") };
         var controller = CreateController(accountService, new RecordingInstitutionService());
 
-        var result = await controller.Update(1, new UpdateAccountRequest("Checking", 1, 1));
+        var result = await controller.Update(1, new UpdateAccountRequest("Checking", 1, 1, 0m));
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -132,7 +132,7 @@ public sealed class AccountsControllerTests
         var accountService = new RecordingAccountService { UpdateResult = Result.Failure("Account name is required.") };
         var controller = CreateController(accountService, new RecordingInstitutionService());
 
-        var result = await controller.Update(1, new UpdateAccountRequest("Checking", 1, 1));
+        var result = await controller.Update(1, new UpdateAccountRequest("Checking", 1, 1, 0m));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -143,7 +143,7 @@ public sealed class AccountsControllerTests
         var accountService = new RecordingAccountService { UpdateResult = Result.Success() };
         var controller = CreateController(accountService, new RecordingInstitutionService());
 
-        var result = await controller.Update(1, new UpdateAccountRequest("Checking", 1, 1));
+        var result = await controller.Update(1, new UpdateAccountRequest("Checking", 1, 1, 0m));
 
         Assert.IsType<NoContentResult>(result);
     }

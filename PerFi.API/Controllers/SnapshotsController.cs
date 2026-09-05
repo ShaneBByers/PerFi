@@ -39,7 +39,8 @@ public class SnapshotsController(
                         ab.Account.Type.Id,
                         ab.Account.Type.Name,
                         ab.Account.Type.DisplayOrder,
-                        new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name, ab.Account.Type.Group.DisplayOrder))),
+                        new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name, ab.Account.Type.Group.DisplayOrder)),
+                    ab.Account.ExpectedAnnualGrowthPercentage),
                 ab.Balance))]));
 
         return Ok(response);
@@ -72,7 +73,8 @@ public class SnapshotsController(
                         ab.Account.Type.Id,
                         ab.Account.Type.Name,
                         ab.Account.Type.DisplayOrder,
-                        new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name, ab.Account.Type.Group.DisplayOrder))),
+                        new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name, ab.Account.Type.Group.DisplayOrder)),
+                    ab.Account.ExpectedAnnualGrowthPercentage),
                 ab.Balance))]);
 
         return Ok(response);

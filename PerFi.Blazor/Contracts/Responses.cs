@@ -10,13 +10,22 @@ public enum ContributionContributorType
     Other
 }
 
+// Mirrors PerFi.Domain.Entities.PayCycleType; ordinal values must stay in sync since the wire format is numeric.
+public enum PayCycleType
+{
+    Weekly,
+    BiWeekly,
+    SemiMonthly,
+    Monthly
+}
+
 public sealed record AccountTypeGroupResponse(int Id, string Name, int DisplayOrder);
 
 public sealed record AccountTypeResponse(int Id, string Name, int DisplayOrder, AccountTypeGroupResponse Group);
 
 public sealed record InstitutionIdentityResponse(int Id, string Name);
 
-public sealed record AccountResponse(int Id, string Name, int DisplayOrder, InstitutionIdentityResponse Institution, AccountTypeResponse Type);
+public sealed record AccountResponse(int Id, string Name, int DisplayOrder, InstitutionIdentityResponse Institution, AccountTypeResponse Type, decimal ExpectedAnnualGrowthPercentage);
 
 public sealed record InstitutionResponse(int Id, string Name, int DisplayOrder, IReadOnlyList<AccountResponse> Accounts);
 
@@ -27,6 +36,29 @@ public sealed record FinanceSnapshotResponse(int Id, DateOnly Date, IReadOnlyLis
 public sealed record AccountIdentityResponse(int Id, string Name);
 
 public sealed record ContributionResponse(int Id, DateOnly Date, decimal Amount, ContributionContributorType Contributor, AccountIdentityResponse Account);
+
+public sealed record SalaryProgressionResponse(int Id, DateOnly EffectiveDate, decimal AnnualSalary);
+
+public sealed record UserConfigurationResponse(
+    int Id,
+    DateOnly BirthDate,
+    PayCycleType PayCycleType,
+    DateOnly ReferencePayDate,
+    decimal ExpectedAnnualSalaryRaisePercentage,
+    decimal ExpectedAnnualInflationPercentage);
+
+public sealed record AccountContributionPlanResponse(
+    int Id,
+    int AccountId,
+    ContributionContributorType ContributorType,
+    decimal DollarAmountPerPayCycle,
+    decimal DollarAmountPerPayCycleAnnualIncrease,
+    decimal DollarAmountAnnual,
+    decimal DollarAmountAnnualIncrease,
+    decimal PercentagePerPayCycle,
+    decimal PercentagePerPayCycleAnnualIncrease,
+    decimal PercentageAnnual,
+    decimal PercentageAnnualIncrease);
 
 public sealed record TransactionCategoryGroupResponse(int Id, string Name, int DisplayOrder);
 

@@ -1,12 +1,14 @@
+using PerFi.Domain.Entities;
+
 namespace PerFi.Infrastructure.Entities;
 
 public class UserConfigurationEntity
 {
     public int Id { get; set; }
     public DateOnly BirthDate { get; set; }
-    public TimeSpan PayCycle { get; set; }
-    public decimal CurrentAnnualSalary { get; set; }
-    public DateTimeOffset LastVerifiedDateTime { get; set; }
+    public PayCycleType PayCycleType { get; set; }
+    public DateOnly ReferencePayDate { get; set; }
+    public decimal ExpectedAnnualSalaryRaisePercentage { get; set; }
+    public decimal ExpectedAnnualInflationPercentage { get; set; }
     public required string UserId { get; set; }
-    public UserConfigurationExpectationsEntity UserExpectations { get; set; } = null!;
 }

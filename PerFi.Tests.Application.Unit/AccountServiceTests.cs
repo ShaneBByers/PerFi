@@ -62,7 +62,7 @@ public class AccountServiceTests
 
         var service = new AccountService(Mock.Of<IAccountRepository>(), accountTypeRepo.Object, Mock.Of<IInstitutionRepository>());
 
-        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1));
+        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
         Assert.Contains("Account type with ID", result.Error);
@@ -79,7 +79,7 @@ public class AccountServiceTests
 
         var service = new AccountService(Mock.Of<IAccountRepository>(), accountTypeRepo.Object, institutionRepo.Object);
 
-        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1));
+        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
         Assert.Contains("Institution with ID", result.Error);
@@ -96,7 +96,7 @@ public class AccountServiceTests
 
         var service = new AccountService(Mock.Of<IAccountRepository>(), accountTypeRepo.Object, institutionRepo.Object);
 
-        var result = await service.CreateAccountAsync(new CreateAccountCommand("   ", 1, 1));
+        var result = await service.CreateAccountAsync(new CreateAccountCommand("   ", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
     }
@@ -116,7 +116,7 @@ public class AccountServiceTests
 
         var service = new AccountService(accountRepo.Object, accountTypeRepo.Object, institutionRepo.Object);
 
-        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1));
+        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
         Assert.Equal("db error", result.Error);
@@ -137,7 +137,7 @@ public class AccountServiceTests
 
         var service = new AccountService(accountRepo.Object, accountTypeRepo.Object, institutionRepo.Object);
 
-        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1));
+        var result = await service.CreateAccountAsync(new CreateAccountCommand("Checking", 1, 1, 0m));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(42, result.Value!.Id);
@@ -151,7 +151,7 @@ public class AccountServiceTests
 
         var service = new AccountService(accountRepo.Object, Mock.Of<IAccountTypeRepository>(), Mock.Of<IInstitutionRepository>());
 
-        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1));
+        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
         Assert.Contains("Account with ID", result.Error);
@@ -169,7 +169,7 @@ public class AccountServiceTests
 
         var service = new AccountService(accountRepo.Object, accountTypeRepo.Object, Mock.Of<IInstitutionRepository>());
 
-        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1));
+        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
         Assert.Contains("Account type with ID", result.Error);
@@ -190,7 +190,7 @@ public class AccountServiceTests
 
         var service = new AccountService(accountRepo.Object, accountTypeRepo.Object, institutionRepo.Object);
 
-        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1));
+        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
         Assert.Contains("Institution with ID", result.Error);
@@ -211,7 +211,7 @@ public class AccountServiceTests
 
         var service = new AccountService(accountRepo.Object, accountTypeRepo.Object, institutionRepo.Object);
 
-        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "   ", 1, 1));
+        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "   ", 1, 1, 0m));
 
         Assert.True(result.IsFailure);
     }
@@ -233,7 +233,7 @@ public class AccountServiceTests
 
         var service = new AccountService(accountRepo.Object, accountTypeRepo.Object, institutionRepo.Object);
 
-        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1));
+        var result = await service.UpdateAccountAsync(new UpdateAccountCommand(1, "Checking", 1, 1, 0m));
 
         Assert.True(result.IsSuccess);
     }

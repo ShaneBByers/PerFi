@@ -67,6 +67,11 @@
                                 }
                             </InputSelect>
                         </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="accountGrowth">Expected Annual Growth %</label>
+                            <InputNumber id="accountGrowth" class="form-control" @bind-Value="createModel.ExpectedAnnualGrowthPercentage" />
+                        </div>
                     </div>
 
                     <div class="mt-3 d-flex gap-2 flex-wrap">
@@ -106,6 +111,11 @@
                                     <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
                                 }
                             </InputSelect>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="editAccountGrowth">Expected Annual Growth %</label>
+                            <InputNumber id="editAccountGrowth" class="form-control" @bind-Value="editModel.ExpectedAnnualGrowthPercentage" />
                         </div>
                     </div>
 
@@ -266,7 +276,8 @@
         var result = await AccountsApiClient.CreateAsync(
             createModel.AccountName,
             createModel.InstitutionId,
-            createModel.AccountTypeId);
+            createModel.AccountTypeId,
+            createModel.ExpectedAnnualGrowthPercentage);
 
         isSubmitting = false;
 
@@ -280,6 +291,7 @@
         createModel.AccountName = string.Empty;
         createModel.InstitutionId = 0;
         createModel.AccountTypeId = 0;
+        createModel.ExpectedAnnualGrowthPercentage = 0;
         showEditor = false;
         successMessage = "Account saved.";
         await LoadListAsync();
@@ -310,7 +322,8 @@
             Id = account.Id,
             AccountName = account.Name,
             InstitutionId = account.Institution.Id,
-            AccountTypeId = account.Type.Id
+            AccountTypeId = account.Type.Id,
+            ExpectedAnnualGrowthPercentage = account.ExpectedAnnualGrowthPercentage
         };
         showEditor = true;
     }
@@ -337,7 +350,8 @@
             editModel.Id,
             editModel.AccountName,
             editModel.InstitutionId,
-            editModel.AccountTypeId);
+            editModel.AccountTypeId,
+            editModel.ExpectedAnnualGrowthPercentage);
 
         isSubmitting = false;
 
@@ -388,6 +402,7 @@
         public string AccountName { get; set; } = string.Empty;
         public int InstitutionId { get; set; }
         public int AccountTypeId { get; set; }
+        public decimal ExpectedAnnualGrowthPercentage { get; set; }
     }
 
     private sealed class EditModel
@@ -396,5 +411,6 @@
         public string AccountName { get; set; } = string.Empty;
         public int InstitutionId { get; set; }
         public int AccountTypeId { get; set; }
+        public decimal ExpectedAnnualGrowthPercentage { get; set; }
     }
 }

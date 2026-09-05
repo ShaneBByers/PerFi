@@ -6,6 +6,7 @@
 @inject IAccountTypeGroupsApiClient AccountTypeGroupsApiClient
 @inject ITransactionCategoryGroupsApiClient TransactionCategoryGroupsApiClient
 @inject ITransactionCategoriesApiClient TransactionCategoriesApiClient
+@inject IAccountContributionPlansApiClient AccountContributionPlansApiClient
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Config</PageTitle>
@@ -357,6 +358,10 @@
                                                 }
                                             </InputSelect>
                                         </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="accountGrowth">Expected Annual Growth %</label>
+                                            <InputNumber id="accountGrowth" class="form-control" @bind-Value="createAccountModel.ExpectedAnnualGrowthPercentage" />
+                                        </div>
                                         <div class="col-12 d-flex gap-2 flex-wrap">
                                             <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Account</button>
                                         </div>
@@ -391,6 +396,10 @@
                                                     <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
                                                 }
                                             </InputSelect>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="editAccountGrowth">Expected Annual Growth %</label>
+                                            <InputNumber id="editAccountGrowth" class="form-control" @bind-Value="editAccountModel.ExpectedAnnualGrowthPercentage" />
                                         </div>
                                         <div class="col-12 d-flex gap-2 flex-wrap">
                                             <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
@@ -469,13 +478,151 @@
                                     <dd>@selectedAccount.Type.Name</dd>
                                     <dt>Group</dt>
                                     <dd>@selectedAccount.Type.Group.Name</dd>
+                                    <dt>Expected Annual Growth %</dt>
+                                    <dd>@selectedAccount.ExpectedAnnualGrowthPercentage.ToString("0.####")%</dd>
                                 </dl>
+
+                                <hr />
+
+                                <h4 class="h6">Contribution Plans</h4>
+                                <EmptyState IsVisible="@(selectedAccountContributionPlans.Count == 0)" Message="No contribution plans yet." />
+
+                                @if (selectedAccountContributionPlans.Count > 0)
+                                {
+                                    <ul class="relationship-list">
+                                        @foreach (var plan in selectedAccountContributionPlans)
+                                        {
+                                            <li>
+                                                <div class="d-flex justify-content-between gap-2 align-items-start">
+                                                    <div class="small">
+                                                        <strong>@plan.ContributorType</strong>
+                                                        <div>$@plan.DollarAmountPerPayCycle.ToString("0.##")/cycle (+$@plan.DollarAmountPerPayCycleAnnualIncrease.ToString("0.##")/yr)</div>
+                                                        <div>$@plan.DollarAmountAnnual.ToString("0.##")/yr (+$@plan.DollarAmountAnnualIncrease.ToString("0.##")/yr)</div>
+                                                        <div>@plan.PercentagePerPayCycle.ToString("0.####")%/cycle (+@plan.PercentagePerPayCycleAnnualIncrease.ToString("0.####")%/yr)</div>
+                                                        <div>@plan.PercentageAnnual.ToString("0.####")%/yr (+@plan.PercentageAnnualIncrease.ToString("0.####")%/yr)</div>
+                                                    </div>
+                                                    <div class="d-flex flex-column gap-1">
+                                                        <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditContributionPlan(plan)">Edit</button>
+                                                        <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteContributionPlanAsync(plan.Id)">Delete</button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+
+                                @if (editContributionPlanModel is null)
+                                {
+                                    <EditForm Model="createContributionPlanModel" OnValidSubmit="CreateContributionPlanAsync">
+                                        <DataAnnotationsValidator />
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <label class="form-label small" for="planContributorType">Contributor</label>
+                                                <InputSelect id="planContributorType" class="form-select form-select-sm" @bind-Value="createContributionPlanModel.ContributorType">
+                                                    @foreach (var contributorType in Enum.GetValues<ContributionContributorType>())
+                                                    {
+                                                        <option value="@contributorType">@contributorType</option>
+                                                    }
+                                                </InputSelect>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planDollarPerCycle">$/Cycle</label>
+                                                <InputNumber id="planDollarPerCycle" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountPerPayCycle" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planDollarPerCycleIncrease">$/Cycle +/yr</label>
+                                                <InputNumber id="planDollarPerCycleIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planDollarAnnual">$/Year</label>
+                                                <InputNumber id="planDollarAnnual" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountAnnual" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planDollarAnnualIncrease">$/Year +/yr</label>
+                                                <InputNumber id="planDollarAnnualIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountAnnualIncrease" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planPercentPerCycle">%/Cycle</label>
+                                                <InputNumber id="planPercentPerCycle" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentagePerPayCycle" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planPercentPerCycleIncrease">%/Cycle +/yr</label>
+                                                <InputNumber id="planPercentPerCycleIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentagePerPayCycleAnnualIncrease" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planPercentAnnual">%/Year</label>
+                                                <InputNumber id="planPercentAnnual" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentageAnnual" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="planPercentAnnualIncrease">%/Year +/yr</label>
+                                                <InputNumber id="planPercentAnnualIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentageAnnualIncrease" />
+                                            </div>
+                                            <div class="col-12">
+                                                <button class="btn btn-sm btn-primary" type="submit" disabled="@isSubmitting">Add Plan</button>
+                                            </div>
+                                        </div>
+                                    </EditForm>
+                                }
+                                else
+                                {
+                                    <EditForm Model="editContributionPlanModel" OnValidSubmit="UpdateContributionPlanAsync">
+                                        <DataAnnotationsValidator />
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <label class="form-label small" for="editPlanContributorType">Contributor</label>
+                                                <InputSelect id="editPlanContributorType" class="form-select form-select-sm" @bind-Value="editContributionPlanModel.ContributorType">
+                                                    @foreach (var contributorType in Enum.GetValues<ContributionContributorType>())
+                                                    {
+                                                        <option value="@contributorType">@contributorType</option>
+                                                    }
+                                                </InputSelect>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanDollarPerCycle">$/Cycle</label>
+                                                <InputNumber id="editPlanDollarPerCycle" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountPerPayCycle" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanDollarPerCycleIncrease">$/Cycle +/yr</label>
+                                                <InputNumber id="editPlanDollarPerCycleIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanDollarAnnual">$/Year</label>
+                                                <InputNumber id="editPlanDollarAnnual" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountAnnual" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanDollarAnnualIncrease">$/Year +/yr</label>
+                                                <InputNumber id="editPlanDollarAnnualIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountAnnualIncrease" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanPercentPerCycle">%/Cycle</label>
+                                                <InputNumber id="editPlanPercentPerCycle" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentagePerPayCycle" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanPercentPerCycleIncrease">%/Cycle +/yr</label>
+                                                <InputNumber id="editPlanPercentPerCycleIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentagePerPayCycleAnnualIncrease" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanPercentAnnual">%/Year</label>
+                                                <InputNumber id="editPlanPercentAnnual" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentageAnnual" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small" for="editPlanPercentAnnualIncrease">%/Year +/yr</label>
+                                                <InputNumber id="editPlanPercentAnnualIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentageAnnualIncrease" />
+                                            </div>
+                                            <div class="col-12 d-flex gap-2">
+                                                <button class="btn btn-sm btn-primary" type="submit" disabled="@isSubmitting">Save</button>
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="CancelContributionPlanEdit">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </EditForm>
+                                }
                             </div>
                         }
                     </div>
                 </div>
             </div>
         }
+
 
         @if (activeTab == "account-types")
         {
@@ -994,6 +1141,9 @@
     private string? successMessage;
     private InstitutionResponse? selectedInstitution;
     private AccountResponse? selectedAccount;
+    private readonly List<AccountContributionPlanResponse> selectedAccountContributionPlans = [];
+    private readonly CreateContributionPlanModel createContributionPlanModel = new();
+    private EditContributionPlanModel? editContributionPlanModel;
     private AccountTypeResponse? selectedAccountType;
     private TransactionCategoryResponse? selectedTransactionCategory;
     private EditInstitutionModel? editInstitutionModel;
@@ -1142,7 +1292,7 @@
         successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
 
-        var result = await AccountsApiClient.CreateAsync(createAccountModel.AccountName, createAccountModel.InstitutionId, createAccountModel.AccountTypeId);
+        var result = await AccountsApiClient.CreateAsync(createAccountModel.AccountName, createAccountModel.InstitutionId, createAccountModel.AccountTypeId, createAccountModel.ExpectedAnnualGrowthPercentage);
         isSubmitting = false;
 
         if (!result.IsSuccess)
@@ -1155,6 +1305,7 @@
         createAccountModel.AccountName = string.Empty;
         createAccountModel.InstitutionId = 0;
         createAccountModel.AccountTypeId = 0;
+        createAccountModel.ExpectedAnnualGrowthPercentage = 0;
         successMessage = "Account saved.";
         await LoadAllAsync();
     }
@@ -1169,7 +1320,7 @@
         successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
 
-        var result = await AccountsApiClient.UpdateAsync(editAccountModel.Id, editAccountModel.AccountName, editAccountModel.InstitutionId, editAccountModel.AccountTypeId);
+        var result = await AccountsApiClient.UpdateAsync(editAccountModel.Id, editAccountModel.AccountName, editAccountModel.InstitutionId, editAccountModel.AccountTypeId, editAccountModel.ExpectedAnnualGrowthPercentage);
         isSubmitting = false;
 
         if (!result.IsSuccess)
@@ -1194,7 +1345,8 @@
             Id = account.Id,
             AccountName = account.Name,
             InstitutionId = account.Institution.Id,
-            AccountTypeId = account.Type.Id
+            AccountTypeId = account.Type.Id,
+            ExpectedAnnualGrowthPercentage = account.ExpectedAnnualGrowthPercentage
         };
         activeTab = "accounts";
     }
@@ -1205,6 +1357,140 @@
     {
         selectedAccount = await AccountsApiClient.GetByIdAsync(id);
         activeTab = "accounts";
+
+        selectedAccountContributionPlans.Clear();
+        editContributionPlanModel = null;
+        if (selectedAccount is not null)
+        {
+            selectedAccountContributionPlans.AddRange(await AccountContributionPlansApiClient.GetAllByAccountIdAsync(selectedAccount.Id));
+        }
+    }
+
+    private async Task CreateContributionPlanAsync()
+    {
+        if (selectedAccount is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var request = new CreateAccountContributionPlanRequest(
+            createContributionPlanModel.ContributorType,
+            createContributionPlanModel.DollarAmountPerPayCycle,
+            createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease,
+            createContributionPlanModel.DollarAmountAnnual,
+            createContributionPlanModel.DollarAmountAnnualIncrease,
+            createContributionPlanModel.PercentagePerPayCycle,
+            createContributionPlanModel.PercentagePerPayCycleAnnualIncrease,
+            createContributionPlanModel.PercentageAnnual,
+            createContributionPlanModel.PercentageAnnualIncrease);
+
+        var result = await AccountContributionPlansApiClient.CreateAsync(selectedAccount.Id, request);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createContributionPlanModel.ContributorType = ContributionContributorType.Self;
+        createContributionPlanModel.DollarAmountPerPayCycle = 0;
+        createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease = 0;
+        createContributionPlanModel.DollarAmountAnnual = 0;
+        createContributionPlanModel.DollarAmountAnnualIncrease = 0;
+        createContributionPlanModel.PercentagePerPayCycle = 0;
+        createContributionPlanModel.PercentagePerPayCycleAnnualIncrease = 0;
+        createContributionPlanModel.PercentageAnnual = 0;
+        createContributionPlanModel.PercentageAnnualIncrease = 0;
+        successMessage = "Contribution plan saved.";
+        await LoadAccountDetailAsync(selectedAccount.Id);
+    }
+
+    private void StartEditContributionPlan(AccountContributionPlanResponse plan)
+    {
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+        editContributionPlanModel = new EditContributionPlanModel
+        {
+            Id = plan.Id,
+            ContributorType = plan.ContributorType,
+            DollarAmountPerPayCycle = plan.DollarAmountPerPayCycle,
+            DollarAmountPerPayCycleAnnualIncrease = plan.DollarAmountPerPayCycleAnnualIncrease,
+            DollarAmountAnnual = plan.DollarAmountAnnual,
+            DollarAmountAnnualIncrease = plan.DollarAmountAnnualIncrease,
+            PercentagePerPayCycle = plan.PercentagePerPayCycle,
+            PercentagePerPayCycleAnnualIncrease = plan.PercentagePerPayCycleAnnualIncrease,
+            PercentageAnnual = plan.PercentageAnnual,
+            PercentageAnnualIncrease = plan.PercentageAnnualIncrease
+        };
+    }
+
+    private void CancelContributionPlanEdit() => editContributionPlanModel = null;
+
+    private async Task UpdateContributionPlanAsync()
+    {
+        if (selectedAccount is null || editContributionPlanModel is null)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var request = new UpdateAccountContributionPlanRequest(
+            editContributionPlanModel.ContributorType,
+            editContributionPlanModel.DollarAmountPerPayCycle,
+            editContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease,
+            editContributionPlanModel.DollarAmountAnnual,
+            editContributionPlanModel.DollarAmountAnnualIncrease,
+            editContributionPlanModel.PercentagePerPayCycle,
+            editContributionPlanModel.PercentagePerPayCycleAnnualIncrease,
+            editContributionPlanModel.PercentageAnnual,
+            editContributionPlanModel.PercentageAnnualIncrease);
+
+        var result = await AccountContributionPlansApiClient.UpdateAsync(selectedAccount.Id, editContributionPlanModel.Id, request);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editContributionPlanModel = null;
+        successMessage = "Contribution plan updated.";
+        await LoadAccountDetailAsync(selectedAccount.Id);
+    }
+
+    private async Task DeleteContributionPlanAsync(int id)
+    {
+        if (selectedAccount is null)
+            return;
+
+        errorMessage = null;
+        successMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this contribution plan? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await AccountContributionPlansApiClient.DeleteAsync(selectedAccount.Id, id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Contribution plan deleted.";
+        await LoadAccountDetailAsync(selectedAccount.Id);
     }
 
     private string GetInstitutionName(int institutionId)
@@ -1664,6 +1950,7 @@
         public string AccountName { get; set; } = string.Empty;
         public int InstitutionId { get; set; }
         public int AccountTypeId { get; set; }
+        public decimal ExpectedAnnualGrowthPercentage { get; set; }
     }
 
     private sealed class EditAccountModel
@@ -1672,6 +1959,34 @@
         public string AccountName { get; set; } = string.Empty;
         public int InstitutionId { get; set; }
         public int AccountTypeId { get; set; }
+        public decimal ExpectedAnnualGrowthPercentage { get; set; }
+    }
+
+    private sealed class CreateContributionPlanModel
+    {
+        public ContributionContributorType ContributorType { get; set; } = ContributionContributorType.Self;
+        public decimal DollarAmountPerPayCycle { get; set; }
+        public decimal DollarAmountPerPayCycleAnnualIncrease { get; set; }
+        public decimal DollarAmountAnnual { get; set; }
+        public decimal DollarAmountAnnualIncrease { get; set; }
+        public decimal PercentagePerPayCycle { get; set; }
+        public decimal PercentagePerPayCycleAnnualIncrease { get; set; }
+        public decimal PercentageAnnual { get; set; }
+        public decimal PercentageAnnualIncrease { get; set; }
+    }
+
+    private sealed class EditContributionPlanModel
+    {
+        public int Id { get; set; }
+        public ContributionContributorType ContributorType { get; set; }
+        public decimal DollarAmountPerPayCycle { get; set; }
+        public decimal DollarAmountPerPayCycleAnnualIncrease { get; set; }
+        public decimal DollarAmountAnnual { get; set; }
+        public decimal DollarAmountAnnualIncrease { get; set; }
+        public decimal PercentagePerPayCycle { get; set; }
+        public decimal PercentagePerPayCycleAnnualIncrease { get; set; }
+        public decimal PercentageAnnual { get; set; }
+        public decimal PercentageAnnualIncrease { get; set; }
     }
 
     private sealed class CreateAccountTypeModel

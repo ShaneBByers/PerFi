@@ -19,6 +19,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInstitutionService, InstitutionService>();
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IFinanceSnapshotService, FinanceSnapshotService>();
+        services.AddScoped<ISalaryProgressionService, SalaryProgressionService>();
+        services.AddScoped<IAccountContributionPlanService, AccountContributionPlanService>();
+        services.AddScoped<IUserConfigurationService, UserConfigurationService>();
 
         return services;
     }

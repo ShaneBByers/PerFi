@@ -14,28 +14,11 @@ internal class UserConfigurationRepository(
     {
         var entity = await dbContext.UserConfigurations
             .AsNoTracking()
-            .Include(configuration => configuration.UserExpectations)
             .SingleOrDefaultAsync(
                 configuration => configuration.UserId == currentUserService.UserId,
                 cancellationToken);
 
-        return entity is null
-            ? null
-            : new UserConfiguration(
-                entity.Id,
-                entity.BirthDate,
-                entity.PayCycle,
-                entity.CurrentAnnualSalary,
-                entity.LastVerifiedDateTime,
-                new UserConfigurationExpectations(
-                    entity.UserExpectations.Id,
-                    entity.UserExpectations.AnnualSalaryRaisePercentage,
-                    entity.UserExpectations.EmployerMatchPercentage,
-                    entity.UserExpectations.EmployerProfitSharingPercentage,
-                    entity.UserExpectations.AnnualBrokerageContributionPerPayCycleIncrease,
-                    entity.UserExpectations.AnnualStockMarketReturnPercentage,
-                    entity.UserExpectations.AnnualInflationPercentage,
-                    entity.UserExpectations.LastVerifiedDateTime));
+        return entity is null ? null : ToDomain(entity);
     }
 
     public async Task<Result<int>> AddUserConfigurationAsync(
@@ -70,9 +53,10 @@ internal class UserConfigurationRepository(
             return Result.Failure($"User configuration with ID '{userConfiguration.Id}' not found.");
 
         entity.BirthDate = userConfiguration.BirthDate;
-        entity.PayCycle = userConfiguration.PayCycle;
-        entity.CurrentAnnualSalary = userConfiguration.CurrentAnnualSalary;
-        entity.LastVerifiedDateTime = userConfiguration.LastVerifiedDateTime;
+        entity.PayCycleType = userConfiguration.PayCycleType;
+        entity.ReferencePayDate = userConfiguration.ReferencePayDate;
+        entity.ExpectedAnnualSalaryRaisePercentage = userConfiguration.ExpectedAnnualSalaryRaisePercentage;
+        entity.ExpectedAnnualInflationPercentage = userConfiguration.ExpectedAnnualInflationPercentage;
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Result.Success();
@@ -83,21 +67,22 @@ internal class UserConfigurationRepository(
         return new UserConfigurationEntity
         {
             BirthDate = userConfiguration.BirthDate,
-            PayCycle = userConfiguration.PayCycle,
-            CurrentAnnualSalary = userConfiguration.CurrentAnnualSalary,
-            LastVerifiedDateTime = userConfiguration.LastVerifiedDateTime,
-            UserId = currentUserService.UserId,
-            UserExpectations = new UserConfigurationExpectationsEntity
-            {
-                AnnualSalaryRaisePercentage = userConfiguration.UserExpectations.AnnualSalaryRaisePercentage,
-                EmployerMatchPercentage = userConfiguration.UserExpectations.EmployerMatchPercentage,
-                EmployerProfitSharingPercentage = userConfiguration.UserExpectations.EmployerProfitSharingPercentage,
-                AnnualBrokerageContributionPerPayCycleIncrease = userConfiguration.UserExpectations.AnnualBrokerageContributionPerPayCycleIncrease,
-                AnnualStockMarketReturnPercentage = userConfiguration.UserExpectations.AnnualStockMarketReturnPercentage,
-                AnnualInflationPercentage = userConfiguration.UserExpectations.AnnualInflationPercentage,
-                LastVerifiedDateTime = userConfiguration.UserExpectations.LastVerifiedDateTime,
-                UserId = currentUserService.UserId
-            }
+            PayCycleType = userConfiguration.PayCycleType,
+            ReferencePayDate = userConfiguration.ReferencePayDate,
+            ExpectedAnnualSalaryRaisePercentage = userConfiguration.ExpectedAnnualSalaryRaisePercentage,
+            ExpectedAnnualInflationPercentage = userConfiguration.ExpectedAnnualInflationPercentage,
+            UserId = currentUserService.UserId
         };
+    }
+
+    private static UserConfiguration ToDomain(UserConfigurationEntity entity)
+    {
+        return new UserConfiguration(
+            entity.Id,
+            entity.BirthDate,
+            entity.PayCycleType,
+            entity.ReferencePayDate,
+            entity.ExpectedAnnualSalaryRaisePercentage,
+            entity.ExpectedAnnualInflationPercentage);
     }
 }

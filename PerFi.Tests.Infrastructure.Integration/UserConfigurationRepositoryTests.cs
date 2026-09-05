@@ -30,24 +30,14 @@ public sealed class UserConfigurationRepositoryTests
         return options;
     }
 
-    private static UserConfiguration CreateSampleConfiguration(DateTimeOffset? verified = null)
+    private static UserConfiguration CreateSampleConfiguration()
     {
-        var lastVerified = verified ?? DateTimeOffset.UtcNow;
-        var expectations = new UserConfigurationExpectations(
-            annualSalaryRaisePercentage: 0.03m,
-            employerMatchPercentage: 0.05m,
-            employerProfitSharingPercentage: 0.02m,
-            annualBrokerageContributionPerPayCycleIncrease: 50m,
-            annualStockMarketReturnPercentage: 0.08m,
-            annualInflationPercentage: 0.025m,
-            lastVerifiedDateTime: lastVerified);
-
         return new UserConfiguration(
             birthDate: new DateOnly(1990, 5, 15),
-            payCycle: TimeSpan.FromDays(14),
-            currentAnnualSalary: 120_000m,
-            lastVerifiedDateTime: lastVerified,
-            userExpectations: expectations);
+            payCycleType: PayCycleType.BiWeekly,
+            referencePayDate: new DateOnly(2026, 1, 2),
+            expectedAnnualSalaryRaisePercentage: 0.03m,
+            expectedAnnualInflationPercentage: 0.025m);
     }
 
     [Fact]
@@ -63,7 +53,7 @@ public sealed class UserConfigurationRepositoryTests
     }
 
     [Fact]
-    public async Task AddUserConfigurationAsync_PersistsConfigurationAndExpectations_AndReturnsId()
+    public async Task AddUserConfigurationAsync_PersistsConfiguration_AndReturnsId()
     {
         var options = await CreateSeededOptionsAsync();
         await using var dbContext = new PerFiDbContext(options);
@@ -78,16 +68,10 @@ public sealed class UserConfigurationRepositoryTests
         var retrieved = await repository.GetUserConfigurationAsync();
         Assert.NotNull(retrieved);
         Assert.Equal(config.BirthDate, retrieved.BirthDate);
-        Assert.Equal(config.PayCycle, retrieved.PayCycle);
-        Assert.Equal(config.CurrentAnnualSalary, retrieved.CurrentAnnualSalary);
-        Assert.Equal(config.LastVerifiedDateTime, retrieved.LastVerifiedDateTime);
-        Assert.NotNull(retrieved.UserExpectations);
-        Assert.Equal(config.UserExpectations.AnnualSalaryRaisePercentage, retrieved.UserExpectations.AnnualSalaryRaisePercentage);
-        Assert.Equal(config.UserExpectations.EmployerMatchPercentage, retrieved.UserExpectations.EmployerMatchPercentage);
-        Assert.Equal(config.UserExpectations.EmployerProfitSharingPercentage, retrieved.UserExpectations.EmployerProfitSharingPercentage);
-        Assert.Equal(config.UserExpectations.AnnualBrokerageContributionPerPayCycleIncrease, retrieved.UserExpectations.AnnualBrokerageContributionPerPayCycleIncrease);
-        Assert.Equal(config.UserExpectations.AnnualStockMarketReturnPercentage, retrieved.UserExpectations.AnnualStockMarketReturnPercentage);
-        Assert.Equal(config.UserExpectations.AnnualInflationPercentage, retrieved.UserExpectations.AnnualInflationPercentage);
+        Assert.Equal(config.PayCycleType, retrieved.PayCycleType);
+        Assert.Equal(config.ReferencePayDate, retrieved.ReferencePayDate);
+        Assert.Equal(config.ExpectedAnnualSalaryRaisePercentage, retrieved.ExpectedAnnualSalaryRaisePercentage);
+        Assert.Equal(config.ExpectedAnnualInflationPercentage, retrieved.ExpectedAnnualInflationPercentage);
     }
 
     [Fact]
@@ -116,21 +100,11 @@ public sealed class UserConfigurationRepositoryTests
             var otherConfig = new UserConfigurationEntity
             {
                 BirthDate = new DateOnly(1980, 1, 1),
-                PayCycle = TimeSpan.FromDays(7),
-                CurrentAnnualSalary = 80_000m,
-                LastVerifiedDateTime = DateTimeOffset.UtcNow,
-                UserId = otherUserId,
-                UserExpectations = new UserConfigurationExpectationsEntity
-                {
-                    AnnualSalaryRaisePercentage = 0.02m,
-                    EmployerMatchPercentage = 0.03m,
-                    EmployerProfitSharingPercentage = 0.01m,
-                    AnnualBrokerageContributionPerPayCycleIncrease = 25m,
-                    AnnualStockMarketReturnPercentage = 0.07m,
-                    AnnualInflationPercentage = 0.02m,
-                    LastVerifiedDateTime = DateTimeOffset.UtcNow,
-                    UserId = otherUserId
-                }
+                PayCycleType = PayCycleType.Weekly,
+                ReferencePayDate = new DateOnly(2026, 1, 2),
+                ExpectedAnnualSalaryRaisePercentage = 0.02m,
+                ExpectedAnnualInflationPercentage = 0.02m,
+                UserId = otherUserId
             };
             setupContext.UserConfigurations.Add(otherConfig);
             await setupContext.SaveChangesAsync();
@@ -154,14 +128,13 @@ public sealed class UserConfigurationRepositoryTests
         var addResult = await repository.AddUserConfigurationAsync(initial);
         Assert.True(addResult.IsSuccess);
 
-        var newVerified = DateTimeOffset.UtcNow.AddDays(30);
         var updated = new UserConfiguration(
             id: addResult.Value,
             birthDate: new DateOnly(1991, 6, 20),
-            payCycle: TimeSpan.FromDays(30),
-            currentAnnualSalary: 135_000m,
-            lastVerifiedDateTime: newVerified,
-            userExpectations: initial.UserExpectations);
+            payCycleType: PayCycleType.Monthly,
+            referencePayDate: new DateOnly(2026, 2, 1),
+            expectedAnnualSalaryRaisePercentage: 0.05m,
+            expectedAnnualInflationPercentage: 0.03m);
 
         var updateResult = await repository.UpdateUserConfigurationAsync(updated);
         Assert.True(updateResult.IsSuccess);
@@ -169,9 +142,10 @@ public sealed class UserConfigurationRepositoryTests
         var retrieved = await repository.GetUserConfigurationAsync();
         Assert.NotNull(retrieved);
         Assert.Equal(new DateOnly(1991, 6, 20), retrieved.BirthDate);
-        Assert.Equal(TimeSpan.FromDays(30), retrieved.PayCycle);
-        Assert.Equal(135_000m, retrieved.CurrentAnnualSalary);
-        Assert.Equal(newVerified, retrieved.LastVerifiedDateTime);
+        Assert.Equal(PayCycleType.Monthly, retrieved.PayCycleType);
+        Assert.Equal(new DateOnly(2026, 2, 1), retrieved.ReferencePayDate);
+        Assert.Equal(0.05m, retrieved.ExpectedAnnualSalaryRaisePercentage);
+        Assert.Equal(0.03m, retrieved.ExpectedAnnualInflationPercentage);
     }
 
     [Fact]
@@ -184,10 +158,10 @@ public sealed class UserConfigurationRepositoryTests
         var config = new UserConfiguration(
             id: 999,
             birthDate: new DateOnly(1990, 1, 1),
-            payCycle: TimeSpan.FromDays(14),
-            currentAnnualSalary: 100_000m,
-            lastVerifiedDateTime: DateTimeOffset.UtcNow,
-            userExpectations: CreateSampleConfiguration().UserExpectations);
+            payCycleType: PayCycleType.BiWeekly,
+            referencePayDate: new DateOnly(2026, 1, 2),
+            expectedAnnualSalaryRaisePercentage: 0.03m,
+            expectedAnnualInflationPercentage: 0.025m);
 
         var result = await repository.UpdateUserConfigurationAsync(config);
         Assert.True(result.IsFailure);

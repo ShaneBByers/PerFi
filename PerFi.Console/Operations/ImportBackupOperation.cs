@@ -264,7 +264,7 @@ public sealed class ImportBackupOperation(
             {
                 var accountTypeId = accountTypeIds[NormalizeKey(account.AccountType)];
                 var result = await accountService.CreateAccountAsync(
-                    new CreateAccountCommand(account.Name, institutionId, accountTypeId),
+                    new CreateAccountCommand(account.Name, institutionId, accountTypeId, ExpectedAnnualGrowthPercentage: 0m),
                     cancellationToken);
 
                 if (result.IsFailure || result.Value is null)

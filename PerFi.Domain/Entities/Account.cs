@@ -7,6 +7,7 @@ public sealed record Account
     public AccountType Type { get; }
     public int InstitutionId { get; set; }
     public int DisplayOrder { get; set; }
+    public decimal ExpectedAnnualGrowthPercentage { get; set; }
 
     public Account(string name, AccountType type)
     {
