@@ -1,12 +1,11 @@
 @page "/login"
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
+@inject IToastService ToastService
 
 <PageTitle>Login</PageTitle>
 
 <h1>Login</h1>
-
-<ErrorState Message="@errorMessage" />
 
 <EditForm Model="loginModel" OnValidSubmit="HandleLoginAsync">
     <DataAnnotationsValidator />
@@ -28,7 +27,6 @@
 @code {
     private readonly LoginModel loginModel = new();
     private bool isSubmitting;
-    private string? errorMessage;
 
     [SupplyParameterFromQuery(Name = "returnUrl")]
     public string? ReturnUrl { get; set; }
@@ -42,14 +40,13 @@
     private async Task HandleLoginAsync()
     {
         isSubmitting = true;
-        errorMessage = null;
 
         var result = await AuthService.LoginAsync(loginModel.Username, loginModel.Password);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
+            ToastService.ShowFailure(result.ErrorMessage);
             return;
         }
 

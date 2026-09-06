@@ -6,6 +6,7 @@
 @inject ITransactionCategoryGroupsApiClient TransactionCategoryGroupsApiClient
 @inject IAccountsApiClient AccountsApiClient
 @inject IJSRuntime JSRuntime
+@inject IToastService ToastService
 
 <PageTitle>Cash Flow</PageTitle>
 
@@ -50,13 +51,6 @@
         </div>
     </header>
 
-    <ErrorState Message="@errorMessage" />
-    <ValidationSummaryPanel Errors="@validationErrors" />
-
-    @if (!string.IsNullOrWhiteSpace(successMessage))
-    {
-        <div class="alert alert-success" role="status">@successMessage</div>
-    }
 
     <section class="summary-grid" aria-label="Cash Flow highlights">
         <article class="summary-card">
@@ -473,15 +467,12 @@
     private readonly List<CashFlowMonthPoint> netCashFlowPoints = [];
     private readonly List<CategoryBreakdownPoint> categoryGroupSpendingPoints = [];
     private readonly List<CategoryBreakdownPoint> contributorBreakdownPoints = [];
-    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private EditTransactionModel? editTransactionModel;
     private EditContributionModel? editContributionModel;
     private bool isLoading = true;
     private bool isSubmitting;
     private bool showRangePicker;
     private string activeTab = "transactions";
-    private string? errorMessage;
-    private string? successMessage;
     private string selectedRangePreset = "ytd";
     private DateTime customStartDate = new(DateTime.Today.Year, 1, 1);
     private DateTime customEndDate = DateTime.Today;
@@ -494,8 +485,6 @@
     private async Task LoadAllAsync()
     {
         isLoading = true;
-        errorMessage = null;
-        successMessage = null;
 
         try
         {
@@ -515,7 +504,7 @@
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            ToastService.ShowError(ex.Message);
         }
         finally
         {
@@ -659,9 +648,6 @@
     private async Task CreateTransactionAsync()
     {
         isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         var result = await TransactionsApiClient.CreateAsync(
             createTransactionModel.Date,
@@ -674,8 +660,7 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
@@ -684,7 +669,7 @@
         createTransactionModel.TransactionCategoryId = 0;
         createTransactionModel.AccountId = 0;
         createTransactionModel.Description = null;
-        successMessage = "Transaction saved.";
+        ToastService.ShowSuccess("Transaction saved.");
         await LoadAllAsync();
     }
 
@@ -694,9 +679,6 @@
             return;
 
         isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         var result = await TransactionsApiClient.UpdateAsync(
             editTransactionModel.Id,
@@ -710,21 +692,17 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editTransactionModel = null;
-        successMessage = "Transaction updated.";
+        ToastService.ShowSuccess("Transaction updated.");
         await LoadAllAsync();
     }
 
     private void StartEditTransaction(TransactionResponse transaction)
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
         editTransactionModel = new EditTransactionModel
         {
             Id = transaction.Id,
@@ -741,9 +719,6 @@
 
     private async Task DeleteTransactionAsync(int id)
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this transaction? (ID {id})");
         if (!confirmed)
@@ -752,21 +727,17 @@
         var result = await TransactionsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Transaction deleted.";
+        ToastService.ShowSuccess("Transaction deleted.");
         await LoadAllAsync();
     }
 
     private async Task CreateContributionAsync()
     {
         isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         var result = await ContributionsApiClient.CreateAsync(
             createContributionModel.Date,
@@ -777,15 +748,14 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         createContributionModel.Amount = 0m;
         createContributionModel.Contributor = ContributionContributorType.Self;
         createContributionModel.AccountId = 0;
-        successMessage = "Contribution saved.";
+        ToastService.ShowSuccess("Contribution saved.");
         await LoadAllAsync();
     }
 
@@ -795,9 +765,6 @@
             return;
 
         isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         var result = await ContributionsApiClient.UpdateAsync(
             editContributionModel.Id,
@@ -809,21 +776,17 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editContributionModel = null;
-        successMessage = "Contribution updated.";
+        ToastService.ShowSuccess("Contribution updated.");
         await LoadAllAsync();
     }
 
     private void StartEditContribution(ContributionResponse contribution)
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
         editContributionModel = new EditContributionModel
         {
             Id = contribution.Id,
@@ -838,9 +801,6 @@
 
     private async Task DeleteContributionAsync(int id)
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this contribution? (ID {id})");
         if (!confirmed)
@@ -849,12 +809,11 @@
         var result = await ContributionsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Contribution deleted.";
+        ToastService.ShowSuccess("Contribution deleted.");
         await LoadAllAsync();
     }
 

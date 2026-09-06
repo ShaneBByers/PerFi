@@ -10,6 +10,7 @@
 @inject ITransactionCategoriesApiClient TransactionCategoriesApiClient
 @inject IAccountContributionPlansApiClient AccountContributionPlansApiClient
 @inject IJSRuntime JSRuntime
+@inject IToastService ToastService
 
 <PageTitle>Settings</PageTitle>
 
@@ -24,13 +25,6 @@
         </div>
     </header>
 
-    <ErrorState Message="@errorMessage" />
-    <ValidationSummaryPanel Errors="@validationErrors" />
-
-    @if (!string.IsNullOrWhiteSpace(successMessage))
-    {
-        <div class="alert alert-success" role="status">@successMessage</div>
-    }
 
     <div class="settings-shell">
         <nav class="settings-nav" aria-label="Settings sections">
@@ -87,7 +81,7 @@
                                     <InputSelect id="payCycleType" class="form-select" @bind-Value="userConfigurationModel.PayCycleType">
                                         @foreach (var payCycleType in Enum.GetValues<PayCycleType>())
                                         {
-                                            <option value="@payCycleType">@payCycleType</option>
+                                            <option value="@payCycleType">@FormatPayCycleType(payCycleType)</option>
                                         }
                                     </InputSelect>
                                 </div>
@@ -968,19 +962,15 @@
     private readonly HashSet<int> expandedTransactionCategoryGroupIds = [];
     private readonly HashSet<int> knownTransactionCategoryGroupIds = [];
 
-    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private bool isLoading = true;
     private bool isSubmitting;
     private string activeSection = "profile";
-    private string? errorMessage;
-    private string? successMessage;
 
     protected override async Task OnInitializedAsync() => await LoadAllAsync();
 
     private async Task LoadAllAsync()
     {
         isLoading = true;
-        errorMessage = null;
 
         try
         {
@@ -1036,7 +1026,7 @@
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            ToastService.ShowError(ex.Message);
         }
         finally
         {
@@ -1064,17 +1054,10 @@
             expandedTransactionCategoryGroupIds.Add(groupId);
     }
 
-    private void ClearMessages()
-    {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
-    }
 
     private async Task SaveUserConfigurationAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = userConfiguration is null
             ? await UserConfigurationApiClient.CreateAsync(new CreateUserConfigurationRequest(
@@ -1094,18 +1077,16 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "User configuration saved.";
+        ToastService.ShowSuccess("User configuration saved.");
         await LoadAllAsync();
     }
 
     private void StartCreateSalaryProgression()
     {
-        ClearMessages();
         createSalaryProgressionModel.EffectiveDate = DateOnly.FromDateTime(DateTime.Today);
         createSalaryProgressionModel.AnnualSalary = 0;
         isCreatingSalaryProgression = true;
@@ -1120,26 +1101,23 @@
     private async Task CreateSalaryProgressionAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = await SalaryProgressionsApiClient.CreateAsync(createSalaryProgressionModel.EffectiveDate, createSalaryProgressionModel.AnnualSalary);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         isCreatingSalaryProgression = false;
-        successMessage = "Salary entry saved.";
+        ToastService.ShowSuccess("Salary entry saved.");
         await LoadAllAsync();
     }
 
     private void StartEditSalaryProgression(SalaryProgressionResponse salaryProgression)
     {
-        ClearMessages();
         editSalaryProgressionModel = new EditSalaryProgressionModel
         {
             Id = salaryProgression.Id,
@@ -1154,26 +1132,23 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var result = await SalaryProgressionsApiClient.UpdateAsync(editSalaryProgressionModel.Id, editSalaryProgressionModel.EffectiveDate, editSalaryProgressionModel.AnnualSalary);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editSalaryProgressionModel = null;
-        successMessage = "Salary entry updated.";
+        ToastService.ShowSuccess("Salary entry updated.");
         await LoadAllAsync();
     }
 
     private async Task DeleteSalaryProgressionAsync(int id)
     {
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Delete this salary entry?");
         if (!confirmed)
@@ -1182,18 +1157,16 @@
         var result = await SalaryProgressionsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Salary entry deleted.";
+        ToastService.ShowSuccess("Salary entry deleted.");
         await LoadAllAsync();
     }
 
     private void StartCreateInstitution()
     {
-        ClearMessages();
         createInstitutionModel.InstitutionName = string.Empty;
         isCreatingInstitution = true;
     }
@@ -1207,20 +1180,18 @@
     private async Task CreateInstitutionAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = await InstitutionsApiClient.CreateAsync(createInstitutionModel.InstitutionName);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         isCreatingInstitution = false;
-        successMessage = "Institution saved.";
+        ToastService.ShowSuccess("Institution saved.");
         await LoadAllAsync();
     }
 
@@ -1230,26 +1201,23 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var result = await InstitutionsApiClient.UpdateAsync(editInstitutionModel.Id, editInstitutionModel.InstitutionName);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editInstitutionModel = null;
-        successMessage = "Institution updated.";
+        ToastService.ShowSuccess("Institution updated.");
         await LoadAllAsync();
     }
 
     private void StartEditInstitution(InstitutionResponse institution)
     {
-        ClearMessages();
         editInstitutionModel = new EditInstitutionModel
         {
             Id = institution.Id,
@@ -1259,7 +1227,6 @@
 
     private async Task DeleteInstitutionAsync(int id)
     {
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this institution? (ID {id})");
         if (!confirmed)
@@ -1268,18 +1235,16 @@
         var result = await InstitutionsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Institution deleted.";
+        ToastService.ShowSuccess("Institution deleted.");
         await LoadAllAsync();
     }
 
     private void StartCreateAccount(int institutionId = 0)
     {
-        ClearMessages();
         createAccountModel.AccountName = string.Empty;
         createAccountModel.InstitutionId = institutionId;
         createAccountModel.AccountTypeId = 0;
@@ -1296,20 +1261,18 @@
     private async Task CreateAccountAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = await AccountsApiClient.CreateAsync(createAccountModel.AccountName, createAccountModel.InstitutionId, createAccountModel.AccountTypeId, createAccountModel.ExpectedAnnualGrowthPercentage);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         isCreatingAccount = false;
-        successMessage = "Account saved.";
+        ToastService.ShowSuccess("Account saved.");
         await LoadAllAsync();
     }
 
@@ -1319,26 +1282,23 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var result = await AccountsApiClient.UpdateAsync(editAccountModel.Id, editAccountModel.AccountName, editAccountModel.InstitutionId, editAccountModel.AccountTypeId, editAccountModel.ExpectedAnnualGrowthPercentage);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editAccountModel = null;
-        successMessage = "Account updated.";
+        ToastService.ShowSuccess("Account updated.");
         await LoadAllAsync();
     }
 
     private void StartEditAccount(AccountResponse account)
     {
-        ClearMessages();
         editAccountModel = new EditAccountModel
         {
             Id = account.Id,
@@ -1351,7 +1311,6 @@
 
     private async Task DeleteAccountAsync(int id)
     {
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this account? (ID {id})");
         if (!confirmed)
@@ -1360,18 +1319,16 @@
         var result = await AccountsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Account deleted.";
+        ToastService.ShowSuccess("Account deleted.");
         await LoadAllAsync();
     }
 
     private async Task OpenContributionsModalAsync(int accountId)
     {
-        ClearMessages();
         selectedAccount = await AccountsApiClient.GetByIdAsync(accountId);
 
         selectedAccountContributionPlans.Clear();
@@ -1398,7 +1355,6 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var request = new CreateAccountContributionPlanRequest(
             createContributionPlanModel.ContributorType,
@@ -1417,8 +1373,7 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
@@ -1432,13 +1387,12 @@
         createContributionPlanModel.PercentagePerPayCycleAnnualIncrease = 0;
         createContributionPlanModel.PercentageAnnual = 0;
         createContributionPlanModel.PercentageAnnualIncrease = 0;
-        successMessage = "Contribution plan saved.";
+        ToastService.ShowSuccess("Contribution plan saved.");
         await OpenContributionsModalAsync(selectedAccount.Id);
     }
 
     private void StartEditContributionPlan(AccountContributionPlanResponse plan)
     {
-        ClearMessages();
         editContributionPlanModel = new EditContributionPlanModel
         {
             Id = plan.Id,
@@ -1463,7 +1417,6 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var request = new UpdateAccountContributionPlanRequest(
             editContributionPlanModel.ContributorType,
@@ -1482,13 +1435,12 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editContributionPlanModel = null;
-        successMessage = "Contribution plan updated.";
+        ToastService.ShowSuccess("Contribution plan updated.");
         await OpenContributionsModalAsync(selectedAccount.Id);
     }
 
@@ -1497,7 +1449,6 @@
         if (selectedAccount is null)
             return;
 
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Delete this contribution plan?");
         if (!confirmed)
@@ -1506,18 +1457,16 @@
         var result = await AccountContributionPlansApiClient.DeleteAsync(selectedAccount.Id, id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Contribution plan deleted.";
+        ToastService.ShowSuccess("Contribution plan deleted.");
         await OpenContributionsModalAsync(selectedAccount.Id);
     }
 
     private void StartCreateAccountType(int groupId = 0)
     {
-        ClearMessages();
         createAccountTypeModel.Name = string.Empty;
         createAccountTypeModel.AccountTypeGroupId = groupId;
         isCreatingAccountType = true;
@@ -1532,20 +1481,18 @@
     private async Task CreateAccountTypeAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = await AccountTypesApiClient.CreateAsync(createAccountTypeModel.Name, createAccountTypeModel.AccountTypeGroupId);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         isCreatingAccountType = false;
-        successMessage = "Account type saved.";
+        ToastService.ShowSuccess("Account type saved.");
         await LoadAllAsync();
     }
 
@@ -1555,26 +1502,23 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var result = await AccountTypesApiClient.UpdateAsync(editAccountTypeModel.Id, editAccountTypeModel.Name, editAccountTypeModel.AccountTypeGroupId);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editAccountTypeModel = null;
-        successMessage = "Account type updated.";
+        ToastService.ShowSuccess("Account type updated.");
         await LoadAllAsync();
     }
 
     private void StartEditAccountType(AccountTypeResponse accountType)
     {
-        ClearMessages();
         editAccountTypeModel = new EditAccountTypeModel
         {
             Id = accountType.Id,
@@ -1585,7 +1529,6 @@
 
     private async Task DeleteAccountTypeAsync(int id)
     {
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this account type? (ID {id})");
         if (!confirmed)
@@ -1594,18 +1537,16 @@
         var result = await AccountTypesApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Account type deleted.";
+        ToastService.ShowSuccess("Account type deleted.");
         await LoadAllAsync();
     }
 
     private void StartCreateAccountTypeGroup()
     {
-        ClearMessages();
         createAccountTypeGroupModel.Name = string.Empty;
         isCreatingAccountTypeGroup = true;
     }
@@ -1619,20 +1560,18 @@
     private async Task CreateAccountTypeGroupAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = await AccountTypeGroupsApiClient.CreateAsync(createAccountTypeGroupModel.Name);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         isCreatingAccountTypeGroup = false;
-        successMessage = "Account type group saved.";
+        ToastService.ShowSuccess("Account type group saved.");
         await LoadAllAsync();
     }
 
@@ -1642,26 +1581,23 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var result = await AccountTypeGroupsApiClient.UpdateAsync(editAccountTypeGroupModel.Id, editAccountTypeGroupModel.Name);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editAccountTypeGroupModel = null;
-        successMessage = "Account type group updated.";
+        ToastService.ShowSuccess("Account type group updated.");
         await LoadAllAsync();
     }
 
     private void StartEditAccountTypeGroup(AccountTypeGroupResponse accountTypeGroup)
     {
-        ClearMessages();
         editAccountTypeGroupModel = new EditAccountTypeGroupModel
         {
             Id = accountTypeGroup.Id,
@@ -1671,7 +1607,6 @@
 
     private async Task DeleteAccountTypeGroupAsync(int id)
     {
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this account type group? (ID {id})");
         if (!confirmed)
@@ -1680,18 +1615,16 @@
         var result = await AccountTypeGroupsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Account type group deleted.";
+        ToastService.ShowSuccess("Account type group deleted.");
         await LoadAllAsync();
     }
 
     private void StartCreateTransactionCategoryGroup()
     {
-        ClearMessages();
         createTransactionCategoryGroupModel.Name = string.Empty;
         isCreatingTransactionCategoryGroup = true;
     }
@@ -1705,20 +1638,18 @@
     private async Task CreateTransactionCategoryGroupAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = await TransactionCategoryGroupsApiClient.CreateAsync(createTransactionCategoryGroupModel.Name);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         isCreatingTransactionCategoryGroup = false;
-        successMessage = "Transaction category group saved.";
+        ToastService.ShowSuccess("Transaction category group saved.");
         await LoadAllAsync();
     }
 
@@ -1728,26 +1659,23 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var result = await TransactionCategoryGroupsApiClient.UpdateAsync(editTransactionCategoryGroupModel.Id, editTransactionCategoryGroupModel.Name);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editTransactionCategoryGroupModel = null;
-        successMessage = "Transaction category group updated.";
+        ToastService.ShowSuccess("Transaction category group updated.");
         await LoadAllAsync();
     }
 
     private void StartEditTransactionCategoryGroup(TransactionCategoryGroupResponse group)
     {
-        ClearMessages();
         editTransactionCategoryGroupModel = new EditTransactionCategoryGroupModel
         {
             Id = group.Id,
@@ -1757,7 +1685,6 @@
 
     private async Task DeleteTransactionCategoryGroupAsync(int id)
     {
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this transaction category group? (ID {id})");
         if (!confirmed)
@@ -1766,18 +1693,16 @@
         var result = await TransactionCategoryGroupsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Transaction category group deleted.";
+        ToastService.ShowSuccess("Transaction category group deleted.");
         await LoadAllAsync();
     }
 
     private void StartCreateTransactionCategory(int groupId = 0)
     {
-        ClearMessages();
         createTransactionCategoryModel.Name = string.Empty;
         createTransactionCategoryModel.TransactionCategoryGroupId = groupId;
         isCreatingTransactionCategory = true;
@@ -1792,20 +1717,18 @@
     private async Task CreateTransactionCategoryAsync()
     {
         isSubmitting = true;
-        ClearMessages();
 
         var result = await TransactionCategoriesApiClient.CreateAsync(createTransactionCategoryModel.Name, createTransactionCategoryModel.TransactionCategoryGroupId);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         isCreatingTransactionCategory = false;
-        successMessage = "Transaction category saved.";
+        ToastService.ShowSuccess("Transaction category saved.");
         await LoadAllAsync();
     }
 
@@ -1815,26 +1738,23 @@
             return;
 
         isSubmitting = true;
-        ClearMessages();
 
         var result = await TransactionCategoriesApiClient.UpdateAsync(editTransactionCategoryModel.Id, editTransactionCategoryModel.Name, editTransactionCategoryModel.TransactionCategoryGroupId);
         isSubmitting = false;
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         editTransactionCategoryModel = null;
-        successMessage = "Transaction category updated.";
+        ToastService.ShowSuccess("Transaction category updated.");
         await LoadAllAsync();
     }
 
     private void StartEditTransactionCategory(TransactionCategoryResponse category)
     {
-        ClearMessages();
         editTransactionCategoryModel = new EditTransactionCategoryModel
         {
             Id = category.Id,
@@ -1845,7 +1765,6 @@
 
     private async Task DeleteTransactionCategoryAsync(int id)
     {
-        ClearMessages();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this transaction category? (ID {id})");
         if (!confirmed)
@@ -1854,12 +1773,11 @@
         var result = await TransactionCategoriesApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
-        successMessage = "Transaction category deleted.";
+        ToastService.ShowSuccess("Transaction category deleted.");
         await LoadAllAsync();
     }
 
@@ -1883,7 +1801,6 @@
 
     private async Task MoveWithinParentAsync<T>(List<T> items, int parentId, Func<T, int> parentIdSelector, int id, int delta, Func<T, int> idSelector, Func<IReadOnlyList<int>, Task<ApiResult>> persistAsync, string successText)
     {
-        ClearMessages();
 
         var parentItems = items.Where(item => parentIdSelector(item) == parentId).ToList();
         if (!TryMove(parentItems, idSelector, id, delta))
@@ -1893,18 +1810,17 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
+            ToastService.ShowFailure(result.ErrorMessage);
             await LoadAllAsync();
             return;
         }
 
-        successMessage = successText;
+        ToastService.ShowSuccess(successText);
         await LoadAllAsync();
     }
 
     private async Task MoveAndPersistAsync<T>(List<T> items, int id, int delta, Func<T, int> idSelector, Func<IReadOnlyList<int>, Task<ApiResult>> persistAsync, string successText)
     {
-        ClearMessages();
 
         if (!TryMove(items, idSelector, id, delta))
             return;
@@ -1914,12 +1830,12 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
+            ToastService.ShowFailure(result.ErrorMessage);
             await LoadAllAsync();
             return;
         }
 
-        successMessage = successText;
+        ToastService.ShowSuccess(successText);
         await LoadAllAsync();
     }
 
@@ -1934,6 +1850,13 @@
         (items[currentIndex], items[targetIndex]) = (items[targetIndex], items[currentIndex]);
         return true;
     }
+
+    private static string FormatPayCycleType(PayCycleType payCycleType) => payCycleType switch
+    {
+        PayCycleType.BiWeekly => "Bi-Weekly",
+        PayCycleType.SemiMonthly => "Semi-Monthly",
+        _ => payCycleType.ToString()
+    };
 
     private sealed class UserConfigurationModel
     {

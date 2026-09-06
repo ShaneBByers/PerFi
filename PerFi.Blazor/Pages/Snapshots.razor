@@ -4,6 +4,7 @@
 @inject ISnapshotsApiClient SnapshotsApiClient
 @inject IAccountsApiClient AccountsApiClient
 @inject IJSRuntime JSRuntime
+@inject IToastService ToastService
 
 <PageTitle>Net Worth</PageTitle>
 
@@ -47,13 +48,6 @@
         </div>
     </header>
 
-    <ErrorState Message="@errorMessage" />
-    <ValidationSummaryPanel Errors="@validationErrors" />
-
-    @if (!string.IsNullOrWhiteSpace(successMessage))
-    {
-        <div class="alert alert-success" role="status">@successMessage</div>
-    }
 
     <section class="summary-grid" aria-label="Net Worth highlights">
         <article class="summary-card">
@@ -329,15 +323,12 @@
     private readonly Dictionary<(int SnapshotId, int AccountId), decimal> matrixCellEdits = [];
     private readonly Dictionary<(int SnapshotId, int AccountId), string> matrixCellInputOverrides = [];
     private readonly Dictionary<(int SnapshotId, int AccountId), string> matrixCellValidationErrors = [];
-    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private FinanceSnapshotResponse? selectedSnapshot;
     private bool isLoading = true;
     private bool isSubmitting;
     private bool hasPendingMatrixEntry;
     private bool showRangePicker;
     private bool isMatrixEditMode;
-    private string? errorMessage;
-    private string? successMessage;
     private string selectedRangePreset = "ytd";
     private DateTime customStartDate = new(DateTime.Today.Year, 1, 1);
     private DateTime customEndDate = DateTime.Today;
@@ -366,15 +357,13 @@
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            ToastService.ShowError(ex.Message);
         }
     }
 
     private async Task LoadListAsync()
     {
         isLoading = true;
-        errorMessage = null;
-        successMessage = null;
 
         try
         {
@@ -388,7 +377,7 @@
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            ToastService.ShowError(ex.Message);
         }
         finally
         {
@@ -398,26 +387,22 @@
 
     private async Task LoadDetailAsync(int id)
     {
-        errorMessage = null;
 
         try
         {
             selectedSnapshot = await SnapshotsApiClient.GetByIdAsync(id);
 
             if (selectedSnapshot is null)
-                errorMessage = $"Net worth entry #{id} was not found.";
+                ToastService.ShowError($"Net worth entry #{id} was not found.");
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            ToastService.ShowError(ex.Message);
         }
     }
 
     private void StartNewMatrixEntry()
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         hasPendingMatrixEntry = true;
         isMatrixEditMode = true;
@@ -429,9 +414,6 @@
 
     private async Task DeleteAsync(int id)
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete net worth entry from your timeline? (ID {id})");
         if (!confirmed)
@@ -440,15 +422,14 @@
         var result = await SnapshotsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
         if (selectedSnapshot?.Id == id)
             selectedSnapshot = null;
 
-        successMessage = "Net worth entry deleted.";
+        ToastService.ShowSuccess("Net worth entry deleted.");
 
         await LoadListAsync();
     }
@@ -478,8 +459,6 @@
     private void EnterMatrixEditMode()
     {
         isMatrixEditMode = true;
-        errorMessage = null;
-        successMessage = null;
     }
 
     private void CancelMatrixEditMode()
@@ -1075,9 +1054,6 @@
             return;
 
         isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
 
         if (hasPendingMatrixEntry)
         {
@@ -1092,7 +1068,7 @@
             if (HasMatrixValidationErrors)
             {
                 isSubmitting = false;
-                errorMessage = "Enter a value for every account in the new entry column before saving.";
+                ToastService.ShowError("Enter a value for every account in the new entry column before saving.");
                 return;
             }
 
@@ -1105,8 +1081,7 @@
             if (!createResult.IsSuccess)
             {
                 isSubmitting = false;
-                errorMessage = createResult.ErrorMessage;
-                validationErrors = createResult.ValidationErrors ?? new Dictionary<string, string[]>();
+                ToastService.ShowFailure(createResult.ErrorMessage, createResult.ValidationErrors);
                 return;
             }
 
@@ -1129,8 +1104,7 @@
 
         if (!result.IsSuccess)
         {
-            errorMessage = result.ErrorMessage;
-            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            ToastService.ShowFailure(result.ErrorMessage, result.ValidationErrors);
             return;
         }
 
@@ -1138,7 +1112,7 @@
         matrixCellInputOverrides.Clear();
         matrixCellValidationErrors.Clear();
         isMatrixEditMode = false;
-        successMessage = "Table edits saved.";
+        ToastService.ShowSuccess("Table edits saved.");
         await LoadListAsync();
     }
 

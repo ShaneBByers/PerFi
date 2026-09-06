@@ -1,6 +1,7 @@
 @page "/projection"
 @attribute [Authorize]
 @inject INetWorthProjectionApiClient NetWorthProjectionApiClient
+@inject IToastService ToastService
 
 <PageTitle>Projection</PageTitle>
 
@@ -19,9 +20,8 @@
         </div>
     </header>
 
-    <ErrorState Message="@errorMessage" />
     <LoadingState IsVisible="@isLoading" />
-    <EmptyState IsVisible="@(!isLoading && errorMessage is null && yearRows.Count == 0)" Message="Add accounts, a net worth entry, and complete Settings to see a projection." />
+    <EmptyState IsVisible="@(!isLoading && !hasLoadError && yearRows.Count == 0)" Message="Add accounts, a net worth entry, and complete Settings to see a projection." />
 
     @if (!isLoading && yearRows.Count > 0)
     {
@@ -196,7 +196,7 @@
     private string selectedGroupName = "Total";
     private bool useTodaysDollars;
     private bool isLoading = true;
-    private string? errorMessage;
+    private bool hasLoadError;
     private decimal currentNetWorth;
     private decimal projectedAtRetirement;
     private decimal totalProjectedGrowth;
@@ -210,7 +210,7 @@
     private async Task LoadAsync()
     {
         isLoading = true;
-        errorMessage = null;
+        hasLoadError = false;
 
         try
         {
@@ -220,7 +220,8 @@
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            hasLoadError = true;
+            ToastService.ShowError(ex.Message);
         }
         finally
         {
