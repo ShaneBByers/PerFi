@@ -32,7 +32,7 @@ public sealed class AccountsControllerTests
         var response = Assert.IsAssignableFrom<IEnumerable<PerFi.API.Responses.AccountResponse>>(ok.Value);
         var account = Assert.Single(response);
 
-        Assert.Equal(7, account.DisplayOrder);
+        Assert.Equal(7, account.DisplayOrderInGroup);
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public sealed class AccountsControllerTests
     private static AccountType BuildAccountType()
         => new AccountType(1, "Checking", new AccountTypeGroup(1, "Assets"))
         {
-            DisplayOrder = 2
+            DisplayOrderInGroup = 2
         };
 
     private sealed class RecordingAccountService : IAccountService
@@ -201,7 +201,7 @@ public sealed class AccountsControllerTests
             => Task.FromResult<IReadOnlyList<Account>>([
                 new Account(1, "Checking", BuildAccountType(), 99)
                 {
-                    DisplayOrder = 7
+                    DisplayOrderInGroup = 7
                 }]);
 
         public Task<Account?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default)

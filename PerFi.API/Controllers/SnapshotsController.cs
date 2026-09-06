@@ -31,14 +31,14 @@ public class SnapshotsController(
                 new AccountResponse(
                     ab.Account.Id,
                     ab.Account.Name,
-                    ab.Account.DisplayOrder,
+                    ab.Account.DisplayOrderInGroup,
                     new InstitutionIdentityResponse(
                         ab.Account.InstitutionId,
                         institutionNameById.GetValueOrDefault(ab.Account.InstitutionId, "Unknown Institution")),
                     new AccountTypeResponse(
                         ab.Account.Type.Id,
                         ab.Account.Type.Name,
-                        ab.Account.Type.DisplayOrder,
+                        ab.Account.Type.DisplayOrderInGroup,
                         new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name, ab.Account.Type.Group.DisplayOrder)),
                     ab.Account.ExpectedAnnualGrowthPercentage),
                 ab.Balance))]));
@@ -65,14 +65,14 @@ public class SnapshotsController(
                 new AccountResponse(
                     ab.Account.Id,
                     ab.Account.Name,
-                    ab.Account.DisplayOrder,
+                    ab.Account.DisplayOrderInGroup,
                     new InstitutionIdentityResponse(
                         ab.Account.InstitutionId,
                         institutionNameById.GetValueOrDefault(ab.Account.InstitutionId, "Unknown Institution")),
                     new AccountTypeResponse(
                         ab.Account.Type.Id,
                         ab.Account.Type.Name,
-                        ab.Account.Type.DisplayOrder,
+                        ab.Account.Type.DisplayOrderInGroup,
                         new AccountTypeGroupIdentityResponse(ab.Account.Type.Group.Id, ab.Account.Type.Group.Name, ab.Account.Type.Group.DisplayOrder)),
                     ab.Account.ExpectedAnnualGrowthPercentage),
                 ab.Balance))]);

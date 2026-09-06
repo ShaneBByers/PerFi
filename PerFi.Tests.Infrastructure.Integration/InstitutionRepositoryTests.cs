@@ -34,7 +34,7 @@ public sealed class InstitutionRepositoryTests
         Assert.Equal(["First Bank", "Second Bank"], institutions.Select(institution => institution.Name));
         Assert.Equal([1, 2], institutions.Select(institution => institution.DisplayOrder));
         Assert.Equal(["Alpha", "Zeta"], institutions.First(institution => institution.Name == "First Bank").Accounts.Select(account => account.Name));
-        Assert.Equal([1, 2], institutions.First(institution => institution.Name == "First Bank").Accounts.Select(account => account.DisplayOrder));
+        Assert.Equal([1, 2], institutions.First(institution => institution.Name == "First Bank").Accounts.Select(account => account.DisplayOrderInGroup));
     }
 
     private static async Task SeedInstitutionsAsync(PerFiDbContext dbContext)
@@ -54,7 +54,7 @@ public sealed class InstitutionRepositoryTests
         {
             Id = 1,
             Name = "Checking",
-            DisplayOrder = 1,
+            DisplayOrderInGroup = 1,
             UserId = FakeCurrentUserService.DefaultUserId,
             AccountTypeGroupId = 1,
             AccountTypeGroup = group,
@@ -85,7 +85,7 @@ public sealed class InstitutionRepositoryTests
         {
             Id = 1,
             Name = "Alpha",
-            DisplayOrder = 1,
+            DisplayOrderInGroup = 1,
             UserId = FakeCurrentUserService.DefaultUserId,
             InstitutionId = firstInstitution.Id,
             Institution = firstInstitution,
@@ -97,7 +97,7 @@ public sealed class InstitutionRepositoryTests
         {
             Id = 2,
             Name = "Zeta",
-            DisplayOrder = 2,
+            DisplayOrderInGroup = 2,
             UserId = FakeCurrentUserService.DefaultUserId,
             InstitutionId = firstInstitution.Id,
             Institution = firstInstitution,
@@ -109,7 +109,7 @@ public sealed class InstitutionRepositoryTests
         {
             Id = 3,
             Name = "Beta",
-            DisplayOrder = 1,
+            DisplayOrderInGroup = 1,
             UserId = FakeCurrentUserService.DefaultUserId,
             InstitutionId = secondInstitution.Id,
             Institution = secondInstitution,

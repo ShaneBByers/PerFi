@@ -29,7 +29,7 @@ public sealed class TransactionCategoriesControllerTests
         var response = Assert.IsAssignableFrom<IEnumerable<PerFi.API.Responses.TransactionCategoryResponse>>(ok.Value);
         var category = Assert.Single(response);
 
-        Assert.Equal(7, category.DisplayOrder);
+        Assert.Equal(7, category.DisplayOrderInGroup);
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public sealed class TransactionCategoriesControllerTests
     }
 
     private static TransactionCategory BuildCategory(int id = 1)
-        => new(id, "Groceries", new TransactionCategoryGroup(1, "Expenses")) { DisplayOrder = 7 };
+        => new(id, "Groceries", new TransactionCategoryGroup(1, "Expenses")) { DisplayOrderInGroup = 7 };
 
     private sealed class RecordingTransactionCategoryService : ITransactionCategoryService
     {

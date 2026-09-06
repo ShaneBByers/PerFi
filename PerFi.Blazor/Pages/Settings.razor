@@ -2,14 +2,22 @@
 @attribute [Authorize]
 @inject IUserConfigurationApiClient UserConfigurationApiClient
 @inject ISalaryProgressionsApiClient SalaryProgressionsApiClient
+@inject IAccountsApiClient AccountsApiClient
+@inject IInstitutionsApiClient InstitutionsApiClient
+@inject IAccountTypesApiClient AccountTypesApiClient
+@inject IAccountTypeGroupsApiClient AccountTypeGroupsApiClient
+@inject ITransactionCategoryGroupsApiClient TransactionCategoryGroupsApiClient
+@inject ITransactionCategoriesApiClient TransactionCategoriesApiClient
+@inject IAccountContributionPlansApiClient AccountContributionPlansApiClient
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Settings</PageTitle>
 
-<div class="crud-page">
+<div class="settings-page">
     <header class="page-hero">
         <div>
             <h1>Settings</h1>
-            <p>Configure your personal projection assumptions and salary history.</p>
+            <p>Manage your profile, net worth structure, and cash flow categories in one place.</p>
         </div>
         <div class="hero-actions">
             <button class="btn btn-outline-secondary" type="button" @onclick="LoadAllAsync" disabled="@isLoading">Refresh</button>
@@ -24,117 +32,99 @@
         <div class="alert alert-success" role="status">@successMessage</div>
     }
 
-    <section class="panel">
-        <div class="section-header">
-            <h2>@(userConfiguration is null ? "Add User Configuration" : "Edit User Configuration")</h2>
-            <p>Birth date and pay cycle drive age and pay-period calculations; the percentages drive future projections.</p>
-        </div>
-
-        <LoadingState IsVisible="@isLoading" />
-
-        @if (!isLoading)
-        {
-            <EditForm Model="userConfigurationModel" OnValidSubmit="SaveUserConfigurationAsync">
-                <DataAnnotationsValidator />
-
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label" for="birthDate">Birth Date</label>
-                        <InputDate id="birthDate" class="form-control" @bind-Value="userConfigurationModel.BirthDate" />
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label" for="payCycleType">Pay Cycle</label>
-                        <InputSelect id="payCycleType" class="form-select" @bind-Value="userConfigurationModel.PayCycleType">
-                            @foreach (var payCycleType in Enum.GetValues<PayCycleType>())
-                            {
-                                <option value="@payCycleType">@payCycleType</option>
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label" for="referencePayDate">Reference Pay Date</label>
-                        <InputDate id="referencePayDate" class="form-control" @bind-Value="userConfigurationModel.ReferencePayDate" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="salaryRaise">Expected Annual Salary Raise %</label>
-                        <InputNumber id="salaryRaise" class="form-control" @bind-Value="userConfigurationModel.ExpectedAnnualSalaryRaisePercentage" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="inflation">Expected Annual Inflation %</label>
-                        <InputNumber id="inflation" class="form-control" @bind-Value="userConfigurationModel.ExpectedAnnualInflationPercentage" />
-                    </div>
-                </div>
-
-                <div class="mt-3 d-flex gap-2 flex-wrap">
-                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save</button>
-                </div>
-            </EditForm>
-        }
-    </section>
-
-    <section class="panel">
-        <div class="section-header">
-            <h2>Salary Progression</h2>
-            <p>Track dated salary entries used for historical and future salary projections.</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-lg-5">
-                <div class="panel nested-panel h-100">
-                    <div class="section-header">
-                        <h3>@(editSalaryProgressionModel is null ? "Add Salary Entry" : "Edit Salary Entry")</h3>
-                    </div>
-
-                    @if (editSalaryProgressionModel is null)
-                    {
-                        <EditForm Model="createSalaryProgressionModel" OnValidSubmit="CreateSalaryProgressionAsync">
-                            <DataAnnotationsValidator />
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label" for="effectiveDate">Effective Date</label>
-                                    <InputDate id="effectiveDate" class="form-control" @bind-Value="createSalaryProgressionModel.EffectiveDate" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="annualSalary">Annual Salary</label>
-                                    <InputNumber id="annualSalary" class="form-control" @bind-Value="createSalaryProgressionModel.AnnualSalary" />
-                                </div>
-                                <div class="col-12 d-flex gap-2 flex-wrap">
-                                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Add Entry</button>
-                                </div>
-                            </div>
-                        </EditForm>
-                    }
-                    else
-                    {
-                        <EditForm Model="editSalaryProgressionModel" OnValidSubmit="UpdateSalaryProgressionAsync">
-                            <DataAnnotationsValidator />
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label" for="editEffectiveDate">Effective Date</label>
-                                    <InputDate id="editEffectiveDate" class="form-control" @bind-Value="editSalaryProgressionModel.EffectiveDate" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="editAnnualSalary">Annual Salary</label>
-                                    <InputNumber id="editAnnualSalary" class="form-control" @bind-Value="editSalaryProgressionModel.AnnualSalary" />
-                                </div>
-                                <div class="col-12 d-flex gap-2 flex-wrap">
-                                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
-                                    <button class="btn btn-outline-secondary" type="button" @onclick="CancelSalaryProgressionEdit">Cancel</button>
-                                </div>
-                            </div>
-                        </EditForm>
-                    }
-                </div>
+    <div class="settings-shell">
+        <nav class="settings-nav" aria-label="Settings sections">
+            <div class="settings-nav-group">
+                <div class="settings-nav-group-title">Profile</div>
+                <button class="settings-nav-item @(activeSection == "profile" ? "active" : null)" type="button" @onclick='() => SetSection("profile")'>Personal Info</button>
+                <button class="settings-nav-item @(activeSection == "salary" ? "active" : null)" type="button" @onclick='() => SetSection("salary")'>
+                    Salary History <span class="settings-nav-count">@salaryProgressions.Count</span>
+                </button>
             </div>
+            <div class="settings-nav-group">
+                <div class="settings-nav-group-title">Net Worth Setup</div>
+                <button class="settings-nav-item @(activeSection == "accounts" ? "active" : null)" type="button" @onclick='() => SetSection("accounts")'>
+                    Accounts <span class="settings-nav-count">@accounts.Count</span>
+                </button>
+                <button class="settings-nav-item @(activeSection == "account-types" ? "active" : null)" type="button" @onclick='() => SetSection("account-types")'>
+                    Account Types <span class="settings-nav-count">@accountTypeGroups.Count</span>
+                </button>
+            </div>
+            <div class="settings-nav-group">
+                <div class="settings-nav-group-title">Cash Flow Setup</div>
+                <button class="settings-nav-item @(activeSection == "transaction-categories" ? "active" : null)" type="button" @onclick='() => SetSection("transaction-categories")'>
+                    Transaction Categories <span class="settings-nav-count">@transactionCategories.Count</span>
+                </button>
+            </div>
+        </nav>
 
-            <div class="col-lg-7">
-                <div class="panel nested-panel h-100">
-                    <div class="section-header">
-                        <h3>Salary History</h3>
+        <div class="settings-content">
+            @if (activeSection == "profile")
+            {
+                <section class="content-section">
+                    <div class="content-section-header">
+                        <div>
+                            <h2>Personal Info</h2>
+                            <p>Birth date and pay cycle drive age and pay-period calculations; the percentages drive future projections.</p>
+                        </div>
+                    </div>
+
+                    <LoadingState IsVisible="@isLoading" />
+
+                    @if (!isLoading)
+                    {
+                        <EditForm Model="userConfigurationModel" OnValidSubmit="SaveUserConfigurationAsync">
+                            <DataAnnotationsValidator />
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label" for="birthDate">Birth Date</label>
+                                    <InputDate id="birthDate" class="form-control" @bind-Value="userConfigurationModel.BirthDate" />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label" for="payCycleType">Pay Cycle</label>
+                                    <InputSelect id="payCycleType" class="form-select" @bind-Value="userConfigurationModel.PayCycleType">
+                                        @foreach (var payCycleType in Enum.GetValues<PayCycleType>())
+                                        {
+                                            <option value="@payCycleType">@payCycleType</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label" for="referencePayDate">Reference Pay Date</label>
+                                    <InputDate id="referencePayDate" class="form-control" @bind-Value="userConfigurationModel.ReferencePayDate" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="salaryRaise">Expected Annual Salary Raise %</label>
+                                    <InputNumber id="salaryRaise" class="form-control" @bind-Value="userConfigurationModel.ExpectedAnnualSalaryRaisePercentage" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="inflation">Expected Annual Inflation %</label>
+                                    <InputNumber id="inflation" class="form-control" @bind-Value="userConfigurationModel.ExpectedAnnualInflationPercentage" />
+                                </div>
+                            </div>
+
+                            <div class="mt-3 d-flex gap-2 flex-wrap">
+                                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save</button>
+                            </div>
+                        </EditForm>
+                    }
+                </section>
+            }
+
+            @if (activeSection == "salary")
+            {
+                <section class="content-section">
+                    <div class="content-section-header">
+                        <div>
+                            <h2>Salary History</h2>
+                            <p>Track dated salary entries used for historical and future salary projections.</p>
+                        </div>
+                        <button class="btn btn-primary" type="button" @onclick="StartCreateSalaryProgression">Add Entry</button>
                     </div>
 
                     <LoadingState IsVisible="@isLoading" />
@@ -143,7 +133,7 @@
                     @if (salaryProgressions.Count > 0)
                     {
                         <div class="table-responsive">
-                            <table class="table table-striped table-sm align-middle">
+                            <table class="table table-striped table-sm align-middle settings-table">
                                 <thead>
                                     <tr>
                                         <th>Effective Date</th>
@@ -158,8 +148,10 @@
                                             <td>@salaryProgression.EffectiveDate</td>
                                             <td>@salaryProgression.AnnualSalary.ToString("C")</td>
                                             <td class="text-end">
-                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEditSalaryProgression(salaryProgression)">Edit</button>
-                                                <button class="btn btn-sm btn-outline-danger ms-2" @onclick="() => DeleteSalaryProgressionAsync(salaryProgression.Id)">Delete</button>
+                                                <div class="row-actions">
+                                                    <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditSalaryProgression(salaryProgression)">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteSalaryProgressionAsync(salaryProgression.Id)">Delete</button>
+                                                </div>
                                             </td>
                                         </tr>
                                     }
@@ -167,24 +159,821 @@
                             </table>
                         </div>
                     }
-                </div>
-            </div>
+                </section>
+            }
+
+            @if (activeSection == "accounts")
+            {
+                <section class="content-section">
+                    <div class="content-section-header">
+                        <div>
+                            <h2>Accounts</h2>
+                            <p>Expand an institution to manage the accounts within it.</p>
+                        </div>
+                        <button class="btn btn-primary" type="button" @onclick="StartCreateInstitution">Add Institution</button>
+                    </div>
+
+                    <LoadingState IsVisible="@isLoading" />
+                    <EmptyState IsVisible="@(!isLoading && institutions.Count == 0)" Message="No institutions yet." />
+
+                    @if (institutions.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm align-middle settings-table">
+                                <thead>
+                                    <tr>
+                                        <th class="order-column"><span class="visually-hidden">Reorder</span></th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Group</th>
+                                        <th>Growth %</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var institution in institutions)
+                                    {
+                                        var institutionAccounts = accounts.Where(account => account.Institution.Id == institution.Id).ToList();
+                                        var isExpanded = expandedInstitutionIds.Contains(institution.Id);
+                                        <tr class="group-row">
+                                            <td class="order-column">
+                                                <OrderStepper OnMoveUp="() => MoveInstitutionAsync(institution.Id, -1)" OnMoveDown="() => MoveInstitutionAsync(institution.Id, 1)" />
+                                            </td>
+                                            <td colspan="4">
+                                                <button class="btn btn-sm btn-link expand-toggle" type="button" aria-label="@(isExpanded ? "Collapse institution" : "Expand institution")" @onclick="() => ToggleInstitutionExpanded(institution.Id)">
+                                                    <span class="expand-caret @(isExpanded ? "expanded" : null)">&#9656;</span>
+                                                </button>
+                                                <strong>@institution.Name</strong>
+                                                <span class="row-subtext">(@institutionAccounts.Count account@(institutionAccounts.Count == 1 ? "" : "s"))</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="row-actions">
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="() => StartCreateAccount(institution.Id)">Add Account</button>
+                                                    <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditInstitution(institution)">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteInstitutionAsync(institution.Id)">Delete</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        @if (isExpanded)
+                                        {
+                                            @if (institutionAccounts.Count == 0)
+                                            {
+                                                <tr class="type-row">
+                                                    <td></td>
+                                                    <td colspan="5" class="row-subtext">No accounts at this institution yet.</td>
+                                                </tr>
+                                            }
+                                            @foreach (var account in institutionAccounts)
+                                            {
+                                                <tr class="type-row">
+                                                    <td class="order-column">
+                                                        <OrderStepper OnMoveUp="() => MoveAccountWithinInstitutionAsync(institution.Id, account.Id, -1)" OnMoveDown="() => MoveAccountWithinInstitutionAsync(institution.Id, account.Id, 1)" />
+                                                    </td>
+                                                    <td class="type-name-cell">@account.Name</td>
+                                                    <td>@account.Type.Name</td>
+                                                    <td>@account.Type.Group.Name</td>
+                                                    <td>@account.ExpectedAnnualGrowthPercentage.ToString("0.####")%</td>
+                                                    <td class="text-end">
+                                                        <div class="row-actions">
+                                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => OpenContributionsModalAsync(account.Id)">Contributions</button>
+                                                            <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditAccount(account)">Edit</button>
+                                                            <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteAccountAsync(account.Id)">Delete</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </section>
+            }
+
+            @if (activeSection == "account-types")
+            {
+                <section class="content-section">
+                    <div class="content-section-header">
+                        <div>
+                            <h2>Account Types</h2>
+                            <p>Expand a group to manage the account types within it.</p>
+                        </div>
+                        <button class="btn btn-primary" type="button" @onclick="StartCreateAccountTypeGroup">Add Group</button>
+                    </div>
+
+                    <LoadingState IsVisible="@isLoading" />
+                    <EmptyState IsVisible="@(!isLoading && accountTypeGroups.Count == 0)" Message="No account type groups yet." />
+
+                    @if (accountTypeGroups.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm align-middle settings-table">
+                                <thead>
+                                    <tr>
+                                        <th class="order-column"><span class="visually-hidden">Reorder</span></th>
+                                        <th>Name</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var group in accountTypeGroups)
+                                    {
+                                        var groupTypes = accountTypes.Where(type => type.Group.Id == group.Id).ToList();
+                                        var isExpanded = expandedAccountTypeGroupIds.Contains(group.Id);
+                                        <tr class="group-row">
+                                            <td class="order-column">
+                                                <OrderStepper OnMoveUp="() => MoveAccountTypeGroupAsync(group.Id, -1)" OnMoveDown="() => MoveAccountTypeGroupAsync(group.Id, 1)" />
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-link expand-toggle" type="button" aria-label="@(isExpanded ? "Collapse group" : "Expand group")" @onclick="() => ToggleAccountTypeGroupExpanded(group.Id)">
+                                                    <span class="expand-caret @(isExpanded ? "expanded" : null)">&#9656;</span>
+                                                </button>
+                                                <strong>@group.Name</strong>
+                                                <span class="row-subtext">(@groupTypes.Count type@(groupTypes.Count == 1 ? "" : "s"))</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="row-actions">
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="() => StartCreateAccountType(group.Id)">Add Type</button>
+                                                    <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditAccountTypeGroup(group)">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteAccountTypeGroupAsync(group.Id)">Delete</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        @if (isExpanded)
+                                        {
+                                            @if (groupTypes.Count == 0)
+                                            {
+                                                <tr class="type-row">
+                                                    <td></td>
+                                                    <td colspan="2" class="row-subtext">No account types in this group yet.</td>
+                                                </tr>
+                                            }
+                                            @foreach (var type in groupTypes)
+                                            {
+                                                <tr class="type-row">
+                                                    <td class="order-column">
+                                                        <OrderStepper OnMoveUp="() => MoveAccountTypeWithinGroupAsync(group.Id, type.Id, -1)" OnMoveDown="() => MoveAccountTypeWithinGroupAsync(group.Id, type.Id, 1)" />
+                                                    </td>
+                                                    <td class="type-name-cell">@type.Name</td>
+                                                    <td class="text-end">
+                                                        <div class="row-actions">
+                                                            <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditAccountType(type)">Edit</button>
+                                                            <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteAccountTypeAsync(type.Id)">Delete</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </section>
+            }
+
+            @if (activeSection == "transaction-categories")
+            {
+                <section class="content-section">
+                    <div class="content-section-header">
+                        <div>
+                            <h2>Transaction Categories</h2>
+                            <p>Expand a group to manage the categories within it.</p>
+                        </div>
+                        <button class="btn btn-primary" type="button" @onclick="StartCreateTransactionCategoryGroup">Add Group</button>
+                    </div>
+
+                    <LoadingState IsVisible="@isLoading" />
+                    <EmptyState IsVisible="@(!isLoading && transactionCategoryGroups.Count == 0)" Message="No transaction category groups yet." />
+
+                    @if (transactionCategoryGroups.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm align-middle settings-table">
+                                <thead>
+                                    <tr>
+                                        <th class="order-column"><span class="visually-hidden">Reorder</span></th>
+                                        <th>Name</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var group in transactionCategoryGroups)
+                                    {
+                                        var groupCategories = transactionCategories.Where(category => category.Group.Id == group.Id).ToList();
+                                        var isExpanded = expandedTransactionCategoryGroupIds.Contains(group.Id);
+                                        <tr class="group-row">
+                                            <td class="order-column">
+                                                <OrderStepper OnMoveUp="() => MoveTransactionCategoryGroupAsync(group.Id, -1)" OnMoveDown="() => MoveTransactionCategoryGroupAsync(group.Id, 1)" />
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-link expand-toggle" type="button" aria-label="@(isExpanded ? "Collapse group" : "Expand group")" @onclick="() => ToggleTransactionCategoryGroupExpanded(group.Id)">
+                                                    <span class="expand-caret @(isExpanded ? "expanded" : null)">&#9656;</span>
+                                                </button>
+                                                <strong>@group.Name</strong>
+                                                <span class="row-subtext">(@groupCategories.Count categor@(groupCategories.Count == 1 ? "y" : "ies"))</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="row-actions">
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="() => StartCreateTransactionCategory(group.Id)">Add Category</button>
+                                                    <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditTransactionCategoryGroup(group)">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteTransactionCategoryGroupAsync(group.Id)">Delete</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        @if (isExpanded)
+                                        {
+                                            @if (groupCategories.Count == 0)
+                                            {
+                                                <tr class="type-row">
+                                                    <td></td>
+                                                    <td colspan="2" class="row-subtext">No categories in this group yet.</td>
+                                                </tr>
+                                            }
+                                            @foreach (var category in groupCategories)
+                                            {
+                                                <tr class="type-row">
+                                                    <td class="order-column">
+                                                        <OrderStepper OnMoveUp="() => MoveTransactionCategoryWithinGroupAsync(group.Id, category.Id, -1)" OnMoveDown="() => MoveTransactionCategoryWithinGroupAsync(group.Id, category.Id, 1)" />
+                                                    </td>
+                                                    <td class="type-name-cell">@category.Name</td>
+                                                    <td class="text-end">
+                                                        <div class="row-actions">
+                                                            <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditTransactionCategory(category)">Edit</button>
+                                                            <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteTransactionCategoryAsync(category.Id)">Delete</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </section>
+            }
         </div>
-    </section>
+    </div>
 </div>
 
+<Modal Title="@(editInstitutionModel is null ? "Add Institution" : "Edit Institution")"
+       IsVisible="@(isCreatingInstitution || editInstitutionModel is not null)"
+       OnClose="CloseInstitutionModal">
+    @if (editInstitutionModel is null)
+    {
+        <EditForm Model="createInstitutionModel" OnValidSubmit="CreateInstitutionAsync">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label" for="institutionName">Institution Name</label>
+                <InputText id="institutionName" class="form-control" @bind-Value="createInstitutionModel.InstitutionName" />
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Institution</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="CloseInstitutionModal">Cancel</button>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="editInstitutionModel" OnValidSubmit="UpdateInstitutionAsync">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label" for="editInstitutionName">Institution Name</label>
+                <InputText id="editInstitutionName" class="form-control" @bind-Value="editInstitutionModel.InstitutionName" />
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="CloseInstitutionModal">Cancel</button>
+            </div>
+        </EditForm>
+    }
+</Modal>
+
+<Modal Title="@(editAccountModel is null ? "Add Account" : "Edit Account")"
+       IsVisible="@(isCreatingAccount || editAccountModel is not null)"
+       OnClose="CloseAccountModal">
+    @if (editAccountModel is null)
+    {
+        <EditForm Model="createAccountModel" OnValidSubmit="CreateAccountAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="accountName">Account Name</label>
+                    <InputText id="accountName" class="form-control" @bind-Value="createAccountModel.AccountName" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="institution">Institution</label>
+                    <InputSelect id="institution" class="form-select" @bind-Value="createAccountModel.InstitutionId">
+                        <option value="0">Select institution</option>
+                        @foreach (var institution in institutions)
+                        {
+                            <option value="@institution.Id">@institution.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="accountType">Account Type</label>
+                    <InputSelect id="accountType" class="form-select" @bind-Value="createAccountModel.AccountTypeId">
+                        <option value="0">Select account type</option>
+                        @foreach (var accountType in accountTypes)
+                        {
+                            <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="accountGrowth">Expected Annual Growth %</label>
+                    <InputNumber id="accountGrowth" class="form-control" @bind-Value="createAccountModel.ExpectedAnnualGrowthPercentage" />
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Account</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseAccountModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="editAccountModel" OnValidSubmit="UpdateAccountAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="editAccountName">Account Name</label>
+                    <InputText id="editAccountName" class="form-control" @bind-Value="editAccountModel.AccountName" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="editInstitution">Institution</label>
+                    <InputSelect id="editInstitution" class="form-select" @bind-Value="editAccountModel.InstitutionId">
+                        <option value="0">Select institution</option>
+                        @foreach (var institution in institutions)
+                        {
+                            <option value="@institution.Id">@institution.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="editAccountType">Account Type</label>
+                    <InputSelect id="editAccountType" class="form-select" @bind-Value="editAccountModel.AccountTypeId">
+                        <option value="0">Select account type</option>
+                        @foreach (var accountType in accountTypes)
+                        {
+                            <option value="@accountType.Id">@accountType.Name (@accountType.Group.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="editAccountGrowth">Expected Annual Growth %</label>
+                    <InputNumber id="editAccountGrowth" class="form-control" @bind-Value="editAccountModel.ExpectedAnnualGrowthPercentage" />
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseAccountModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+</Modal>
+
+<Modal Title="@(editAccountTypeModel is null ? "Add Account Type" : "Edit Account Type")"
+       IsVisible="@(isCreatingAccountType || editAccountTypeModel is not null)"
+       OnClose="CloseAccountTypeModal"
+       SizeClass="modal-md">
+    @if (editAccountTypeModel is null)
+    {
+        <EditForm Model="createAccountTypeModel" OnValidSubmit="CreateAccountTypeAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="name">Name</label>
+                    <InputText id="name" class="form-control" @bind-Value="createAccountTypeModel.Name" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="accountTypeGroup">Group</label>
+                    <InputSelect id="accountTypeGroup" class="form-select" @bind-Value="createAccountTypeModel.AccountTypeGroupId">
+                        <option value="0">Select group</option>
+                        @foreach (var group in accountTypeGroups)
+                        {
+                            <option value="@group.Id">@group.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Type</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseAccountTypeModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="editAccountTypeModel" OnValidSubmit="UpdateAccountTypeAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="editName">Name</label>
+                    <InputText id="editName" class="form-control" @bind-Value="editAccountTypeModel.Name" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="editAccountTypeGroup">Group</label>
+                    <InputSelect id="editAccountTypeGroup" class="form-select" @bind-Value="editAccountTypeModel.AccountTypeGroupId">
+                        <option value="0">Select group</option>
+                        @foreach (var group in accountTypeGroups)
+                        {
+                            <option value="@group.Id">@group.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseAccountTypeModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+</Modal>
+
+<Modal Title="@(editAccountTypeGroupModel is null ? "Add Type Group" : "Edit Type Group")"
+       IsVisible="@(isCreatingAccountTypeGroup || editAccountTypeGroupModel is not null)"
+       OnClose="CloseAccountTypeGroupModal"
+       SizeClass="modal-md">
+    @if (editAccountTypeGroupModel is null)
+    {
+        <EditForm Model="createAccountTypeGroupModel" OnValidSubmit="CreateAccountTypeGroupAsync">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label" for="groupName">Name</label>
+                <InputText id="groupName" class="form-control" @bind-Value="createAccountTypeGroupModel.Name" />
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Group</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="CloseAccountTypeGroupModal">Cancel</button>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="editAccountTypeGroupModel" OnValidSubmit="UpdateAccountTypeGroupAsync">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label" for="editGroupName">Name</label>
+                <InputText id="editGroupName" class="form-control" @bind-Value="editAccountTypeGroupModel.Name" />
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="CloseAccountTypeGroupModal">Cancel</button>
+            </div>
+        </EditForm>
+    }
+</Modal>
+
+<Modal Title="@(editTransactionCategoryModel is null ? "Add Category" : "Edit Category")"
+       IsVisible="@(isCreatingTransactionCategory || editTransactionCategoryModel is not null)"
+       OnClose="CloseTransactionCategoryModal"
+       SizeClass="modal-md">
+    @if (editTransactionCategoryModel is null)
+    {
+        <EditForm Model="createTransactionCategoryModel" OnValidSubmit="CreateTransactionCategoryAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="transactionCategoryName">Name</label>
+                    <InputText id="transactionCategoryName" class="form-control" @bind-Value="createTransactionCategoryModel.Name" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="transactionCategoryGroup">Group</label>
+                    <InputSelect id="transactionCategoryGroup" class="form-select" @bind-Value="createTransactionCategoryModel.TransactionCategoryGroupId">
+                        <option value="0">Select group</option>
+                        @foreach (var group in transactionCategoryGroups)
+                        {
+                            <option value="@group.Id">@group.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Category</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseTransactionCategoryModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="editTransactionCategoryModel" OnValidSubmit="UpdateTransactionCategoryAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="editTransactionCategoryName">Name</label>
+                    <InputText id="editTransactionCategoryName" class="form-control" @bind-Value="editTransactionCategoryModel.Name" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="editTransactionCategoryGroup">Group</label>
+                    <InputSelect id="editTransactionCategoryGroup" class="form-select" @bind-Value="editTransactionCategoryModel.TransactionCategoryGroupId">
+                        <option value="0">Select group</option>
+                        @foreach (var group in transactionCategoryGroups)
+                        {
+                            <option value="@group.Id">@group.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseTransactionCategoryModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+</Modal>
+
+<Modal Title="@(editTransactionCategoryGroupModel is null ? "Add Group" : "Edit Group")"
+       IsVisible="@(isCreatingTransactionCategoryGroup || editTransactionCategoryGroupModel is not null)"
+       OnClose="CloseTransactionCategoryGroupModal"
+       SizeClass="modal-md">
+    @if (editTransactionCategoryGroupModel is null)
+    {
+        <EditForm Model="createTransactionCategoryGroupModel" OnValidSubmit="CreateTransactionCategoryGroupAsync">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label" for="transactionCategoryGroupName">Name</label>
+                <InputText id="transactionCategoryGroupName" class="form-control" @bind-Value="createTransactionCategoryGroupModel.Name" />
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Group</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="CloseTransactionCategoryGroupModal">Cancel</button>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="editTransactionCategoryGroupModel" OnValidSubmit="UpdateTransactionCategoryGroupAsync">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label" for="editTransactionCategoryGroupName">Name</label>
+                <InputText id="editTransactionCategoryGroupName" class="form-control" @bind-Value="editTransactionCategoryGroupModel.Name" />
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="CloseTransactionCategoryGroupModal">Cancel</button>
+            </div>
+        </EditForm>
+    }
+</Modal>
+
+<Modal Title="@(editSalaryProgressionModel is null ? "Add Salary Entry" : "Edit Salary Entry")"
+       IsVisible="@(isCreatingSalaryProgression || editSalaryProgressionModel is not null)"
+       OnClose="CloseSalaryProgressionModal"
+       SizeClass="modal-md">
+    @if (editSalaryProgressionModel is null)
+    {
+        <EditForm Model="createSalaryProgressionModel" OnValidSubmit="CreateSalaryProgressionAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="effectiveDate">Effective Date</label>
+                    <InputDate id="effectiveDate" class="form-control" @bind-Value="createSalaryProgressionModel.EffectiveDate" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="annualSalary">Annual Salary</label>
+                    <InputNumber id="annualSalary" class="form-control" @bind-Value="createSalaryProgressionModel.AnnualSalary" />
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Add Entry</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseSalaryProgressionModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="editSalaryProgressionModel" OnValidSubmit="UpdateSalaryProgressionAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="editEffectiveDate">Effective Date</label>
+                    <InputDate id="editEffectiveDate" class="form-control" @bind-Value="editSalaryProgressionModel.EffectiveDate" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="editAnnualSalary">Annual Salary</label>
+                    <InputNumber id="editAnnualSalary" class="form-control" @bind-Value="editSalaryProgressionModel.AnnualSalary" />
+                </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Changes</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CloseSalaryProgressionModal">Cancel</button>
+                </div>
+            </div>
+        </EditForm>
+    }
+</Modal>
+
+<Modal Title="@($"Contribution Plans - {selectedAccount?.Name}")"
+       IsVisible="@showContributionsModal"
+       OnClose="CloseContributionsModal">
+    @if (selectedAccount is not null)
+    {
+        <EmptyState IsVisible="@(selectedAccountContributionPlans.Count == 0)" Message="No contribution plans yet." />
+
+        @if (selectedAccountContributionPlans.Count > 0)
+        {
+            <ul class="relationship-list">
+                @foreach (var plan in selectedAccountContributionPlans)
+                {
+                    <li>
+                        <div class="d-flex justify-content-between gap-2 align-items-start">
+                            <div class="small">
+                                <strong>@plan.ContributorType</strong>
+                                <div>Effective @plan.EffectiveDate.ToString("yyyy-MM-dd")</div>
+                                <div>$@plan.DollarAmountPerPayCycle.ToString("0.##")/cycle (+$@plan.DollarAmountPerPayCycleAnnualIncrease.ToString("0.##")/yr)</div>
+                                <div>$@plan.DollarAmountAnnual.ToString("0.##")/yr (+$@plan.DollarAmountAnnualIncrease.ToString("0.##")/yr)</div>
+                                <div>@plan.PercentagePerPayCycle.ToString("0.####")%/cycle (+@plan.PercentagePerPayCycleAnnualIncrease.ToString("0.####")%/yr)</div>
+                                <div>@plan.PercentageAnnual.ToString("0.####")%/yr (+@plan.PercentageAnnualIncrease.ToString("0.####")%/yr)</div>
+                            </div>
+                            <div class="d-flex flex-column gap-1">
+                                <button class="btn btn-sm btn-outline-primary" type="button" @onclick="() => StartEditContributionPlan(plan)">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => DeleteContributionPlanAsync(plan.Id)">Delete</button>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+
+        <hr />
+
+        @if (editContributionPlanModel is null)
+        {
+            <h4 class="h6">Add Plan</h4>
+            <EditForm Model="createContributionPlanModel" OnValidSubmit="CreateContributionPlanAsync">
+                <DataAnnotationsValidator />
+                <div class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label small" for="planContributorType">Contributor</label>
+                        <InputSelect id="planContributorType" class="form-select form-select-sm" @bind-Value="createContributionPlanModel.ContributorType">
+                            @foreach (var contributorType in Enum.GetValues<ContributionContributorType>())
+                            {
+                                <option value="@contributorType">@contributorType</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small" for="planEffectiveDate">Effective Date</label>
+                        <InputDate id="planEffectiveDate" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.EffectiveDate" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planDollarPerCycle">$/Cycle</label>
+                        <InputNumber id="planDollarPerCycle" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountPerPayCycle" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planDollarPerCycleIncrease">$/Cycle +/yr</label>
+                        <InputNumber id="planDollarPerCycleIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planDollarAnnual">$/Year</label>
+                        <InputNumber id="planDollarAnnual" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountAnnual" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planDollarAnnualIncrease">$/Year +/yr</label>
+                        <InputNumber id="planDollarAnnualIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.DollarAmountAnnualIncrease" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planPercentPerCycle">%/Cycle</label>
+                        <InputNumber id="planPercentPerCycle" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentagePerPayCycle" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planPercentPerCycleIncrease">%/Cycle +/yr</label>
+                        <InputNumber id="planPercentPerCycleIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentagePerPayCycleAnnualIncrease" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planPercentAnnual">%/Year</label>
+                        <InputNumber id="planPercentAnnual" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentageAnnual" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="planPercentAnnualIncrease">%/Year +/yr</label>
+                        <InputNumber id="planPercentAnnualIncrease" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.PercentageAnnualIncrease" />
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-sm btn-primary" type="submit" disabled="@isSubmitting">Add Plan</button>
+                    </div>
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            <h4 class="h6">Edit Plan</h4>
+            <EditForm Model="editContributionPlanModel" OnValidSubmit="UpdateContributionPlanAsync">
+                <DataAnnotationsValidator />
+                <div class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label small" for="editPlanContributorType">Contributor</label>
+                        <InputSelect id="editPlanContributorType" class="form-select form-select-sm" @bind-Value="editContributionPlanModel.ContributorType">
+                            @foreach (var contributorType in Enum.GetValues<ContributionContributorType>())
+                            {
+                                <option value="@contributorType">@contributorType</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small" for="editPlanEffectiveDate">Effective Date</label>
+                        <InputDate id="editPlanEffectiveDate" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.EffectiveDate" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanDollarPerCycle">$/Cycle</label>
+                        <InputNumber id="editPlanDollarPerCycle" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountPerPayCycle" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanDollarPerCycleIncrease">$/Cycle +/yr</label>
+                        <InputNumber id="editPlanDollarPerCycleIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanDollarAnnual">$/Year</label>
+                        <InputNumber id="editPlanDollarAnnual" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountAnnual" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanDollarAnnualIncrease">$/Year +/yr</label>
+                        <InputNumber id="editPlanDollarAnnualIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.DollarAmountAnnualIncrease" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanPercentPerCycle">%/Cycle</label>
+                        <InputNumber id="editPlanPercentPerCycle" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentagePerPayCycle" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanPercentPerCycleIncrease">%/Cycle +/yr</label>
+                        <InputNumber id="editPlanPercentPerCycleIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentagePerPayCycleAnnualIncrease" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanPercentAnnual">%/Year</label>
+                        <InputNumber id="editPlanPercentAnnual" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentageAnnual" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="editPlanPercentAnnualIncrease">%/Year +/yr</label>
+                        <InputNumber id="editPlanPercentAnnualIncrease" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.PercentageAnnualIncrease" />
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button class="btn btn-sm btn-primary" type="submit" disabled="@isSubmitting">Save</button>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="CancelContributionPlanEdit">Cancel</button>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    }
+</Modal>
+
 @code {
+    private readonly List<AccountResponse> accounts = [];
+    private readonly List<InstitutionResponse> institutions = [];
+    private readonly List<AccountTypeResponse> accountTypes = [];
+    private readonly List<AccountTypeGroupResponse> accountTypeGroups = [];
+    private readonly List<TransactionCategoryGroupResponse> transactionCategoryGroups = [];
+    private readonly List<TransactionCategoryResponse> transactionCategories = [];
     private readonly List<SalaryProgressionResponse> salaryProgressions = [];
     private readonly UserConfigurationModel userConfigurationModel = new();
-    private readonly CreateSalaryProgressionModel createSalaryProgressionModel = new();
-    private EditSalaryProgressionModel? editSalaryProgressionModel;
     private UserConfigurationResponse? userConfiguration;
 
+    private readonly CreateInstitutionModel createInstitutionModel = new();
+    private readonly CreateAccountModel createAccountModel = new();
+    private readonly CreateAccountTypeModel createAccountTypeModel = new();
+    private readonly CreateAccountTypeGroupModel createAccountTypeGroupModel = new();
+    private readonly CreateTransactionCategoryGroupModel createTransactionCategoryGroupModel = new();
+    private readonly CreateTransactionCategoryModel createTransactionCategoryModel = new();
+    private readonly CreateSalaryProgressionModel createSalaryProgressionModel = new();
+    private readonly CreateContributionPlanModel createContributionPlanModel = new();
+
+    private EditInstitutionModel? editInstitutionModel;
+    private EditAccountModel? editAccountModel;
+    private EditAccountTypeModel? editAccountTypeModel;
+    private EditAccountTypeGroupModel? editAccountTypeGroupModel;
+    private EditTransactionCategoryGroupModel? editTransactionCategoryGroupModel;
+    private EditTransactionCategoryModel? editTransactionCategoryModel;
+    private EditSalaryProgressionModel? editSalaryProgressionModel;
+    private EditContributionPlanModel? editContributionPlanModel;
+
+    private bool isCreatingInstitution;
+    private bool isCreatingAccount;
+    private bool isCreatingAccountType;
+    private bool isCreatingAccountTypeGroup;
+    private bool isCreatingTransactionCategoryGroup;
+    private bool isCreatingTransactionCategory;
+    private bool isCreatingSalaryProgression;
+    private bool showContributionsModal;
+
+    private AccountResponse? selectedAccount;
+    private readonly List<AccountContributionPlanResponse> selectedAccountContributionPlans = [];
+    private readonly HashSet<int> expandedAccountTypeGroupIds = [];
+    private readonly HashSet<int> knownAccountTypeGroupIds = [];
+    private readonly HashSet<int> expandedInstitutionIds = [];
+    private readonly HashSet<int> knownInstitutionIds = [];
+    private readonly HashSet<int> expandedTransactionCategoryGroupIds = [];
+    private readonly HashSet<int> knownTransactionCategoryGroupIds = [];
+
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
     private bool isLoading = true;
     private bool isSubmitting;
+    private string activeSection = "profile";
     private string? errorMessage;
     private string? successMessage;
-    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
 
     protected override async Task OnInitializedAsync() => await LoadAllAsync();
 
@@ -207,6 +996,43 @@
 
             salaryProgressions.Clear();
             salaryProgressions.AddRange(await SalaryProgressionsApiClient.GetAllAsync());
+            salaryProgressions.Sort((a, b) => b.EffectiveDate.CompareTo(a.EffectiveDate));
+
+            institutions.Clear();
+            institutions.AddRange(await InstitutionsApiClient.GetAllAsync());
+
+            foreach (var institution in institutions)
+            {
+                if (knownInstitutionIds.Add(institution.Id))
+                    expandedInstitutionIds.Add(institution.Id);
+            }
+
+            accounts.Clear();
+            accounts.AddRange(await AccountsApiClient.GetAllAsync());
+
+            accountTypes.Clear();
+            accountTypes.AddRange(await AccountTypesApiClient.GetAllAsync());
+
+            accountTypeGroups.Clear();
+            accountTypeGroups.AddRange(await AccountTypeGroupsApiClient.GetAllAsync());
+
+            foreach (var group in accountTypeGroups)
+            {
+                if (knownAccountTypeGroupIds.Add(group.Id))
+                    expandedAccountTypeGroupIds.Add(group.Id);
+            }
+
+            transactionCategoryGroups.Clear();
+            transactionCategoryGroups.AddRange(await TransactionCategoryGroupsApiClient.GetAllAsync());
+
+            foreach (var group in transactionCategoryGroups)
+            {
+                if (knownTransactionCategoryGroupIds.Add(group.Id))
+                    expandedTransactionCategoryGroupIds.Add(group.Id);
+            }
+
+            transactionCategories.Clear();
+            transactionCategories.AddRange(await TransactionCategoriesApiClient.GetAllAsync());
         }
         catch (Exception ex)
         {
@@ -218,12 +1044,37 @@
         }
     }
 
-    private async Task SaveUserConfigurationAsync()
+    private void SetSection(string section) => activeSection = section;
+
+    private void ToggleAccountTypeGroupExpanded(int groupId)
     {
-        isSubmitting = true;
+        if (!expandedAccountTypeGroupIds.Remove(groupId))
+            expandedAccountTypeGroupIds.Add(groupId);
+    }
+
+    private void ToggleInstitutionExpanded(int institutionId)
+    {
+        if (!expandedInstitutionIds.Remove(institutionId))
+            expandedInstitutionIds.Add(institutionId);
+    }
+
+    private void ToggleTransactionCategoryGroupExpanded(int groupId)
+    {
+        if (!expandedTransactionCategoryGroupIds.Remove(groupId))
+            expandedTransactionCategoryGroupIds.Add(groupId);
+    }
+
+    private void ClearMessages()
+    {
         errorMessage = null;
         successMessage = null;
         validationErrors = new Dictionary<string, string[]>();
+    }
+
+    private async Task SaveUserConfigurationAsync()
+    {
+        isSubmitting = true;
+        ClearMessages();
 
         var result = userConfiguration is null
             ? await UserConfigurationApiClient.CreateAsync(new CreateUserConfigurationRequest(
@@ -252,12 +1103,24 @@
         await LoadAllAsync();
     }
 
+    private void StartCreateSalaryProgression()
+    {
+        ClearMessages();
+        createSalaryProgressionModel.EffectiveDate = DateOnly.FromDateTime(DateTime.Today);
+        createSalaryProgressionModel.AnnualSalary = 0;
+        isCreatingSalaryProgression = true;
+    }
+
+    private void CloseSalaryProgressionModal()
+    {
+        isCreatingSalaryProgression = false;
+        editSalaryProgressionModel = null;
+    }
+
     private async Task CreateSalaryProgressionAsync()
     {
         isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
+        ClearMessages();
 
         var result = await SalaryProgressionsApiClient.CreateAsync(createSalaryProgressionModel.EffectiveDate, createSalaryProgressionModel.AnnualSalary);
         isSubmitting = false;
@@ -269,17 +1132,14 @@
             return;
         }
 
-        createSalaryProgressionModel.EffectiveDate = default;
-        createSalaryProgressionModel.AnnualSalary = 0;
+        isCreatingSalaryProgression = false;
         successMessage = "Salary entry saved.";
         await LoadAllAsync();
     }
 
     private void StartEditSalaryProgression(SalaryProgressionResponse salaryProgression)
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
+        ClearMessages();
         editSalaryProgressionModel = new EditSalaryProgressionModel
         {
             Id = salaryProgression.Id,
@@ -288,17 +1148,13 @@
         };
     }
 
-    private void CancelSalaryProgressionEdit() => editSalaryProgressionModel = null;
-
     private async Task UpdateSalaryProgressionAsync()
     {
         if (editSalaryProgressionModel is null)
             return;
 
         isSubmitting = true;
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
+        ClearMessages();
 
         var result = await SalaryProgressionsApiClient.UpdateAsync(editSalaryProgressionModel.Id, editSalaryProgressionModel.EffectiveDate, editSalaryProgressionModel.AnnualSalary);
         isSubmitting = false;
@@ -317,9 +1173,11 @@
 
     private async Task DeleteSalaryProgressionAsync(int id)
     {
-        errorMessage = null;
-        successMessage = null;
-        validationErrors = new Dictionary<string, string[]>();
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Delete this salary entry?");
+        if (!confirmed)
+            return;
 
         var result = await SalaryProgressionsApiClient.DeleteAsync(id);
         if (!result.IsSuccess)
@@ -331,6 +1189,750 @@
 
         successMessage = "Salary entry deleted.";
         await LoadAllAsync();
+    }
+
+    private void StartCreateInstitution()
+    {
+        ClearMessages();
+        createInstitutionModel.InstitutionName = string.Empty;
+        isCreatingInstitution = true;
+    }
+
+    private void CloseInstitutionModal()
+    {
+        isCreatingInstitution = false;
+        editInstitutionModel = null;
+    }
+
+    private async Task CreateInstitutionAsync()
+    {
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await InstitutionsApiClient.CreateAsync(createInstitutionModel.InstitutionName);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        isCreatingInstitution = false;
+        successMessage = "Institution saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateInstitutionAsync()
+    {
+        if (editInstitutionModel is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await InstitutionsApiClient.UpdateAsync(editInstitutionModel.Id, editInstitutionModel.InstitutionName);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editInstitutionModel = null;
+        successMessage = "Institution updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditInstitution(InstitutionResponse institution)
+    {
+        ClearMessages();
+        editInstitutionModel = new EditInstitutionModel
+        {
+            Id = institution.Id,
+            InstitutionName = institution.Name
+        };
+    }
+
+    private async Task DeleteInstitutionAsync(int id)
+    {
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this institution? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await InstitutionsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Institution deleted.";
+        await LoadAllAsync();
+    }
+
+    private void StartCreateAccount(int institutionId = 0)
+    {
+        ClearMessages();
+        createAccountModel.AccountName = string.Empty;
+        createAccountModel.InstitutionId = institutionId;
+        createAccountModel.AccountTypeId = 0;
+        createAccountModel.ExpectedAnnualGrowthPercentage = 0;
+        isCreatingAccount = true;
+    }
+
+    private void CloseAccountModal()
+    {
+        isCreatingAccount = false;
+        editAccountModel = null;
+    }
+
+    private async Task CreateAccountAsync()
+    {
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await AccountsApiClient.CreateAsync(createAccountModel.AccountName, createAccountModel.InstitutionId, createAccountModel.AccountTypeId, createAccountModel.ExpectedAnnualGrowthPercentage);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        isCreatingAccount = false;
+        successMessage = "Account saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateAccountAsync()
+    {
+        if (editAccountModel is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await AccountsApiClient.UpdateAsync(editAccountModel.Id, editAccountModel.AccountName, editAccountModel.InstitutionId, editAccountModel.AccountTypeId, editAccountModel.ExpectedAnnualGrowthPercentage);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editAccountModel = null;
+        successMessage = "Account updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditAccount(AccountResponse account)
+    {
+        ClearMessages();
+        editAccountModel = new EditAccountModel
+        {
+            Id = account.Id,
+            AccountName = account.Name,
+            InstitutionId = account.Institution.Id,
+            AccountTypeId = account.Type.Id,
+            ExpectedAnnualGrowthPercentage = account.ExpectedAnnualGrowthPercentage
+        };
+    }
+
+    private async Task DeleteAccountAsync(int id)
+    {
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this account? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await AccountsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Account deleted.";
+        await LoadAllAsync();
+    }
+
+    private async Task OpenContributionsModalAsync(int accountId)
+    {
+        ClearMessages();
+        selectedAccount = await AccountsApiClient.GetByIdAsync(accountId);
+
+        selectedAccountContributionPlans.Clear();
+        editContributionPlanModel = null;
+        if (selectedAccount is not null)
+        {
+            selectedAccountContributionPlans.AddRange(await AccountContributionPlansApiClient.GetAllByAccountIdAsync(selectedAccount.Id));
+        }
+
+        showContributionsModal = true;
+    }
+
+    private void CloseContributionsModal()
+    {
+        showContributionsModal = false;
+        selectedAccount = null;
+        selectedAccountContributionPlans.Clear();
+        editContributionPlanModel = null;
+    }
+
+    private async Task CreateContributionPlanAsync()
+    {
+        if (selectedAccount is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var request = new CreateAccountContributionPlanRequest(
+            createContributionPlanModel.ContributorType,
+            createContributionPlanModel.EffectiveDate,
+            createContributionPlanModel.DollarAmountPerPayCycle,
+            createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease,
+            createContributionPlanModel.DollarAmountAnnual,
+            createContributionPlanModel.DollarAmountAnnualIncrease,
+            createContributionPlanModel.PercentagePerPayCycle,
+            createContributionPlanModel.PercentagePerPayCycleAnnualIncrease,
+            createContributionPlanModel.PercentageAnnual,
+            createContributionPlanModel.PercentageAnnualIncrease);
+
+        var result = await AccountContributionPlansApiClient.CreateAsync(selectedAccount.Id, request);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        createContributionPlanModel.ContributorType = ContributionContributorType.Self;
+        createContributionPlanModel.EffectiveDate = DateOnly.FromDateTime(DateTime.Today);
+        createContributionPlanModel.DollarAmountPerPayCycle = 0;
+        createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease = 0;
+        createContributionPlanModel.DollarAmountAnnual = 0;
+        createContributionPlanModel.DollarAmountAnnualIncrease = 0;
+        createContributionPlanModel.PercentagePerPayCycle = 0;
+        createContributionPlanModel.PercentagePerPayCycleAnnualIncrease = 0;
+        createContributionPlanModel.PercentageAnnual = 0;
+        createContributionPlanModel.PercentageAnnualIncrease = 0;
+        successMessage = "Contribution plan saved.";
+        await OpenContributionsModalAsync(selectedAccount.Id);
+    }
+
+    private void StartEditContributionPlan(AccountContributionPlanResponse plan)
+    {
+        ClearMessages();
+        editContributionPlanModel = new EditContributionPlanModel
+        {
+            Id = plan.Id,
+            ContributorType = plan.ContributorType,
+            EffectiveDate = plan.EffectiveDate,
+            DollarAmountPerPayCycle = plan.DollarAmountPerPayCycle,
+            DollarAmountPerPayCycleAnnualIncrease = plan.DollarAmountPerPayCycleAnnualIncrease,
+            DollarAmountAnnual = plan.DollarAmountAnnual,
+            DollarAmountAnnualIncrease = plan.DollarAmountAnnualIncrease,
+            PercentagePerPayCycle = plan.PercentagePerPayCycle,
+            PercentagePerPayCycleAnnualIncrease = plan.PercentagePerPayCycleAnnualIncrease,
+            PercentageAnnual = plan.PercentageAnnual,
+            PercentageAnnualIncrease = plan.PercentageAnnualIncrease
+        };
+    }
+
+    private void CancelContributionPlanEdit() => editContributionPlanModel = null;
+
+    private async Task UpdateContributionPlanAsync()
+    {
+        if (selectedAccount is null || editContributionPlanModel is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var request = new UpdateAccountContributionPlanRequest(
+            editContributionPlanModel.ContributorType,
+            editContributionPlanModel.EffectiveDate,
+            editContributionPlanModel.DollarAmountPerPayCycle,
+            editContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease,
+            editContributionPlanModel.DollarAmountAnnual,
+            editContributionPlanModel.DollarAmountAnnualIncrease,
+            editContributionPlanModel.PercentagePerPayCycle,
+            editContributionPlanModel.PercentagePerPayCycleAnnualIncrease,
+            editContributionPlanModel.PercentageAnnual,
+            editContributionPlanModel.PercentageAnnualIncrease);
+
+        var result = await AccountContributionPlansApiClient.UpdateAsync(selectedAccount.Id, editContributionPlanModel.Id, request);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editContributionPlanModel = null;
+        successMessage = "Contribution plan updated.";
+        await OpenContributionsModalAsync(selectedAccount.Id);
+    }
+
+    private async Task DeleteContributionPlanAsync(int id)
+    {
+        if (selectedAccount is null)
+            return;
+
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Delete this contribution plan?");
+        if (!confirmed)
+            return;
+
+        var result = await AccountContributionPlansApiClient.DeleteAsync(selectedAccount.Id, id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Contribution plan deleted.";
+        await OpenContributionsModalAsync(selectedAccount.Id);
+    }
+
+    private void StartCreateAccountType(int groupId = 0)
+    {
+        ClearMessages();
+        createAccountTypeModel.Name = string.Empty;
+        createAccountTypeModel.AccountTypeGroupId = groupId;
+        isCreatingAccountType = true;
+    }
+
+    private void CloseAccountTypeModal()
+    {
+        isCreatingAccountType = false;
+        editAccountTypeModel = null;
+    }
+
+    private async Task CreateAccountTypeAsync()
+    {
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await AccountTypesApiClient.CreateAsync(createAccountTypeModel.Name, createAccountTypeModel.AccountTypeGroupId);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        isCreatingAccountType = false;
+        successMessage = "Account type saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateAccountTypeAsync()
+    {
+        if (editAccountTypeModel is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await AccountTypesApiClient.UpdateAsync(editAccountTypeModel.Id, editAccountTypeModel.Name, editAccountTypeModel.AccountTypeGroupId);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editAccountTypeModel = null;
+        successMessage = "Account type updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditAccountType(AccountTypeResponse accountType)
+    {
+        ClearMessages();
+        editAccountTypeModel = new EditAccountTypeModel
+        {
+            Id = accountType.Id,
+            Name = accountType.Name,
+            AccountTypeGroupId = accountType.Group.Id
+        };
+    }
+
+    private async Task DeleteAccountTypeAsync(int id)
+    {
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this account type? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await AccountTypesApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Account type deleted.";
+        await LoadAllAsync();
+    }
+
+    private void StartCreateAccountTypeGroup()
+    {
+        ClearMessages();
+        createAccountTypeGroupModel.Name = string.Empty;
+        isCreatingAccountTypeGroup = true;
+    }
+
+    private void CloseAccountTypeGroupModal()
+    {
+        isCreatingAccountTypeGroup = false;
+        editAccountTypeGroupModel = null;
+    }
+
+    private async Task CreateAccountTypeGroupAsync()
+    {
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await AccountTypeGroupsApiClient.CreateAsync(createAccountTypeGroupModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        isCreatingAccountTypeGroup = false;
+        successMessage = "Account type group saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateAccountTypeGroupAsync()
+    {
+        if (editAccountTypeGroupModel is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await AccountTypeGroupsApiClient.UpdateAsync(editAccountTypeGroupModel.Id, editAccountTypeGroupModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editAccountTypeGroupModel = null;
+        successMessage = "Account type group updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditAccountTypeGroup(AccountTypeGroupResponse accountTypeGroup)
+    {
+        ClearMessages();
+        editAccountTypeGroupModel = new EditAccountTypeGroupModel
+        {
+            Id = accountTypeGroup.Id,
+            Name = accountTypeGroup.Name
+        };
+    }
+
+    private async Task DeleteAccountTypeGroupAsync(int id)
+    {
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this account type group? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await AccountTypeGroupsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Account type group deleted.";
+        await LoadAllAsync();
+    }
+
+    private void StartCreateTransactionCategoryGroup()
+    {
+        ClearMessages();
+        createTransactionCategoryGroupModel.Name = string.Empty;
+        isCreatingTransactionCategoryGroup = true;
+    }
+
+    private void CloseTransactionCategoryGroupModal()
+    {
+        isCreatingTransactionCategoryGroup = false;
+        editTransactionCategoryGroupModel = null;
+    }
+
+    private async Task CreateTransactionCategoryGroupAsync()
+    {
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await TransactionCategoryGroupsApiClient.CreateAsync(createTransactionCategoryGroupModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        isCreatingTransactionCategoryGroup = false;
+        successMessage = "Transaction category group saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateTransactionCategoryGroupAsync()
+    {
+        if (editTransactionCategoryGroupModel is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await TransactionCategoryGroupsApiClient.UpdateAsync(editTransactionCategoryGroupModel.Id, editTransactionCategoryGroupModel.Name);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editTransactionCategoryGroupModel = null;
+        successMessage = "Transaction category group updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditTransactionCategoryGroup(TransactionCategoryGroupResponse group)
+    {
+        ClearMessages();
+        editTransactionCategoryGroupModel = new EditTransactionCategoryGroupModel
+        {
+            Id = group.Id,
+            Name = group.Name
+        };
+    }
+
+    private async Task DeleteTransactionCategoryGroupAsync(int id)
+    {
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this transaction category group? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await TransactionCategoryGroupsApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Transaction category group deleted.";
+        await LoadAllAsync();
+    }
+
+    private void StartCreateTransactionCategory(int groupId = 0)
+    {
+        ClearMessages();
+        createTransactionCategoryModel.Name = string.Empty;
+        createTransactionCategoryModel.TransactionCategoryGroupId = groupId;
+        isCreatingTransactionCategory = true;
+    }
+
+    private void CloseTransactionCategoryModal()
+    {
+        isCreatingTransactionCategory = false;
+        editTransactionCategoryModel = null;
+    }
+
+    private async Task CreateTransactionCategoryAsync()
+    {
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await TransactionCategoriesApiClient.CreateAsync(createTransactionCategoryModel.Name, createTransactionCategoryModel.TransactionCategoryGroupId);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        isCreatingTransactionCategory = false;
+        successMessage = "Transaction category saved.";
+        await LoadAllAsync();
+    }
+
+    private async Task UpdateTransactionCategoryAsync()
+    {
+        if (editTransactionCategoryModel is null)
+            return;
+
+        isSubmitting = true;
+        ClearMessages();
+
+        var result = await TransactionCategoriesApiClient.UpdateAsync(editTransactionCategoryModel.Id, editTransactionCategoryModel.Name, editTransactionCategoryModel.TransactionCategoryGroupId);
+        isSubmitting = false;
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        editTransactionCategoryModel = null;
+        successMessage = "Transaction category updated.";
+        await LoadAllAsync();
+    }
+
+    private void StartEditTransactionCategory(TransactionCategoryResponse category)
+    {
+        ClearMessages();
+        editTransactionCategoryModel = new EditTransactionCategoryModel
+        {
+            Id = category.Id,
+            Name = category.Name,
+            TransactionCategoryGroupId = category.Group.Id
+        };
+    }
+
+    private async Task DeleteTransactionCategoryAsync(int id)
+    {
+        ClearMessages();
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete this transaction category? (ID {id})");
+        if (!confirmed)
+            return;
+
+        var result = await TransactionCategoriesApiClient.DeleteAsync(id);
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            validationErrors = result.ValidationErrors ?? new Dictionary<string, string[]>();
+            return;
+        }
+
+        successMessage = "Transaction category deleted.";
+        await LoadAllAsync();
+    }
+
+    private async Task MoveInstitutionAsync(int id, int delta)
+        => await MoveAndPersistAsync(institutions, id, delta, item => item.Id, orderedIds => InstitutionsApiClient.ReorderAsync(orderedIds), "Institution order updated.");
+
+    private async Task MoveAccountWithinInstitutionAsync(int institutionId, int id, int delta)
+        => await MoveWithinParentAsync(accounts, institutionId, item => item.Institution.Id, id, delta, item => item.Id, orderedIds => AccountsApiClient.ReorderAsync(orderedIds), "Account order updated.");
+
+    private async Task MoveAccountTypeWithinGroupAsync(int groupId, int id, int delta)
+        => await MoveWithinParentAsync(accountTypes, groupId, item => item.Group.Id, id, delta, item => item.Id, orderedIds => AccountTypesApiClient.ReorderAsync(orderedIds), "Account type order updated.");
+
+    private async Task MoveAccountTypeGroupAsync(int id, int delta)
+        => await MoveAndPersistAsync(accountTypeGroups, id, delta, item => item.Id, orderedIds => AccountTypeGroupsApiClient.ReorderAsync(orderedIds), "Account type group order updated.");
+
+    private async Task MoveTransactionCategoryGroupAsync(int id, int delta)
+        => await MoveAndPersistAsync(transactionCategoryGroups, id, delta, item => item.Id, orderedIds => TransactionCategoryGroupsApiClient.ReorderAsync(orderedIds), "Transaction category group order updated.");
+
+    private async Task MoveTransactionCategoryWithinGroupAsync(int groupId, int id, int delta)
+        => await MoveWithinParentAsync(transactionCategories, groupId, item => item.Group.Id, id, delta, item => item.Id, orderedIds => TransactionCategoriesApiClient.ReorderAsync(orderedIds), "Transaction category order updated.");
+
+    private async Task MoveWithinParentAsync<T>(List<T> items, int parentId, Func<T, int> parentIdSelector, int id, int delta, Func<T, int> idSelector, Func<IReadOnlyList<int>, Task<ApiResult>> persistAsync, string successText)
+    {
+        ClearMessages();
+
+        var parentItems = items.Where(item => parentIdSelector(item) == parentId).ToList();
+        if (!TryMove(parentItems, idSelector, id, delta))
+            return;
+
+        var result = await persistAsync(parentItems.Select(idSelector).ToList());
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            await LoadAllAsync();
+            return;
+        }
+
+        successMessage = successText;
+        await LoadAllAsync();
+    }
+
+    private async Task MoveAndPersistAsync<T>(List<T> items, int id, int delta, Func<T, int> idSelector, Func<IReadOnlyList<int>, Task<ApiResult>> persistAsync, string successText)
+    {
+        ClearMessages();
+
+        if (!TryMove(items, idSelector, id, delta))
+            return;
+
+        var orderedIds = items.Select(idSelector).ToList();
+        var result = await persistAsync(orderedIds);
+
+        if (!result.IsSuccess)
+        {
+            errorMessage = result.ErrorMessage;
+            await LoadAllAsync();
+            return;
+        }
+
+        successMessage = successText;
+        await LoadAllAsync();
+    }
+
+    private static bool TryMove<T>(List<T> items, Func<T, int> idSelector, int id, int delta)
+    {
+        var currentIndex = items.FindIndex(item => idSelector(item) == id);
+        var targetIndex = currentIndex + delta;
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= items.Count)
+            return false;
+
+        (items[currentIndex], items[targetIndex]) = (items[targetIndex], items[currentIndex]);
+        return true;
     }
 
     private sealed class UserConfigurationModel
@@ -353,5 +1955,110 @@
         public int Id { get; set; }
         public DateOnly EffectiveDate { get; set; }
         public decimal AnnualSalary { get; set; }
+    }
+
+    private sealed class CreateInstitutionModel
+    {
+        public string InstitutionName { get; set; } = string.Empty;
+    }
+
+    private sealed class EditInstitutionModel
+    {
+        public int Id { get; set; }
+        public string InstitutionName { get; set; } = string.Empty;
+    }
+
+    private sealed class CreateAccountModel
+    {
+        public string AccountName { get; set; } = string.Empty;
+        public int InstitutionId { get; set; }
+        public int AccountTypeId { get; set; }
+        public decimal ExpectedAnnualGrowthPercentage { get; set; }
+    }
+
+    private sealed class EditAccountModel
+    {
+        public int Id { get; set; }
+        public string AccountName { get; set; } = string.Empty;
+        public int InstitutionId { get; set; }
+        public int AccountTypeId { get; set; }
+        public decimal ExpectedAnnualGrowthPercentage { get; set; }
+    }
+
+    private sealed class CreateContributionPlanModel
+    {
+        public ContributionContributorType ContributorType { get; set; } = ContributionContributorType.Self;
+        public DateOnly EffectiveDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public decimal DollarAmountPerPayCycle { get; set; }
+        public decimal DollarAmountPerPayCycleAnnualIncrease { get; set; }
+        public decimal DollarAmountAnnual { get; set; }
+        public decimal DollarAmountAnnualIncrease { get; set; }
+        public decimal PercentagePerPayCycle { get; set; }
+        public decimal PercentagePerPayCycleAnnualIncrease { get; set; }
+        public decimal PercentageAnnual { get; set; }
+        public decimal PercentageAnnualIncrease { get; set; }
+    }
+
+    private sealed class EditContributionPlanModel
+    {
+        public int Id { get; set; }
+        public ContributionContributorType ContributorType { get; set; }
+        public DateOnly EffectiveDate { get; set; }
+        public decimal DollarAmountPerPayCycle { get; set; }
+        public decimal DollarAmountPerPayCycleAnnualIncrease { get; set; }
+        public decimal DollarAmountAnnual { get; set; }
+        public decimal DollarAmountAnnualIncrease { get; set; }
+        public decimal PercentagePerPayCycle { get; set; }
+        public decimal PercentagePerPayCycleAnnualIncrease { get; set; }
+        public decimal PercentageAnnual { get; set; }
+        public decimal PercentageAnnualIncrease { get; set; }
+    }
+
+    private sealed class CreateAccountTypeModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public int AccountTypeGroupId { get; set; }
+    }
+
+    private sealed class EditAccountTypeModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int AccountTypeGroupId { get; set; }
+    }
+
+    private sealed class CreateAccountTypeGroupModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class EditAccountTypeGroupModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class CreateTransactionCategoryGroupModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class EditTransactionCategoryGroupModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class CreateTransactionCategoryModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public int TransactionCategoryGroupId { get; set; }
+    }
+
+    private sealed class EditTransactionCategoryModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int TransactionCategoryGroupId { get; set; }
     }
 }

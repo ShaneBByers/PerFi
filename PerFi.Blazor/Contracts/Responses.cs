@@ -21,11 +21,11 @@ public enum PayCycleType
 
 public sealed record AccountTypeGroupResponse(int Id, string Name, int DisplayOrder);
 
-public sealed record AccountTypeResponse(int Id, string Name, int DisplayOrder, AccountTypeGroupResponse Group);
+public sealed record AccountTypeResponse(int Id, string Name, int DisplayOrderInGroup, AccountTypeGroupResponse Group);
 
 public sealed record InstitutionIdentityResponse(int Id, string Name);
 
-public sealed record AccountResponse(int Id, string Name, int DisplayOrder, InstitutionIdentityResponse Institution, AccountTypeResponse Type, decimal ExpectedAnnualGrowthPercentage);
+public sealed record AccountResponse(int Id, string Name, int DisplayOrderInGroup, InstitutionIdentityResponse Institution, AccountTypeResponse Type, decimal ExpectedAnnualGrowthPercentage);
 
 public sealed record InstitutionResponse(int Id, string Name, int DisplayOrder, IReadOnlyList<AccountResponse> Accounts);
 
@@ -65,7 +65,7 @@ public sealed record TransactionCategoryGroupResponse(int Id, string Name, int D
 
 public sealed record TransactionCategoryGroupIdentityResponse(int Id, string Name);
 
-public sealed record TransactionCategoryResponse(int Id, string Name, int DisplayOrder, TransactionCategoryGroupIdentityResponse Group);
+public sealed record TransactionCategoryResponse(int Id, string Name, int DisplayOrderInGroup, TransactionCategoryGroupIdentityResponse Group);
 
 public sealed record TransactionCategoryIdentityResponse(int Id, string Name, TransactionCategoryGroupIdentityResponse Group);
 

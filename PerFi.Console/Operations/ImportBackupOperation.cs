@@ -290,24 +290,25 @@ public sealed class ImportBackupOperation(
         return accountTypeIds;
     }
 
-    // AccountType.DisplayOrder is a single sequence per user, not per group, so it is reordered across all groups at once.
     private async Task ReorderAccountTypesAsync(
         IReadOnlyList<BackupAccountTypeGroup> groups,
         IReadOnlyDictionary<string, int> accountTypeIds,
         CancellationToken cancellationToken)
     {
-        var orderedIds = groups
-            .SelectMany(group => group.AccountTypes)
-            .OrderBy(accountType => accountType.DisplayOrder)
-            .Select(accountType => accountTypeIds[NormalizeKey(accountType.Name)])
-            .ToList();
+        foreach (var group in groups)
+        {
+            var orderedIds = group.AccountTypes
+                .OrderBy(accountType => accountType.DisplayOrderInGroup)
+                .Select(accountType => accountTypeIds[NormalizeKey(accountType.Name)])
+                .ToList();
 
-        var result = await accountTypeService.ReorderAccountTypesAsync(
-            new ReorderAccountTypeCommand(orderedIds),
-            cancellationToken);
+            var result = await accountTypeService.ReorderAccountTypesAsync(
+                new ReorderAccountTypeCommand(orderedIds),
+                cancellationToken);
 
-        if (result.IsFailure)
-            throw new InvalidOperationException($"Failed to restore account type order: {result.Error}");
+            if (result.IsFailure)
+                throw new InvalidOperationException($"Failed to restore account type order for group '{group.Name}': {result.Error}");
+        }
     }
 
     private async Task<Dictionary<string, int>> CreateInstitutionsAsync(
@@ -381,24 +382,25 @@ public sealed class ImportBackupOperation(
         return accountIds;
     }
 
-    // Account.DisplayOrder is a single sequence per user, not per institution, so it is reordered across all institutions at once.
     private async Task ReorderAccountsAsync(
         IReadOnlyList<BackupInstitution> institutions,
         IReadOnlyDictionary<string, int> accountIds,
         CancellationToken cancellationToken)
     {
-        var orderedIds = institutions
-            .SelectMany(institution => institution.Accounts.Select(account => (institution.Name, account)))
-            .OrderBy(entry => entry.account.DisplayOrder)
-            .Select(entry => accountIds[MakeAccountKey(entry.Name, entry.account.Name)])
-            .ToList();
+        foreach (var institution in institutions)
+        {
+            var orderedIds = institution.Accounts
+                .OrderBy(account => account.DisplayOrderInGroup)
+                .Select(account => accountIds[MakeAccountKey(institution.Name, account.Name)])
+                .ToList();
 
-        var result = await accountService.ReorderAccountsAsync(
-            new ReorderAccountCommand(orderedIds),
-            cancellationToken);
+            var result = await accountService.ReorderAccountsAsync(
+                new ReorderAccountCommand(orderedIds),
+                cancellationToken);
 
-        if (result.IsFailure)
-            throw new InvalidOperationException($"Failed to restore account order: {result.Error}");
+            if (result.IsFailure)
+                throw new InvalidOperationException($"Failed to restore account order for institution '{institution.Name}': {result.Error}");
+        }
     }
 
     private async Task CreateFinanceSnapshotsAsync(
@@ -489,24 +491,25 @@ public sealed class ImportBackupOperation(
         return categoryIds;
     }
 
-    // TransactionCategory.DisplayOrder is a single sequence per user, not per group, so it is reordered across all groups at once.
     private async Task ReorderTransactionCategoriesAsync(
         IReadOnlyList<BackupTransactionCategoryGroup> groups,
         IReadOnlyDictionary<string, int> categoryIds,
         CancellationToken cancellationToken)
     {
-        var orderedIds = groups
-            .SelectMany(group => group.Categories)
-            .OrderBy(category => category.DisplayOrder)
-            .Select(category => categoryIds[NormalizeKey(category.Name)])
-            .ToList();
+        foreach (var group in groups)
+        {
+            var orderedIds = group.Categories
+                .OrderBy(category => category.DisplayOrderInGroup)
+                .Select(category => categoryIds[NormalizeKey(category.Name)])
+                .ToList();
 
-        var result = await transactionCategoryService.ReorderTransactionCategoriesAsync(
-            new ReorderTransactionCategoriesCommand(orderedIds),
-            cancellationToken);
+            var result = await transactionCategoryService.ReorderTransactionCategoriesAsync(
+                new ReorderTransactionCategoriesCommand(orderedIds),
+                cancellationToken);
 
-        if (result.IsFailure)
-            throw new InvalidOperationException($"Failed to restore transaction category order: {result.Error}");
+            if (result.IsFailure)
+                throw new InvalidOperationException($"Failed to restore transaction category order for group '{group.Name}': {result.Error}");
+        }
     }
 
     private async Task CreateTransactionsAsync(

@@ -22,7 +22,7 @@ public class TransactionCategoriesController(
         return Ok(categories.Select(category => new TransactionCategoryResponse(
             category.Id,
             category.Name,
-            category.DisplayOrder,
+            category.DisplayOrderInGroup,
             new TransactionCategoryGroupIdentityResponse(category.Group.Id, category.Group.Name))));
     }
 
@@ -37,7 +37,7 @@ public class TransactionCategoriesController(
         return Ok(new TransactionCategoryResponse(
             category.Id,
             category.Name,
-            category.DisplayOrder,
+            category.DisplayOrderInGroup,
             new TransactionCategoryGroupIdentityResponse(category.Group.Id, category.Group.Name)));
     }
 

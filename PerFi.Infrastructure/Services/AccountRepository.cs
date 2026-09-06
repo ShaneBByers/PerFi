@@ -18,7 +18,8 @@ internal class AccountRepository(
             .Where(a => a.Institution!.UserId == currentUserService.UserId)
             .Include(a => a.AccountType)
                 .ThenInclude(t => t.AccountTypeGroup)
-            .OrderBy(a => a.DisplayOrder)
+            .OrderBy(a => a.InstitutionId)
+            .ThenBy(a => a.DisplayOrderInGroup)
             .ThenBy(a => a.Name)
             .ThenBy(a => a.Id)
             .Select(a => new Account(
@@ -32,11 +33,11 @@ internal class AccountRepository(
                         DisplayOrder = a.AccountType.AccountTypeGroup.DisplayOrder
                     })
                 {
-                    DisplayOrder = a.AccountType.DisplayOrder
+                    DisplayOrderInGroup = a.AccountType.DisplayOrderInGroup
                 },
                 a.InstitutionId)
             {
-                DisplayOrder = a.DisplayOrder,
+                DisplayOrderInGroup = a.DisplayOrderInGroup,
                 ExpectedAnnualGrowthPercentage = a.ExpectedAnnualGrowthPercentage
             })
             .ToListAsync(cancellationToken);
@@ -60,12 +61,12 @@ internal class AccountRepository(
 
         var type = new AccountType(accountEntity.AccountType.Id, accountEntity.AccountType.Name, group)
         {
-            DisplayOrder = accountEntity.AccountType.DisplayOrder
+            DisplayOrderInGroup = accountEntity.AccountType.DisplayOrderInGroup
         };
 
         return new Account(accountEntity.Id, accountEntity.Name, type, accountEntity.InstitutionId)
         {
-            DisplayOrder = accountEntity.DisplayOrder,
+            DisplayOrderInGroup = accountEntity.DisplayOrderInGroup,
             ExpectedAnnualGrowthPercentage = accountEntity.ExpectedAnnualGrowthPercentage
         };
     }
@@ -85,14 +86,14 @@ internal class AccountRepository(
             return Result<int>.Failure($"Account type with ID '{account.Type.Id}' does not exist.");
 
         var nextDisplayOrder = await dbContext.Accounts
-            .Where(accountEntity => accountEntity.Institution!.UserId == currentUserService.UserId)
-            .Select(accountEntity => (int?)accountEntity.DisplayOrder)
+            .Where(accountEntity => accountEntity.InstitutionId == institution.Id)
+            .Select(accountEntity => (int?)accountEntity.DisplayOrderInGroup)
             .MaxAsync(cancellationToken) ?? 0;
 
         var newAccount = new AccountEntity
         {
             Name = account.Name,
-            DisplayOrder = nextDisplayOrder + 1,
+            DisplayOrderInGroup = nextDisplayOrder + 1,
             UserId = currentUserService.UserId,
             InstitutionId = institution.Id,
             AccountTypeId = accountType.Id,
@@ -128,6 +129,16 @@ internal class AccountRepository(
 
         if (accountType is null)
             return Result.Failure($"Account type with ID '{account.Type.Id}' does not exist.");
+
+        if (accountEntity.InstitutionId != institution.Id)
+        {
+            var nextDisplayOrder = await dbContext.Accounts
+                .Where(a => a.InstitutionId == institution.Id)
+                .Select(a => (int?)a.DisplayOrderInGroup)
+                .MaxAsync(cancellationToken) ?? 0;
+
+            accountEntity.DisplayOrderInGroup = nextDisplayOrder + 1;
+        }
 
         accountEntity.Name = account.Name;
         accountEntity.AccountType = accountType;
@@ -173,11 +184,14 @@ internal class AccountRepository(
         if (accountEntities.Count != normalizedIds.Count)
             return Result.Failure("One or more accounts in the reorder list do not exist.");
 
+        if (accountEntities.Select(account => account.InstitutionId).Distinct().Count() > 1)
+            return Result.Failure("Accounts in a reorder list must all belong to the same institution.");
+
         var entitiesById = accountEntities.ToDictionary(account => account.Id);
 
         for (var index = 0; index < normalizedIds.Count; index++)
         {
-            entitiesById[normalizedIds[index]].DisplayOrder = index + 1;
+            entitiesById[normalizedIds[index]].DisplayOrderInGroup = index + 1;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

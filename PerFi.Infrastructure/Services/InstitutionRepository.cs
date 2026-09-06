@@ -28,16 +28,16 @@ internal class InstitutionRepository(
 
         var accountTypeRows = await dbContext.AccountTypes
             .AsNoTracking()
-            .Select(accountType => new AccountTypeRow(accountType.Id, accountType.Name, accountType.DisplayOrder, accountType.AccountTypeGroupId))
+            .Select(accountType => new AccountTypeRow(accountType.Id, accountType.Name, accountType.DisplayOrderInGroup, accountType.AccountTypeGroupId))
             .ToListAsync(cancellationToken);
 
         var accountRows = await dbContext.Accounts
             .AsNoTracking()
             .Where(account => account.Institution!.UserId == currentUserService.UserId)
-            .OrderBy(account => account.DisplayOrder)
+            .OrderBy(account => account.DisplayOrderInGroup)
             .ThenBy(account => account.Name)
             .ThenBy(account => account.Id)
-            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrder, account.InstitutionId, account.AccountTypeId, account.ExpectedAnnualGrowthPercentage))
+            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrderInGroup, account.InstitutionId, account.AccountTypeId, account.ExpectedAnnualGrowthPercentage))
             .ToListAsync(cancellationToken);
 
         var accountTypesById = accountTypeRows.ToDictionary(row => row.Id);
@@ -56,7 +56,7 @@ internal class InstitutionRepository(
 
                     return new Account(a.Id, a.Name, new AccountType(accountType.Id, accountType.Name, new AccountTypeGroup(accountTypeGroup.Id, accountTypeGroup.Name)), i.Id)
                 {
-                    DisplayOrder = a.DisplayOrder,
+                    DisplayOrderInGroup = a.DisplayOrderInGroup,
                     ExpectedAnnualGrowthPercentage = a.ExpectedAnnualGrowthPercentage
                 };
                 })]
@@ -78,16 +78,16 @@ internal class InstitutionRepository(
 
         var accountRows = await dbContext.Accounts
             .AsNoTracking()
-            .OrderBy(a => a.DisplayOrder)
+            .OrderBy(a => a.DisplayOrderInGroup)
             .ThenBy(a => a.Name)
             .ThenBy(a => a.Id)
             .Where(account => account.InstitutionId == id)
-            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrder, account.InstitutionId, account.AccountTypeId, account.ExpectedAnnualGrowthPercentage))
+            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrderInGroup, account.InstitutionId, account.AccountTypeId, account.ExpectedAnnualGrowthPercentage))
             .ToListAsync(cancellationToken);
 
         var accountTypeRows = await dbContext.AccountTypes
             .AsNoTracking()
-            .Select(accountType => new AccountTypeRow(accountType.Id, accountType.Name, accountType.DisplayOrder, accountType.AccountTypeGroupId))
+            .Select(accountType => new AccountTypeRow(accountType.Id, accountType.Name, accountType.DisplayOrderInGroup, accountType.AccountTypeGroupId))
             .ToListAsync(cancellationToken);
 
         var accountTypeGroupRows = await dbContext.AccountTypeGroups
@@ -106,7 +106,7 @@ internal class InstitutionRepository(
 
                 return new Account(a.Id, a.Name, new AccountType(accountType.Id, accountType.Name, new AccountTypeGroup(accountTypeGroup.Id, accountTypeGroup.Name)), institutionEntity.Id)
             {
-                DisplayOrder = a.DisplayOrder,
+                DisplayOrderInGroup = a.DisplayOrderInGroup,
                 ExpectedAnnualGrowthPercentage = a.ExpectedAnnualGrowthPercentage
             };
             })])
@@ -133,12 +133,12 @@ internal class InstitutionRepository(
             Accounts = [.. institution.Accounts.Select(a => new AccountEntity
             {
                 Name = a.Name,
-                DisplayOrder = a.DisplayOrder,
+                DisplayOrderInGroup = a.DisplayOrderInGroup,
                 UserId = currentUserService.UserId,
                 AccountType = new AccountTypeEntity
                 {
                     Name = a.Type.Name,
-                    DisplayOrder = a.Type.DisplayOrder,
+                    DisplayOrderInGroup = a.Type.DisplayOrderInGroup,
                     UserId = currentUserService.UserId,
                     AccountTypeGroup = new AccountTypeGroupEntity
                     {
@@ -225,7 +225,7 @@ internal class InstitutionRepository(
     private sealed record AccountRow(
         int Id,
         string Name,
-        int DisplayOrder,
+        int DisplayOrderInGroup,
         int InstitutionId,
         int AccountTypeId,
         decimal ExpectedAnnualGrowthPercentage);
@@ -233,7 +233,7 @@ internal class InstitutionRepository(
     private sealed record AccountTypeRow(
         int Id,
         string Name,
-        int DisplayOrder,
+        int DisplayOrderInGroup,
         int AccountTypeGroupId);
 
     private sealed record AccountTypeGroupRow(

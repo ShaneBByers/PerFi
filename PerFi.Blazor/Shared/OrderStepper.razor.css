@@ -1,0 +1,31 @@
+.order-stepper {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+    width: 1.1rem;
+    border: 1px solid var(--pf-border-soft);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.order-stepper-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 0.85rem;
+    padding: 0;
+    border: none;
+    background: var(--pf-bg-elevated);
+    color: var(--pf-text-tertiary);
+    font-size: 0.5rem;
+    line-height: 1;
+}
+
+.order-stepper-btn:first-child {
+    border-bottom: 1px solid var(--pf-border-soft);
+}
+
+.order-stepper-btn:hover {
+    background: var(--pf-surface-subtle);
+    color: var(--pf-text-primary);
+}

@@ -36,11 +36,11 @@ internal class FinanceSnapshotRepository(
                                 DisplayOrder = ab.Account.AccountType.AccountTypeGroup.DisplayOrder
                             })
                         {
-                            DisplayOrder = ab.Account.AccountType.DisplayOrder
+                            DisplayOrderInGroup = ab.Account.AccountType.DisplayOrderInGroup
                         },
                         ab.Account.InstitutionId)
                     {
-                        DisplayOrder = ab.Account.DisplayOrder
+                        DisplayOrderInGroup = ab.Account.DisplayOrderInGroup
                     },
                     ab.Balance)).ToList()))
             .ToListAsync(cancellationToken);
@@ -72,12 +72,12 @@ internal class FinanceSnapshotRepository(
 
                 var type = new AccountType(ab.Account.AccountType.Id, ab.Account.AccountType.Name, group)
                 {
-                    DisplayOrder = ab.Account.AccountType.DisplayOrder
+                    DisplayOrderInGroup = ab.Account.AccountType.DisplayOrderInGroup
                 };
 
                 var account = new Account(ab.Account.Id, ab.Account.Name, type, ab.Account.InstitutionId)
                 {
-                    DisplayOrder = ab.Account.DisplayOrder
+                    DisplayOrderInGroup = ab.Account.DisplayOrderInGroup
                 };
 
                 return new AccountBalance(account, ab.Balance);

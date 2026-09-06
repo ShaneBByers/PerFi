@@ -22,7 +22,7 @@ public class AccountTypesController(
         var response = accountTypes.Select(at => new AccountTypeResponse(
             at.Id,
             at.Name,
-            at.DisplayOrder,
+            at.DisplayOrderInGroup,
             new AccountTypeGroupIdentityResponse(at.Group.Id, at.Group.Name, at.Group.DisplayOrder)));
         return Ok(response);
     }
@@ -38,7 +38,7 @@ public class AccountTypesController(
         var response = new AccountTypeResponse(
             accountType.Id,
             accountType.Name,
-            accountType.DisplayOrder,
+            accountType.DisplayOrderInGroup,
             new AccountTypeGroupIdentityResponse(accountType.Group.Id, accountType.Group.Name, accountType.Group.DisplayOrder));
         return Ok(response);
     }

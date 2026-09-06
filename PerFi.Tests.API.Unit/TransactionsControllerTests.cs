@@ -143,7 +143,7 @@ public sealed class TransactionsControllerTests
     }
 
     private static Transaction BuildTransaction(int id = 1)
-        => new(id, new DateOnly(2026, 8, 9), "Store", 25m, new TransactionCategory(1, "Groceries", new TransactionCategoryGroup(1, "Expenses")) { DisplayOrder = 7 }, 1);
+        => new(id, new DateOnly(2026, 8, 9), "Store", 25m, new TransactionCategory(1, "Groceries", new TransactionCategoryGroup(1, "Expenses")) { DisplayOrderInGroup = 7 }, 1);
 
     private sealed class RecordingTransactionService : ITransactionService
     {

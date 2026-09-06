@@ -26,12 +26,12 @@ public class InstitutionsController(
             [.. i.Accounts.Select(a => new AccountResponse(
                 a.Id, 
                 a.Name,
-                a.DisplayOrder,
+                a.DisplayOrderInGroup,
                 new InstitutionIdentityResponse(i.Id, i.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
                     a.Type.Name,
-                    a.Type.DisplayOrder,
+                    a.Type.DisplayOrderInGroup,
                         new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder)),
                 a.ExpectedAnnualGrowthPercentage))]));
 
@@ -53,12 +53,12 @@ public class InstitutionsController(
             [.. institution.Accounts.Select(a => new AccountResponse(
                 a.Id, 
                 a.Name,
-                a.DisplayOrder,
+                a.DisplayOrderInGroup,
                 new InstitutionIdentityResponse(institution.Id, institution.Name),
                 new AccountTypeResponse(
                     a.Type.Id,
                     a.Type.Name,
-                    a.Type.DisplayOrder,
+                    a.Type.DisplayOrderInGroup,
                         new AccountTypeGroupIdentityResponse(a.Type.Group.Id, a.Type.Group.Name, a.Type.Group.DisplayOrder)),
                 a.ExpectedAnnualGrowthPercentage))]);
         return Ok(response);

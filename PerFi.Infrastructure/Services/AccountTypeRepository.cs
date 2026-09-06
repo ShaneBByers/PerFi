@@ -17,7 +17,8 @@ internal class AccountTypeRepository(
             .AsNoTracking()
             .Where(at => at.AccountTypeGroup.UserId == currentUserService.UserId)
             .Include(at => at.AccountTypeGroup)
-            .OrderBy(at => at.DisplayOrder)
+            .OrderBy(at => at.AccountTypeGroupId)
+            .ThenBy(at => at.DisplayOrderInGroup)
             .ThenBy(at => at.Name)
             .ThenBy(at => at.Id)
             .Select(at => new AccountType(
@@ -28,7 +29,7 @@ internal class AccountTypeRepository(
                     DisplayOrder = at.AccountTypeGroup.DisplayOrder
                 })
             {
-                DisplayOrder = at.DisplayOrder
+                DisplayOrderInGroup = at.DisplayOrderInGroup
             })
             .ToListAsync(cancellationToken);
     }
@@ -49,7 +50,7 @@ internal class AccountTypeRepository(
 
         return new AccountType(accountTypeEntity.Id, accountTypeEntity.Name, group)
         {
-            DisplayOrder = accountTypeEntity.DisplayOrder
+            DisplayOrderInGroup = accountTypeEntity.DisplayOrderInGroup
         };
     }
 
@@ -65,14 +66,14 @@ internal class AccountTypeRepository(
             return Result<int>.Failure($"Account type group with ID '{accountTypeGroupId}' does not exist.");
 
         var nextDisplayOrder = await dbContext.AccountTypes
-            .Where(accountTypeEntity => accountTypeEntity.AccountTypeGroup.UserId == currentUserService.UserId)
-            .Select(accountTypeEntity => (int?)accountTypeEntity.DisplayOrder)
+            .Where(accountTypeEntity => accountTypeEntity.AccountTypeGroupId == accountTypeGroup.Id)
+            .Select(accountTypeEntity => (int?)accountTypeEntity.DisplayOrderInGroup)
             .MaxAsync(cancellationToken) ?? 0;
 
         var newAccountType = new AccountTypeEntity
         {
             Name = accountType.Name,
-            DisplayOrder = nextDisplayOrder + 1,
+            DisplayOrderInGroup = nextDisplayOrder + 1,
             UserId = currentUserService.UserId,
             AccountTypeGroupId = accountTypeGroup.Id,
             AccountTypeGroup = accountTypeGroup
@@ -105,6 +106,16 @@ internal class AccountTypeRepository(
 
         if (accountTypeGroup is null)
             return Result.Failure($"Account type group with ID '{accountTypeGroupId}' does not exist.");
+
+        if (accountTypeEntity.AccountTypeGroupId != accountTypeGroup.Id)
+        {
+            var nextDisplayOrder = await dbContext.AccountTypes
+                .Where(at => at.AccountTypeGroupId == accountTypeGroup.Id)
+                .Select(at => (int?)at.DisplayOrderInGroup)
+                .MaxAsync(cancellationToken) ?? 0;
+
+            accountTypeEntity.DisplayOrderInGroup = nextDisplayOrder + 1;
+        }
 
         accountTypeEntity.Name = accountType.Name;
         accountTypeEntity.AccountTypeGroup = accountTypeGroup;
@@ -147,11 +158,14 @@ internal class AccountTypeRepository(
         if (accountTypeEntities.Count != normalizedIds.Count)
             return Result.Failure("One or more account types in the reorder list do not exist.");
 
+        if (accountTypeEntities.Select(accountType => accountType.AccountTypeGroupId).Distinct().Count() > 1)
+            return Result.Failure("Account types in a reorder list must all belong to the same account type group.");
+
         var entitiesById = accountTypeEntities.ToDictionary(accountType => accountType.Id);
 
         for (var index = 0; index < normalizedIds.Count; index++)
         {
-            entitiesById[normalizedIds[index]].DisplayOrder = index + 1;
+            entitiesById[normalizedIds[index]].DisplayOrderInGroup = index + 1;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

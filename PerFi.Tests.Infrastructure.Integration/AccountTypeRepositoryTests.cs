@@ -58,7 +58,7 @@ public sealed class AccountTypeRepositoryTests
         Assert.True(result.IsSuccess);
         var created = await repository.GetAccountTypeByIdAsync(result.Value);
         Assert.NotNull(created);
-        Assert.Equal(1, created!.DisplayOrder);
+        Assert.Equal(1, created!.DisplayOrderInGroup);
     }
 
     [Fact]
@@ -150,8 +150,8 @@ public sealed class AccountTypeRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var group = SeedGroup(dbContext);
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", DisplayOrder = 1, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
-            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 2, Name = "Savings", DisplayOrder = 2, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", DisplayOrderInGroup = 1, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 2, Name = "Savings", DisplayOrderInGroup = 2, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
             return Task.CompletedTask;
         });
 
@@ -163,5 +163,48 @@ public sealed class AccountTypeRepositoryTests
         Assert.True(result.IsSuccess);
         var types = await repository.GetAllAccountTypesAsync();
         Assert.Equal(["Savings", "Checking"], types.Select(t => t.Name));
+    }
+
+    [Fact]
+    public async Task AddAccountTypeAsync_ForDifferentGroups_ScopesDisplayOrderPerGroup()
+    {
+        var options = await CreateSeededOptionsAsync(dbContext =>
+        {
+            SeedGroup(dbContext, 1);
+            dbContext.AccountTypeGroups.Add(new AccountTypeGroupEntity { Id = 2, Name = "Liabilities", UserId = FakeCurrentUserService.DefaultUserId, AccountTypes = [] });
+            return Task.CompletedTask;
+        });
+
+        await using var dbContext = new PerFiDbContext(options);
+        var repository = new AccountTypeRepository(dbContext, new FakeCurrentUserService());
+
+        var firstGroupFirstType = await repository.AddAccountTypeAsync(new PerFi.Domain.Entities.AccountType("Checking", new PerFi.Domain.Entities.AccountTypeGroup(1, "Assets")), 1);
+        var firstGroupSecondType = await repository.AddAccountTypeAsync(new PerFi.Domain.Entities.AccountType("Savings", new PerFi.Domain.Entities.AccountTypeGroup(1, "Assets")), 1);
+        var secondGroupFirstType = await repository.AddAccountTypeAsync(new PerFi.Domain.Entities.AccountType("Credit Card", new PerFi.Domain.Entities.AccountTypeGroup(2, "Liabilities")), 2);
+
+        Assert.Equal(1, (await repository.GetAccountTypeByIdAsync(firstGroupFirstType.Value))!.DisplayOrderInGroup);
+        Assert.Equal(2, (await repository.GetAccountTypeByIdAsync(firstGroupSecondType.Value))!.DisplayOrderInGroup);
+        Assert.Equal(1, (await repository.GetAccountTypeByIdAsync(secondGroupFirstType.Value))!.DisplayOrderInGroup);
+    }
+
+    [Fact]
+    public async Task ReorderAccountTypesAsync_WithTypesFromDifferentGroups_ReturnsFailure()
+    {
+        var options = await CreateSeededOptionsAsync(dbContext =>
+        {
+            var group = SeedGroup(dbContext, 1);
+            var otherGroup = new AccountTypeGroupEntity { Id = 2, Name = "Liabilities", UserId = FakeCurrentUserService.DefaultUserId, AccountTypes = [] };
+            dbContext.AccountTypeGroups.Add(otherGroup);
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 1, Name = "Checking", DisplayOrderInGroup = 1, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 1, AccountTypeGroup = group, Accounts = [] });
+            dbContext.AccountTypes.Add(new AccountTypeEntity { Id = 2, Name = "Credit Card", DisplayOrderInGroup = 1, UserId = FakeCurrentUserService.DefaultUserId, AccountTypeGroupId = 2, AccountTypeGroup = otherGroup, Accounts = [] });
+            return Task.CompletedTask;
+        });
+
+        await using var dbContext = new PerFiDbContext(options);
+        var repository = new AccountTypeRepository(dbContext, new FakeCurrentUserService());
+
+        var result = await repository.ReorderAccountTypesAsync([2, 1]);
+
+        Assert.True(result.IsFailure);
     }
 }

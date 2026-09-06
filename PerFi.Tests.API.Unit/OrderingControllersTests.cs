@@ -32,7 +32,7 @@ public sealed class OrderingControllersTests
 
         Assert.Equal(4, institution.DisplayOrder);
         Assert.Single(institution.Accounts);
-        Assert.Equal(9, institution.Accounts[0].DisplayOrder);
+        Assert.Equal(9, institution.Accounts[0].DisplayOrderInGroup);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public sealed class OrderingControllersTests
         var response = Assert.IsAssignableFrom<IEnumerable<PerFi.API.Responses.AccountTypeResponse>>(ok.Value);
         var accountType = Assert.Single(response);
 
-        Assert.Equal(6, accountType.DisplayOrder);
+        Assert.Equal(6, accountType.DisplayOrderInGroup);
         Assert.Equal("Assets", accountType.Group.Name);
     }
 
@@ -141,7 +141,7 @@ public sealed class OrderingControllersTests
 
         public Task<IReadOnlyList<Institution>> GetAllInstitutionsAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<Institution>>([
-                new Institution(1, "Alpha Bank", [new Account(9, "Checking", BuildAccountType(), 1) { DisplayOrder = 9 }])
+                new Institution(1, "Alpha Bank", [new Account(9, "Checking", BuildAccountType(), 1) { DisplayOrderInGroup = 9 }])
                 {
                     DisplayOrder = 4
                 }]);
@@ -167,7 +167,7 @@ public sealed class OrderingControllersTests
         private static AccountType BuildAccountType()
             => new AccountType(2, "Checking", new AccountTypeGroup(3, "Assets"))
             {
-                DisplayOrder = 8
+                DisplayOrderInGroup = 8
             };
     }
 
@@ -179,7 +179,7 @@ public sealed class OrderingControllersTests
             => Task.FromResult<IReadOnlyList<AccountType>>([
                 new AccountType(1, "Checking", new AccountTypeGroup(1, "Assets"))
                 {
-                    DisplayOrder = 6
+                    DisplayOrderInGroup = 6
                 }]);
 
         public Task<AccountType?> GetAccountTypeByIdAsync(int id, CancellationToken cancellationToken = default)

@@ -33,13 +33,13 @@ public sealed record BackupSalaryProgression(DateOnly EffectiveDate, decimal Ann
 
 public sealed record BackupAccountTypeGroup(string Name, int DisplayOrder, IReadOnlyList<BackupAccountType> AccountTypes);
 
-public sealed record BackupAccountType(string Name, int DisplayOrder);
+public sealed record BackupAccountType(string Name, int DisplayOrderInGroup);
 
 public sealed record BackupInstitution(string Name, int DisplayOrder, IReadOnlyList<BackupAccount> Accounts);
 
 public sealed record BackupAccount(
     string Name,
-    int DisplayOrder,
+    int DisplayOrderInGroup,
     string AccountTypeGroup,
     string AccountType,
     decimal ExpectedAnnualGrowthPercentage,
@@ -63,7 +63,7 @@ public sealed record BackupAccountBalance(string Institution, string Account, de
 
 public sealed record BackupTransactionCategoryGroup(string Name, int DisplayOrder, IReadOnlyList<BackupTransactionCategory> Categories);
 
-public sealed record BackupTransactionCategory(string Name, int DisplayOrder);
+public sealed record BackupTransactionCategory(string Name, int DisplayOrderInGroup);
 
 public sealed record BackupTransaction(
     DateOnly Date,

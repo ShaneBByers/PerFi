@@ -77,7 +77,7 @@ public sealed class TransactionRepositoryTests
         {
             Name = $"{namePrefix}Groceries",
             UserId = userId,
-            DisplayOrder = 1,
+            DisplayOrderInGroup = 1,
             TransactionCategoryGroup = categoryGroup
         };
         categoryGroup.TransactionCategories.Add(category);
@@ -95,7 +95,7 @@ public sealed class TransactionRepositoryTests
     private static TransactionCategory CreateDomainCategory(int categoryId, string categoryName = "Groceries")
     {
         var group = new TransactionCategoryGroup(1, "Expenses") { DisplayOrder = 1 };
-        return new TransactionCategory(categoryId, categoryName, group) { DisplayOrder = 1 };
+        return new TransactionCategory(categoryId, categoryName, group) { DisplayOrderInGroup = 1 };
     }
 
     [Fact]

@@ -17,7 +17,8 @@ internal class TransactionCategoryRepository(
             .AsNoTracking()
             .Where(category => category.TransactionCategoryGroup.UserId == currentUserService.UserId)
             .Include(category => category.TransactionCategoryGroup)
-            .OrderBy(category => category.DisplayOrder)
+            .OrderBy(category => category.TransactionCategoryGroupId)
+            .ThenBy(category => category.DisplayOrderInGroup)
             .ThenBy(category => category.Name)
             .ThenBy(category => category.Id)
             .Select(category => new TransactionCategory(
@@ -28,7 +29,7 @@ internal class TransactionCategoryRepository(
                     DisplayOrder = category.TransactionCategoryGroup.DisplayOrder
                 })
             {
-                DisplayOrder = category.DisplayOrder
+                DisplayOrderInGroup = category.DisplayOrderInGroup
             })
             .ToListAsync(cancellationToken);
     }
@@ -52,7 +53,7 @@ internal class TransactionCategoryRepository(
                     DisplayOrder = categoryEntity.TransactionCategoryGroup.DisplayOrder
                 })
             {
-                DisplayOrder = categoryEntity.DisplayOrder
+                DisplayOrderInGroup = categoryEntity.DisplayOrderInGroup
             };
     }
 
@@ -74,14 +75,14 @@ internal class TransactionCategoryRepository(
             return Result<int>.Failure($"Transaction category group with ID '{transactionCategoryGroupId}' does not exist.");
 
         var nextDisplayOrder = await dbContext.TransactionCategories
-            .Where(category => category.TransactionCategoryGroup.UserId == currentUserService.UserId)
-            .Select(category => (int?)category.DisplayOrder)
+            .Where(category => category.TransactionCategoryGroupId == groupEntity.Id)
+            .Select(category => (int?)category.DisplayOrderInGroup)
             .MaxAsync(cancellationToken) ?? 0;
 
         var categoryEntity = new TransactionCategoryEntity
         {
             Name = transactionCategory.Name,
-            DisplayOrder = nextDisplayOrder + 1,
+            DisplayOrderInGroup = nextDisplayOrder + 1,
             UserId = currentUserService.UserId,
             TransactionCategoryGroupId = groupEntity.Id,
             TransactionCategoryGroup = groupEntity,
@@ -122,6 +123,16 @@ internal class TransactionCategoryRepository(
 
         if (groupEntity is null)
             return Result.Failure($"Transaction category group with ID '{transactionCategoryGroupId}' does not exist.");
+
+        if (categoryEntity.TransactionCategoryGroupId != groupEntity.Id)
+        {
+            var nextDisplayOrder = await dbContext.TransactionCategories
+                .Where(category => category.TransactionCategoryGroupId == groupEntity.Id)
+                .Select(category => (int?)category.DisplayOrderInGroup)
+                .MaxAsync(cancellationToken) ?? 0;
+
+            categoryEntity.DisplayOrderInGroup = nextDisplayOrder + 1;
+        }
 
         categoryEntity.Name = transactionCategory.Name;
         categoryEntity.TransactionCategoryGroupId = groupEntity.Id;
@@ -167,11 +178,14 @@ internal class TransactionCategoryRepository(
         if (categoryEntities.Count != normalizedIds.Count)
             return Result.Failure("One or more transaction categories in the reorder list do not exist.");
 
+        if (categoryEntities.Select(category => category.TransactionCategoryGroupId).Distinct().Count() > 1)
+            return Result.Failure("Transaction categories in a reorder list must all belong to the same transaction category group.");
+
         var entitiesById = categoryEntities.ToDictionary(category => category.Id);
 
         for (var index = 0; index < normalizedIds.Count; index++)
         {
-            entitiesById[normalizedIds[index]].DisplayOrder = index + 1;
+            entitiesById[normalizedIds[index]].DisplayOrderInGroup = index + 1;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

@@ -5,7 +5,7 @@ public sealed record AccountType
     public int Id { get; set; }
     public string Name { get; }
     public AccountTypeGroup Group { get; }
-    public int DisplayOrder { get; set; }
+    public int DisplayOrderInGroup { get; set; }
 
     public AccountType(string name, AccountTypeGroup group)
     {

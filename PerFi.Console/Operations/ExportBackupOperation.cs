@@ -119,7 +119,7 @@ public sealed class ExportBackupOperation(
             group.DisplayOrder,
             [.. accountTypes
                 .Where(type => type.Group.Id == group.Id)
-                .Select(type => new BackupAccountType(type.Name, type.DisplayOrder))]))];
+                .Select(type => new BackupAccountType(type.Name, type.DisplayOrderInGroup))]))];
 
     private static BackupUserConfiguration? BuildUserConfiguration(UserConfiguration? userConfiguration)
         => userConfiguration is null
@@ -144,7 +144,7 @@ public sealed class ExportBackupOperation(
             institution.DisplayOrder,
             [.. institution.Accounts.Select(account => new BackupAccount(
                 account.Name,
-                account.DisplayOrder,
+                account.DisplayOrderInGroup,
                 account.Type.Group.Name,
                 account.Type.Name,
                 account.ExpectedAnnualGrowthPercentage,
@@ -188,7 +188,7 @@ public sealed class ExportBackupOperation(
             group.DisplayOrder,
             [.. categories
                 .Where(category => category.Group.Id == group.Id)
-                .Select(category => new BackupTransactionCategory(category.Name, category.DisplayOrder))]))];
+                .Select(category => new BackupTransactionCategory(category.Name, category.DisplayOrderInGroup))]))];
 
     private static IReadOnlyList<BackupTransaction> BuildTransactions(
         IReadOnlyList<Transaction> transactions,

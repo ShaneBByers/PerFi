@@ -4,7 +4,7 @@ public class AccountTypeEntity
 {
     public int Id { get; set; }
     public required string Name { get; set; }
-    public int DisplayOrder { get; set; }
+    public int DisplayOrderInGroup { get; set; }
     public required string UserId { get; set; }
     public int AccountTypeGroupId { get; set; }
     public AccountTypeGroupEntity AccountTypeGroup { get; set; } = null!;

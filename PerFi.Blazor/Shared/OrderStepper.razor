@@ -1,0 +1,12 @@
+<div class="order-stepper">
+    <button type="button" class="order-stepper-btn" title="Move up" aria-label="Move up" @onclick="OnMoveUp">&#9650;</button>
+    <button type="button" class="order-stepper-btn" title="Move down" aria-label="Move down" @onclick="OnMoveDown">&#9660;</button>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnMoveUp { get; set; }
+
+    [Parameter]
+    public EventCallback OnMoveDown { get; set; }
+}

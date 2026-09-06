@@ -136,7 +136,7 @@ public sealed class TransactionCategoryGroupRepositoryTests
                 Id = 1,
                 Name = "Groceries",
                 UserId = FakeCurrentUserService.DefaultUserId,
-                DisplayOrder = 1,
+                DisplayOrderInGroup = 1,
                 TransactionCategoryGroupId = 1,
                 TransactionCategoryGroup = group,
                 Transactions = []

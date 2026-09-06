@@ -26,15 +26,15 @@
       "accountTypes": [
         {
           "name": "Checking",
-          "displayOrder": 1
+          "displayOrderInGroup": 1
         },
         {
           "name": "Savings",
-          "displayOrder": 2
+          "displayOrderInGroup": 2
         },
         {
           "name": "Money Market",
-          "displayOrder": 3
+          "displayOrderInGroup": 3
         }
       ]
     },
@@ -44,11 +44,11 @@
       "accountTypes": [
         {
           "name": "Credit Card",
-          "displayOrder": 4
+          "displayOrderInGroup": 1
         },
         {
           "name": "Line of Credit",
-          "displayOrder": 5
+          "displayOrderInGroup": 2
         }
       ]
     },
@@ -58,7 +58,7 @@
       "accountTypes": [
         {
           "name": "Brokerage",
-          "displayOrder": 6
+          "displayOrderInGroup": 1
         }
       ]
     },
@@ -68,11 +68,11 @@
       "accountTypes": [
         {
           "name": "401k",
-          "displayOrder": 7
+          "displayOrderInGroup": 1
         },
         {
           "name": "IRA",
-          "displayOrder": 8
+          "displayOrderInGroup": 2
         }
       ]
     }
@@ -84,7 +84,7 @@
       "accounts": [
         {
           "name": "Everyday Checking",
-          "displayOrder": 1,
+          "displayOrderInGroup": 1,
           "accountTypeGroup": "Assets",
           "accountType": "Checking",
           "expectedAnnualGrowthPercentage": 0,
@@ -92,7 +92,7 @@
         },
         {
           "name": "Emergency Fund",
-          "displayOrder": 2,
+          "displayOrderInGroup": 2,
           "accountTypeGroup": "Assets",
           "accountType": "Savings",
           "expectedAnnualGrowthPercentage": 2,
@@ -106,7 +106,7 @@
       "accounts": [
         {
           "name": "High-Yield Savings",
-          "displayOrder": 3,
+          "displayOrderInGroup": 1,
           "accountTypeGroup": "Assets",
           "accountType": "Savings",
           "expectedAnnualGrowthPercentage": 4,
@@ -114,7 +114,7 @@
         },
         {
           "name": "Cash Reserve",
-          "displayOrder": 4,
+          "displayOrderInGroup": 2,
           "accountTypeGroup": "Assets",
           "accountType": "Money Market",
           "expectedAnnualGrowthPercentage": 2,
@@ -128,7 +128,7 @@
       "accounts": [
         {
           "name": "Rewards Visa",
-          "displayOrder": 5,
+          "displayOrderInGroup": 1,
           "accountTypeGroup": "Liabilities",
           "accountType": "Credit Card",
           "expectedAnnualGrowthPercentage": 0,
@@ -136,7 +136,7 @@
         },
         {
           "name": "Home Equity Line",
-          "displayOrder": 6,
+          "displayOrderInGroup": 2,
           "accountTypeGroup": "Liabilities",
           "accountType": "Line of Credit",
           "expectedAnnualGrowthPercentage": 0,
@@ -150,7 +150,7 @@
       "accounts": [
         {
           "name": "Everyday Checking",
-          "displayOrder": 7,
+          "displayOrderInGroup": 1,
           "accountTypeGroup": "Assets",
           "accountType": "Checking",
           "expectedAnnualGrowthPercentage": 0,
@@ -158,7 +158,7 @@
         },
         {
           "name": "Travel Rewards Card",
-          "displayOrder": 8,
+          "displayOrderInGroup": 2,
           "accountTypeGroup": "Liabilities",
           "accountType": "Credit Card",
           "expectedAnnualGrowthPercentage": 0,
@@ -172,7 +172,7 @@
       "accounts": [
         {
           "name": "Brokerage Account",
-          "displayOrder": 9,
+          "displayOrderInGroup": 1,
           "accountTypeGroup": "Investments",
           "accountType": "Brokerage",
           "expectedAnnualGrowthPercentage": 6.5,
@@ -180,7 +180,7 @@
         },
         {
           "name": "Roth IRA",
-          "displayOrder": 10,
+          "displayOrderInGroup": 2,
           "accountTypeGroup": "Retirement",
           "accountType": "IRA",
           "expectedAnnualGrowthPercentage": 7,
@@ -207,7 +207,7 @@
       "accounts": [
         {
           "name": "401k Rollover",
-          "displayOrder": 11,
+          "displayOrderInGroup": 1,
           "accountTypeGroup": "Retirement",
           "accountType": "401k",
           "expectedAnnualGrowthPercentage": 7,
@@ -240,7 +240,7 @@
         },
         {
           "name": "Taxable Brokerage",
-          "displayOrder": 12,
+          "displayOrderInGroup": 2,
           "accountTypeGroup": "Investments",
           "accountType": "Brokerage",
           "expectedAnnualGrowthPercentage": 6.5,
@@ -3378,15 +3378,15 @@
       "categories": [
         {
           "name": "Rent/Mortgage",
-          "displayOrder": 1
+          "displayOrderInGroup": 1
         },
         {
           "name": "Utilities",
-          "displayOrder": 2
+          "displayOrderInGroup": 2
         },
         {
           "name": "Home Maintenance",
-          "displayOrder": 3
+          "displayOrderInGroup": 3
         }
       ]
     },
@@ -3396,15 +3396,15 @@
       "categories": [
         {
           "name": "Paycheck",
-          "displayOrder": 4
+          "displayOrderInGroup": 1
         },
         {
           "name": "Bonus",
-          "displayOrder": 5
+          "displayOrderInGroup": 2
         },
         {
           "name": "Interest Income",
-          "displayOrder": 6
+          "displayOrderInGroup": 3
         }
       ]
     },
@@ -3414,15 +3414,15 @@
       "categories": [
         {
           "name": "Groceries",
-          "displayOrder": 7
+          "displayOrderInGroup": 1
         },
         {
           "name": "Restaurants",
-          "displayOrder": 8
+          "displayOrderInGroup": 2
         },
         {
           "name": "Coffee Shops",
-          "displayOrder": 9
+          "displayOrderInGroup": 3
         }
       ]
     },
@@ -3432,15 +3432,15 @@
       "categories": [
         {
           "name": "Gas",
-          "displayOrder": 10
+          "displayOrderInGroup": 1
         },
         {
           "name": "Car Payment",
-          "displayOrder": 11
+          "displayOrderInGroup": 2
         },
         {
           "name": "Public Transit",
-          "displayOrder": 12
+          "displayOrderInGroup": 3
         }
       ]
     },
@@ -3450,15 +3450,15 @@
       "categories": [
         {
           "name": "Streaming Services",
-          "displayOrder": 13
+          "displayOrderInGroup": 1
         },
         {
           "name": "Hobbies",
-          "displayOrder": 14
+          "displayOrderInGroup": 2
         },
         {
           "name": "Travel",
-          "displayOrder": 15
+          "displayOrderInGroup": 3
         }
       ]
     },
@@ -3468,11 +3468,11 @@
       "categories": [
         {
           "name": "Electronics",
-          "displayOrder": 16
+          "displayOrderInGroup": 1
         },
         {
           "name": "Home Goods",
-          "displayOrder": 17
+          "displayOrderInGroup": 2
         }
       ]
     }

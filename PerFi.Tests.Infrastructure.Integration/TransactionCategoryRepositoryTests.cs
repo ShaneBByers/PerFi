@@ -75,7 +75,7 @@ public sealed class TransactionCategoryRepositoryTests
         Assert.True(result.IsSuccess);
         var created = await repository.GetTransactionCategoryByIdAsync(result.Value);
         Assert.NotNull(created);
-        Assert.Equal(1, created!.DisplayOrder);
+        Assert.Equal(1, created!.DisplayOrderInGroup);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public sealed class TransactionCategoryRepositoryTests
                 Id = 1,
                 Name = "Other Category",
                 UserId = "other-user",
-                DisplayOrder = 1,
+                DisplayOrderInGroup = 1,
                 TransactionCategoryGroupId = 1,
                 TransactionCategoryGroup = group,
                 Transactions = []
@@ -145,7 +145,7 @@ public sealed class TransactionCategoryRepositoryTests
                 Id = 1,
                 Name = "Groceries",
                 UserId = FakeCurrentUserService.DefaultUserId,
-                DisplayOrder = 1,
+                DisplayOrderInGroup = 1,
                 TransactionCategoryGroupId = 1,
                 TransactionCategoryGroup = group,
                 Transactions = []
@@ -176,7 +176,7 @@ public sealed class TransactionCategoryRepositoryTests
                 Id = 1,
                 Name = "Groceries",
                 UserId = FakeCurrentUserService.DefaultUserId,
-                DisplayOrder = 1,
+                DisplayOrderInGroup = 1,
                 TransactionCategoryGroupId = 1,
                 TransactionCategoryGroup = group,
                 Transactions = []
@@ -220,7 +220,7 @@ public sealed class TransactionCategoryRepositoryTests
                 Id = 1,
                 Name = "Groceries",
                 UserId = FakeCurrentUserService.DefaultUserId,
-                DisplayOrder = 1,
+                DisplayOrderInGroup = 1,
                 TransactionCategoryGroupId = 1,
                 TransactionCategoryGroup = group,
                 Transactions = []
@@ -230,7 +230,7 @@ public sealed class TransactionCategoryRepositoryTests
                 Id = 2,
                 Name = "Rent",
                 UserId = FakeCurrentUserService.DefaultUserId,
-                DisplayOrder = 2,
+                DisplayOrderInGroup = 2,
                 TransactionCategoryGroupId = 1,
                 TransactionCategoryGroup = group,
                 Transactions = []
@@ -246,5 +246,80 @@ public sealed class TransactionCategoryRepositoryTests
         Assert.True(result.IsSuccess);
         var categories = await repository.GetAllTransactionCategoriesAsync();
         Assert.Equal(["Rent", "Groceries"], categories.Select(c => c.Name));
+    }
+
+    [Fact]
+    public async Task AddTransactionCategoryAsync_ForDifferentGroups_ScopesDisplayOrderPerGroup()
+    {
+        var options = await CreateSeededOptionsAsync(dbContext =>
+        {
+            SeedGroup(dbContext, 1);
+            dbContext.TransactionCategoryGroups.Add(new TransactionCategoryGroupEntity
+            {
+                Id = 2,
+                Name = "Income",
+                UserId = FakeCurrentUserService.DefaultUserId,
+                DisplayOrder = 2,
+                TransactionCategories = []
+            });
+            return Task.CompletedTask;
+        });
+
+        await using var dbContext = new PerFiDbContext(options);
+        var repository = new TransactionCategoryRepository(dbContext, new FakeCurrentUserService());
+
+        var firstGroupFirstCategory = await repository.AddTransactionCategoryAsync(new TransactionCategory("Groceries", new TransactionCategoryGroup(1, "Expenses")), 1);
+        var firstGroupSecondCategory = await repository.AddTransactionCategoryAsync(new TransactionCategory("Rent", new TransactionCategoryGroup(1, "Expenses")), 1);
+        var secondGroupFirstCategory = await repository.AddTransactionCategoryAsync(new TransactionCategory("Paycheck", new TransactionCategoryGroup(2, "Income")), 2);
+
+        Assert.Equal(1, (await repository.GetTransactionCategoryByIdAsync(firstGroupFirstCategory.Value))!.DisplayOrderInGroup);
+        Assert.Equal(2, (await repository.GetTransactionCategoryByIdAsync(firstGroupSecondCategory.Value))!.DisplayOrderInGroup);
+        Assert.Equal(1, (await repository.GetTransactionCategoryByIdAsync(secondGroupFirstCategory.Value))!.DisplayOrderInGroup);
+    }
+
+    [Fact]
+    public async Task ReorderTransactionCategoriesAsync_WithCategoriesFromDifferentGroups_ReturnsFailure()
+    {
+        var options = await CreateSeededOptionsAsync(dbContext =>
+        {
+            var group = SeedGroup(dbContext, 1);
+            var otherGroup = new TransactionCategoryGroupEntity
+            {
+                Id = 2,
+                Name = "Income",
+                UserId = FakeCurrentUserService.DefaultUserId,
+                DisplayOrder = 2,
+                TransactionCategories = []
+            };
+            dbContext.TransactionCategoryGroups.Add(otherGroup);
+            dbContext.TransactionCategories.Add(new TransactionCategoryEntity
+            {
+                Id = 1,
+                Name = "Groceries",
+                UserId = FakeCurrentUserService.DefaultUserId,
+                DisplayOrderInGroup = 1,
+                TransactionCategoryGroupId = 1,
+                TransactionCategoryGroup = group,
+                Transactions = []
+            });
+            dbContext.TransactionCategories.Add(new TransactionCategoryEntity
+            {
+                Id = 2,
+                Name = "Paycheck",
+                UserId = FakeCurrentUserService.DefaultUserId,
+                DisplayOrderInGroup = 1,
+                TransactionCategoryGroupId = 2,
+                TransactionCategoryGroup = otherGroup,
+                Transactions = []
+            });
+            return Task.CompletedTask;
+        });
+
+        await using var dbContext = new PerFiDbContext(options);
+        var repository = new TransactionCategoryRepository(dbContext, new FakeCurrentUserService());
+
+        var result = await repository.ReorderTransactionCategoriesAsync([2, 1]);
+
+        Assert.True(result.IsFailure);
     }
 }

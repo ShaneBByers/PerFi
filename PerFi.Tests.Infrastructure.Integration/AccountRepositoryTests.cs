@@ -103,7 +103,7 @@ public sealed class AccountRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var (_, type, institution) = SeedBaseGraph(dbContext);
-            institution.Accounts.Add(new AccountEntity { Name = "Existing", DisplayOrder = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type });
+            institution.Accounts.Add(new AccountEntity { Name = "Existing", DisplayOrderInGroup = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type });
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             institutionId = institution.Id;
             accountTypeId = type.Id;
@@ -118,7 +118,7 @@ public sealed class AccountRepositoryTests
 
         Assert.True(result.IsSuccess);
         var created = await repository.GetAccountByIdAsync(result.Value);
-        Assert.Equal(2, created!.DisplayOrder);
+        Assert.Equal(2, created!.DisplayOrderInGroup);
     }
 
     [Fact]
@@ -194,8 +194,8 @@ public sealed class AccountRepositoryTests
         var options = await CreateSeededOptionsAsync(dbContext =>
         {
             var (_, type, institution) = SeedBaseGraph(dbContext);
-            var first = new AccountEntity { Name = "First", DisplayOrder = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
-            var second = new AccountEntity { Name = "Second", DisplayOrder = 2, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
+            var first = new AccountEntity { Name = "First", DisplayOrderInGroup = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
+            var second = new AccountEntity { Name = "Second", DisplayOrderInGroup = 2, UserId = FakeCurrentUserService.DefaultUserId, Institution = institution, AccountType = type };
             institution.Accounts.Add(first);
             institution.Accounts.Add(second);
             dbContext.SaveChangesAsync().GetAwaiter().GetResult();
@@ -212,5 +212,63 @@ public sealed class AccountRepositoryTests
         Assert.True(result.IsSuccess);
         var accounts = await repository.GetAllAccountsAsync();
         Assert.Equal(["Second", "First"], accounts.Select(a => a.Name));
+    }
+
+    [Fact]
+    public async Task AddAccountAsync_ForDifferentInstitutions_ScopesDisplayOrderPerInstitution()
+    {
+        int firstInstitutionId = 0, secondInstitutionId = 0, accountTypeId = 0;
+        var options = await CreateSeededOptionsAsync(dbContext =>
+        {
+            var (_, type, firstInstitution) = SeedBaseGraph(dbContext);
+            var secondInstitution = new InstitutionEntity { Name = "Second Bank", UserId = FakeCurrentUserService.DefaultUserId, Accounts = [] };
+            dbContext.Institutions.Add(secondInstitution);
+            dbContext.SaveChangesAsync().GetAwaiter().GetResult();
+            firstInstitutionId = firstInstitution.Id;
+            secondInstitutionId = secondInstitution.Id;
+            accountTypeId = type.Id;
+            return Task.CompletedTask;
+        });
+
+        await using var dbContext = new PerFiDbContext(options);
+        var repository = new AccountRepository(dbContext, new FakeCurrentUserService());
+        var accountType = new PerFi.Domain.Entities.AccountType(accountTypeId, "Checking", new PerFi.Domain.Entities.AccountTypeGroup(1, "Assets"));
+
+        var firstInstitutionFirstAccount = await repository.AddAccountAsync(new PerFi.Domain.Entities.Account("First-1", accountType), firstInstitutionId);
+        var firstInstitutionSecondAccount = await repository.AddAccountAsync(new PerFi.Domain.Entities.Account("First-2", accountType), firstInstitutionId);
+        var secondInstitutionFirstAccount = await repository.AddAccountAsync(new PerFi.Domain.Entities.Account("Second-1", accountType), secondInstitutionId);
+        var secondInstitutionSecondAccount = await repository.AddAccountAsync(new PerFi.Domain.Entities.Account("Second-2", accountType), secondInstitutionId);
+
+        Assert.Equal(1, (await repository.GetAccountByIdAsync(firstInstitutionFirstAccount.Value))!.DisplayOrderInGroup);
+        Assert.Equal(2, (await repository.GetAccountByIdAsync(firstInstitutionSecondAccount.Value))!.DisplayOrderInGroup);
+        Assert.Equal(1, (await repository.GetAccountByIdAsync(secondInstitutionFirstAccount.Value))!.DisplayOrderInGroup);
+        Assert.Equal(2, (await repository.GetAccountByIdAsync(secondInstitutionSecondAccount.Value))!.DisplayOrderInGroup);
+    }
+
+    [Fact]
+    public async Task ReorderAccountsAsync_WithAccountsFromDifferentInstitutions_ReturnsFailure()
+    {
+        var ids = new List<int>();
+        var options = await CreateSeededOptionsAsync(dbContext =>
+        {
+            var (_, type, firstInstitution) = SeedBaseGraph(dbContext);
+            var secondInstitution = new InstitutionEntity { Name = "Second Bank", UserId = FakeCurrentUserService.DefaultUserId, Accounts = [] };
+            var first = new AccountEntity { Name = "First", DisplayOrderInGroup = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = firstInstitution, AccountType = type };
+            var second = new AccountEntity { Name = "Second", DisplayOrderInGroup = 1, UserId = FakeCurrentUserService.DefaultUserId, Institution = secondInstitution, AccountType = type };
+            firstInstitution.Accounts.Add(first);
+            dbContext.Institutions.Add(secondInstitution);
+            dbContext.Accounts.Add(second);
+            dbContext.SaveChangesAsync().GetAwaiter().GetResult();
+            ids.Add(first.Id);
+            ids.Add(second.Id);
+            return Task.CompletedTask;
+        });
+
+        await using var dbContext = new PerFiDbContext(options);
+        var repository = new AccountRepository(dbContext, new FakeCurrentUserService());
+
+        var result = await repository.ReorderAccountsAsync([ids[1], ids[0]]);
+
+        Assert.True(result.IsFailure);
     }
 }

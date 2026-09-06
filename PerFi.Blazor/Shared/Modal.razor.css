@@ -1,0 +1,30 @@
+.modal-backdrop {
+    z-index: 1050;
+}
+
+.modal {
+    z-index: 1055;
+}
+
+.modal-content {
+    background: var(--pf-bg-elevated);
+    color: var(--pf-text-primary);
+    border: 1px solid var(--pf-border);
+    border-radius: 14px;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--pf-border-soft);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--pf-border-soft);
+}
+
+.modal-title {
+    color: var(--pf-text-primary);
+}
+
+.btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}

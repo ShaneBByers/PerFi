@@ -35,7 +35,7 @@ internal class TransactionRepository(
                         DisplayOrder = transaction.TransactionCategory.TransactionCategoryGroup.DisplayOrder
                     })
                 {
-                    DisplayOrder = transaction.TransactionCategory.DisplayOrder
+                    DisplayOrderInGroup = transaction.TransactionCategory.DisplayOrderInGroup
                 },
                 transaction.AccountId,
                 transaction.Description))
@@ -69,7 +69,7 @@ internal class TransactionRepository(
                         DisplayOrder = transactionEntity.TransactionCategory.TransactionCategoryGroup.DisplayOrder
                     })
                 {
-                    DisplayOrder = transactionEntity.TransactionCategory.DisplayOrder
+                    DisplayOrderInGroup = transactionEntity.TransactionCategory.DisplayOrderInGroup
                 },
                 transactionEntity.AccountId,
                 transactionEntity.Description);
