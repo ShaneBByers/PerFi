@@ -62,6 +62,13 @@ article {
     border-color: var(--pf-border);
 }
 
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--pf-surface-subtle);
+    color: var(--pf-text-tertiary);
+    border-color: var(--pf-border-soft);
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid var(--pf-success);
 }
