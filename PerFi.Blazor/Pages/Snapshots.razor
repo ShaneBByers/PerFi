@@ -8,317 +8,392 @@
 
 <PageTitle>Net Worth</PageTitle>
 
-<div class="snapshots-page">
-    <header class="page-hero">
-        <div>
-            <h1>Net Worth</h1>
-        </div>
-        <div class="hero-actions">
-            <div class="range-control">
-                <button class="btn btn-outline-secondary" type="button" @onclick="ToggleRangePicker">@GetRangeButtonLabel()</button>
-
-                @if (showRangePicker)
+<div class="networth-page">
+    <header class="networth-hero">
+        <div class="hero-top">
+            <div class="hero-headline">
+                <span class="hero-eyebrow">Net Worth</span>
+                <strong class="hero-figure">@FormatCurrency(latestTotal)</strong>
+                @if (matrixSnapshots.Count > 0)
                 {
-                    <div class="range-popover" role="dialog" aria-label="Date range options">
+                    <span class="hero-asof">as of @matrixSnapshots[^1].Date.ToString("MMM d, yyyy")</span>
+                }
+            </div>
+
+            <div class="hero-second-metric">
+                <select class="form-select form-select-sm hero-group-select" @bind="selectedHeroGroupName" aria-label="Second net worth metric">
+                    @foreach (var group in matrixGroups)
+                    {
+                        <option value="@group.AccountTypeGroupName">@group.AccountTypeGroupName</option>
+                    }
+                </select>
+                <strong class="hero-figure hero-figure-secondary">@FormatCurrency(GetHeroSecondMetricTotal())</strong>
+            </div>
+
+            <div class="hero-sparkline" aria-hidden="true" @key="chartVersion">
+                @if (allTimeTrendPoints.Count > 1)
+                {
+                    <ApexChart TItem="SnapshotTrendPoint" Height="64" Options="@CreateSparklineChartOptions()">
+                        <ApexPointSeries TItem="SnapshotTrendPoint"
+                                         Items="allTimeTrendPoints"
+                                         Name="Net Worth"
+                                         SeriesType="SeriesType.Area"
+                                         XValue="point => point.Label"
+                                         YValue="point => point.Total" />
+                    </ApexChart>
+                }
+            </div>
+        </div>
+
+        <div class="hero-chips" aria-label="Net Worth highlights">
+            @foreach (var chip in GetHeroChips())
+            {
+                <article class="hero-chip">
+                    <span class="hero-chip-label">@chip.Label</span>
+                    <div class="hero-chip-metric">
+                        <span class="hero-chip-metric-name">Net Worth</span>
+                        @if (chip.NetWorthDelta is not null)
+                        {
+                            <strong class="@GetAmountClass(chip.NetWorthDelta.Amount)">@FormatDeltaCurrency(chip.NetWorthDelta.Amount)</strong>
+                            <span class="hero-chip-percent @GetAmountClass(chip.NetWorthDelta.Amount)">@FormatPercent(chip.NetWorthDelta.Percent)</span>
+                        }
+                        else
+                        {
+                            <strong class="amount-muted">&mdash;</strong>
+                        }
+                    </div>
+                    <div class="hero-chip-metric">
+                        <span class="hero-chip-metric-name">@selectedHeroGroupName</span>
+                        @if (chip.GroupDelta is not null)
+                        {
+                            <strong class="@GetAmountClass(chip.GroupDelta.Amount)">@FormatDeltaCurrency(chip.GroupDelta.Amount)</strong>
+                            <span class="hero-chip-percent @GetAmountClass(chip.GroupDelta.Amount)">@FormatPercent(chip.GroupDelta.Percent)</span>
+                        }
+                        else
+                        {
+                            <strong class="amount-muted">&mdash;</strong>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </header>
+
+    <div class="networth-shell">
+        <nav class="networth-nav" aria-label="Net worth sections">
+            <button class="networth-nav-item @(activeSection == "grid" ? "active" : null)" type="button" @onclick='() => SetSection("grid")'>Data Grid</button>
+            <button class="networth-nav-item @(activeSection == "trends" ? "active" : null)" type="button" @onclick='() => SetSection("trends")'>Trends</button>
+            <button class="networth-nav-item @(activeSection == "milestones" ? "active" : null)" type="button" @onclick='() => SetSection("milestones")'>Milestones</button>
+        </nav>
+
+        <div class="networth-content">
+            <LoadingState IsVisible="@isLoading" />
+
+            @if (!isLoading)
+            {
+                @if (activeSection == "grid")
+                {
+                    <section class="matrix-panel">
+                        <div class="section-header matrix-header">
+                            <div>
+                                <h2>Account Ledger</h2>
+                                <p>Every net worth entry, account by account. Click a date to see its full breakdown.</p>
+                            </div>
+                            <div class="matrix-nav-actions">
+                                @if (!isMatrixEditMode)
+                                {
+                                    <button class="btn btn-sm btn-primary" type="button" @onclick="StartNewMatrixEntry">New Entry</button>
+                                    @if (matrixSnapshots.Count > 0)
+                                    {
+                                        <button class="btn btn-sm btn-primary" type="button" @onclick="EnterMatrixEditMode">Edit</button>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="matrix-staged-chip @(HasPendingMatrixEdits ? string.Empty : "matrix-staged-chip-hidden")">@GetMatrixStagedChangesText()</span>
+                                    <button class="btn btn-sm btn-primary" type="button" @onclick="SaveMatrixEditsAsync" disabled="@(isSubmitting || HasMatrixValidationErrors || !HasPendingMatrixEdits)">Save Changes</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="CancelMatrixEditMode" disabled="@isSubmitting">Discard Changes</button>
+                                }
+                            </div>
+                        </div>
+
+                        @if (isMatrixEditMode && HasMatrixValidationErrors)
+                        {
+                            <div class="alert alert-warning matrix-validation-banner" role="alert">
+                                Fix invalid cell values before saving table edits.
+                            </div>
+                        }
+
+                        <EmptyState IsVisible="@(!isMatrixEditMode && matrixSnapshots.Count == 0)" Message="No net worth entries yet. Click New Entry to add your first one." />
+
+                        @if (matrixSnapshots.Count > 0 || hasPendingMatrixEntry)
+                        {
+                            var visibleSnapshots = GetVisibleMatrixSnapshots();
+                            <div class="matrix-wrap" id="ledger-scroll">
+                                <table class="table table-sm snapshot-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th>Account</th>
+                                            @foreach (var column in visibleSnapshots)
+                                            {
+                                                <th class="text-end @(column.IsDraft ? "new-entry-column-header" : "matrix-column-clickable")"
+                                                    @onclick="() => OnMatrixColumnHeaderClicked(column)">
+                                                    <span>@column.Date.ToString("MMM dd, yyyy")</span>
+                                                </th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var group in matrixGroups)
+                                        {
+                                            <tr class="group-header-row">
+                                                <th>@group.AccountTypeGroupName</th>
+                                                @foreach (var column in visibleSnapshots)
+                                                {
+                                                    var groupTotal = GetGroupTotal(group, column.Id);
+                                                    var groupDeltaDisplay = GetGroupDeltaDisplay(group, column.Id);
+                                                    <th class="text-end @GetAmountClass(groupTotal)">
+                                                        <div>@FormatCurrency(groupTotal)</div>
+                                                        <div class="matrix-cell-delta @groupDeltaDisplay.CssClass">@groupDeltaDisplay.Text</div>
+                                                    </th>
+                                                }
+                                            </tr>
+
+                                            @foreach (var row in group.Rows)
+                                            {
+                                                <tr>
+                                                    <th>
+                                                        <div class="account-name">@row.AccountName</div>
+                                                        <div class="account-meta">@row.InstitutionName</div>
+                                                    </th>
+                                                    @foreach (var column in visibleSnapshots)
+                                                    {
+                                                        <td class="@GetCellClass(column.Id, row.AccountId)">
+                                                            @if (isMatrixEditMode)
+                                                            {
+                                                                <input class="form-control form-control-sm text-end matrix-cell-input @GetCellInputClass(column.Id, row.AccountId)"
+                                                                       value="@GetCellInputValue(column.Id, row.AccountId)"
+                                                                       @onchange='eventArgs => OnMatrixCellChanged(column.Id, row.AccountId, eventArgs.Value?.ToString())' />
+                                                                @if (TryGetMatrixCellValidationError(column.Id, row.AccountId, out var validationError))
+                                                                {
+                                                                    <div class="matrix-cell-error">@validationError</div>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                var displayedValue = GetDisplayedCellValue(column.Id, row.AccountId);
+                                                                @if (displayedValue.HasValue)
+                                                                {
+                                                                    var deltaDisplay = GetCellDeltaDisplay(column.Id, row.AccountId);
+                                                                    <div class="text-end @GetAmountClass(displayedValue.Value)">@FormatCurrency(displayedValue.Value)</div>
+                                                                    <div class="text-end matrix-cell-delta @deltaDisplay.CssClass">@deltaDisplay.Text</div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="text-end amount-muted">-</div>
+                                                                }
+                                                            }
+                                                        </td>
+                                                    }
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Total</th>
+                                            @foreach (var column in visibleSnapshots)
+                                            {
+                                                var total = GetSnapshotTotal(column.Id);
+                                                <th class="text-end @GetAmountClass(total)">@FormatCurrency(total)</th>
+                                            }
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+
+                        @if (selectedSnapshot is not null)
+                        {
+                            <SnapshotDetailPanel Snapshot="selectedSnapshot" OnClose="() => selectedSnapshot = null" OnDelete="HandleDeleteSnapshotAsync" />
+                        }
+                    </section>
+                }
+
+                @if (activeSection == "trends")
+                {
+                    <section class="panel range-panel">
+                        <div class="section-header">
+                            <h2>Trends</h2>
+                            <p>@GetRangeLabel()</p>
+                        </div>
                         <div class="filter-presets" role="toolbar" aria-label="Net Worth range presets">
                             <button class='@GetRangeClass("ytd")' @onclick='() => SetRangePreset("ytd")'>YTD</button>
                             <button class='@GetRangeClass("3m")' @onclick='() => SetRangePreset("3m")'>3M</button>
                             <button class='@GetRangeClass("6m")' @onclick='() => SetRangePreset("6m")'>6M</button>
                             <button class='@GetRangeClass("12m")' @onclick='() => SetRangePreset("12m")'>12M</button>
                             <button class='@GetRangeClass("all")' @onclick='() => SetRangePreset("all")'>All</button>
+                            <button class='@GetRangeClass("custom")' @onclick="ToggleCustomRangeInputs">Custom</button>
                         </div>
-                        <div class="custom-range row g-2 align-items-end mt-1">
-                            <div class="col-md-4">
-                                <label class="form-label" for="customStart">Start</label>
-                                <InputDate id="customStart" class="form-control" @bind-Value="customStartDate" />
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label" for="customEnd">End</label>
-                                <InputDate id="customEnd" class="form-control" @bind-Value="customEndDate" />
-                            </div>
-                            <div class="col-md-4 d-flex gap-2">
-                                <button class="btn btn-outline-secondary" type="button" @onclick="ApplyCustomRange">Apply</button>
-                                <button class="btn btn-outline-secondary" type="button" @onclick="ToggleRangePicker">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-            <button class="btn btn-outline-secondary" type="button" @onclick="LoadListAsync" disabled="@isLoading">Refresh</button>
-        </div>
-    </header>
 
+                        @if (showCustomRangeInputs)
+                        {
+                            <div class="custom-range row g-2 align-items-end mt-2">
+                                <div class="col-md-4">
+                                    <label class="form-label" for="customStart">Start</label>
+                                    <InputDate id="customStart" class="form-control" @bind-Value="customStartDate" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="customEnd">End</label>
+                                    <InputDate id="customEnd" class="form-control" @bind-Value="customEndDate" />
+                                </div>
+                                <div class="col-md-4 d-flex gap-2">
+                                    <button class="btn btn-outline-secondary" type="button" @onclick="ApplyCustomRange">Apply</button>
+                                </div>
+                            </div>
+                        }
+                    </section>
 
-    <section class="summary-grid" aria-label="Net Worth highlights">
-        <article class="summary-card">
-            <span class="summary-label">Latest Net Worth</span>
-            <strong>@FormatCurrency(latestTotal)</strong>
-        </article>
-        <article class="summary-card">
-            <span class="summary-label">Previous Entry</span>
-            <strong>@FormatCurrency(previousTotal)</strong>
-        </article>
-        <article class="summary-card">
-            <span class="summary-label">Change</span>
-            <strong class="@(latestTotal - previousTotal >= 0 ? "positive" : "negative")">
-                @FormatCurrency(latestTotal - previousTotal)
-            </strong>
-        </article>
-        <article class="summary-card">
-            <span class="summary-label">Active Accounts</span>
-            <strong>@activeAccountCount</strong>
-        </article>
-    </section>
+                    <EmptyState IsVisible="@(filteredSnapshots.Count == 0)" Message="Add net worth entries to render trend charts." />
 
-    <section class="matrix-panel">
-        <div class="section-header matrix-header">
-            <div>
-                <h2>Net Worth Matrix</h2>
-            </div>
-            <div class="matrix-nav-actions">
-                @if (!isMatrixEditMode)
-                {
-                    <button class="btn btn-sm btn-primary" type="button" @onclick="StartNewMatrixEntry">New Entry</button>
                     @if (filteredSnapshots.Count > 0)
                     {
-                        <button class="btn btn-sm btn-primary" type="button" @onclick="EnterMatrixEditMode">Edit</button>
+                        var totalRangeDelta = GetTrendDelta(rangeTrendPoints);
+
+                        <section class="chart-panel" @key="chartVersion">
+                            <div class="section-header">
+                                <h2>@GetSelectedRangeChartTitle()</h2>
+                                @if (totalRangeDelta is not null)
+                                {
+                                    <p class="range-delta @GetAmountClass(totalRangeDelta.Amount)">@FormatDeltaCurrency(totalRangeDelta.Amount) (@FormatPercent(totalRangeDelta.Percent))</p>
+                                }
+                            </div>
+                            <ApexChart TItem="SnapshotTrendPoint" Title="@($"Total Net Worth ({GetSelectedRangeChartLabel()})")" Height="420" Options="@CreateCurrencyChartOptions()">
+                                <ApexPointSeries TItem="SnapshotTrendPoint"
+                                                 Items="rangeTrendPoints"
+                                                 Name="Net Worth"
+                                                 SeriesType="SeriesType.Area"
+                                                 XValue="point => point.Label"
+                                                 YValue="point => point.Total" />
+                            </ApexChart>
+                        </section>
+
+                        @foreach (var groupChart in accountTypeGroupCharts)
+                        {
+                            var groupRangeDelta = GetTrendDelta(groupChart.RangePoints);
+
+                            <section class="chart-panel" @key="(groupChart.GroupName, chartVersion)">
+                                <div class="section-header">
+                                    <h2>@groupChart.GroupName (@GetSelectedRangeChartLabel())</h2>
+                                    @if (groupRangeDelta is not null)
+                                    {
+                                        <p class="range-delta @GetAmountClass(groupRangeDelta.Amount)">@FormatDeltaCurrency(groupRangeDelta.Amount) (@FormatPercent(groupRangeDelta.Percent))</p>
+                                    }
+                                </div>
+                                <ApexChart TItem="SnapshotTrendPoint" Title="@($"{groupChart.GroupName} ({GetSelectedRangeChartLabel()})")" Height="420" Options="@CreateCurrencyChartOptions()">
+                                    <ApexPointSeries TItem="SnapshotTrendPoint"
+                                                     Items="groupChart.RangePoints"
+                                                     Name="@groupChart.GroupName"
+                                                     SeriesType="SeriesType.Area"
+                                                     XValue="point => point.Label"
+                                                     YValue="point => point.Total" />
+                                </ApexChart>
+                            </section>
+                        }
                     }
                 }
-                else
+
+                @if (activeSection == "milestones")
                 {
-                    <span class="matrix-staged-chip @(HasPendingMatrixEdits ? string.Empty : "matrix-staged-chip-hidden")">@GetMatrixStagedChangesText()</span>
-                    <button class="btn btn-sm btn-primary" type="button" @onclick="SaveMatrixEditsAsync" disabled="@(isSubmitting || HasMatrixValidationErrors || !HasPendingMatrixEdits)">Save Changes</button>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="CancelMatrixEditMode" disabled="@isSubmitting">Discard Changes</button>
-                }
+                    <EmptyState IsVisible="@(milestoneSeries.Count == 0)" Message="Add net worth entries to see year and quarter milestones." />
 
-                @if (filteredSnapshots.Count > 0)
-                {
-                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="PreviousMatrixPage" disabled="@(!CanGoToPreviousMatrixPage())">Prev</button>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="NextMatrixPage" disabled="@(!CanGoToNextMatrixPage())">Next</button>
-                }
-            </div>
-        </div>
+                    @foreach (var series in milestoneSeries)
+                    {
+                        <section class="panel milestones-panel">
+                            <div class="section-header">
+                                <h2>@series.Name</h2>
+                                <p>Net worth at the end of each year and quarter, using your actual entries (interpolated between the closest entries for closed periods).</p>
+                            </div>
 
-        @if (isMatrixEditMode && HasMatrixValidationErrors)
-        {
-            <div class="alert alert-warning matrix-validation-banner" role="alert">
-                Fix invalid cell values before saving table edits.
-            </div>
-        }
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle milestones-table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Period</th>
+                                            <th class="text-end">@series.Name</th>
+                                            <th class="text-end">Change</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var yearRow in series.YearRows)
+                                        {
+                                            var yearDelta = GetMilestoneDeltaDisplay(yearRow.EndTotal, yearRow.PriorYearEndTotal);
+                                            <tr class="year-row" @onclick="() => ToggleMilestoneYear(series.Name, yearRow.Year)">
+                                                <td><span class="expand-toggle @(IsMilestoneYearExpanded(series.Name, yearRow.Year) ? "expanded" : null)" aria-hidden="true">&#9656;</span></td>
+                                                <td>@(yearRow.IsCurrentYear ? "Year to Date" : yearRow.Year.ToString(CultureInfo.InvariantCulture))</td>
+                                                <td class="text-end @(yearRow.EndTotal.HasValue ? GetAmountClass(yearRow.EndTotal.Value) : "amount-muted")">
+                                                    @(yearRow.EndTotal.HasValue ? FormatCurrency(yearRow.EndTotal.Value) : "-")
+                                                </td>
+                                                <td class="text-end @yearDelta.CssClass">@yearDelta.Text</td>
+                                                <td><span class="@(yearRow.IsCurrentYear ? "badge-projected" : "badge-actual")">@(yearRow.IsCurrentYear ? "In Progress" : "Complete")</span></td>
+                                            </tr>
 
-        <LoadingState IsVisible="@isLoading" />
-        <EmptyState IsVisible="@(!isLoading && filteredSnapshots.Count == 0)" Message="No net worth entries in this period." />
-
-        @if (!isLoading && filteredSnapshots.Count > 0)
-        {
-            var visibleSnapshots = GetVisibleMatrixSnapshots();
-            <div class="matrix-wrap">
-                <table class="table table-sm snapshot-matrix">
-                    <thead>
-                        <tr>
-                            <th>Account</th>
-                            @foreach (var column in visibleSnapshots)
-                            {
-                                <th class="text-end @(column.IsDraft ? "new-entry-column-header" : string.Empty)">
-                                    <span>@column.Date.ToString("MMM dd, yyyy")</span>
-                                </th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var group in matrixGroups)
-                        {
-                            <tr class="group-header-row">
-                                <th>@group.AccountTypeGroupName</th>
-                                @foreach (var column in visibleSnapshots)
-                                {
-                                    var groupTotal = GetGroupTotal(group, column.Id);
-                                    var groupDeltaDisplay = GetGroupDeltaDisplay(group, column.Id);
-                                    <th class="text-end @GetAmountClass(groupTotal)">
-                                        <div>@FormatCurrency(groupTotal)</div>
-                                        <div class="matrix-cell-delta @groupDeltaDisplay.CssClass">@groupDeltaDisplay.Text</div>
-                                    </th>
-                                }
-                            </tr>
-
-                            @foreach (var row in group.Rows)
-                            {
-                                <tr>
-                                    <th>
-                                        <div class="account-name">@row.AccountName</div>
-                                        <div class="account-meta">@row.InstitutionName</div>
-                                    </th>
-                                    @foreach (var column in visibleSnapshots)
-                                    {
-                                        <td class="@GetCellClass(column.Id, row.AccountId)">
-                                            @if (isMatrixEditMode)
+                                            @if (IsMilestoneYearExpanded(series.Name, yearRow.Year))
                                             {
-                                                <input class="form-control form-control-sm text-end matrix-cell-input @GetCellInputClass(column.Id, row.AccountId)"
-                                                       value="@GetCellInputValue(column.Id, row.AccountId)"
-                                                       @onchange='eventArgs => OnMatrixCellChanged(column.Id, row.AccountId, eventArgs.Value?.ToString())' />
-                                                @if (TryGetMatrixCellValidationError(column.Id, row.AccountId, out var validationError))
+                                                @foreach (var quarter in yearRow.Quarters)
                                                 {
-                                                    <div class="matrix-cell-error">@validationError</div>
+                                                    var quarterDelta = GetMilestoneDeltaDisplay(quarter.EndTotal, quarter.PriorTotal);
+                                                    <tr class="quarter-row @(quarter.DetailSnapshotId is not null ? "quarter-row-clickable" : null)" @onclick="() => OnMilestoneQuarterClicked(quarter)">
+                                                        <td></td>
+                                                        <td>Q@(quarter.Quarter)</td>
+                                                        @if (quarter.EndTotal.HasValue)
+                                                        {
+                                                            <td class="text-end @GetAmountClass(quarter.EndTotal.Value)">@FormatCurrency(quarter.EndTotal.Value)@(quarter.IsInterpolated ? "*" : null)</td>
+                                                            <td class="text-end @quarterDelta.CssClass">@quarterDelta.Text</td>
+                                                            <td></td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td class="text-end amount-muted" colspan="3">No entry</td>
+                                                        }
+                                                    </tr>
                                                 }
                                             }
-                                            else
-                                            {
-                                                var displayedValue = GetDisplayedCellValue(column.Id, row.AccountId);
-                                                @if (displayedValue.HasValue)
-                                                {
-                                                    var deltaDisplay = GetCellDeltaDisplay(column.Id, row.AccountId);
-                                                    <div class="text-end @GetAmountClass(displayedValue.Value)">@FormatCurrency(displayedValue.Value)</div>
-                                                    <div class="text-end matrix-cell-delta @deltaDisplay.CssClass">@deltaDisplay.Text</div>
-                                                }
-                                                else
-                                                {
-                                                    <div class="text-end amount-muted">-</div>
-                                                }
-                                            }
-                                        </td>
-                                    }
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th>Total</th>
-                            @foreach (var column in visibleSnapshots)
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if (series.YearRows.SelectMany(y => y.Quarters).Any(q => q.IsInterpolated))
                             {
-                                var total = GetSnapshotTotal(column.Id);
-                                <th class="text-end @GetAmountClass(total)">@FormatCurrency(total)</th>
+                                <p class="milestones-footnote">* interpolated between the two closest entries</p>
                             }
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        }
-    </section>
+                        </section>
+                    }
 
-    <section class="chart-panel">
-        <div class="section-header">
-            <h2>Total Net Worth Trend</h2>
+                    @if (selectedSnapshot is not null)
+                    {
+                        <SnapshotDetailPanel Snapshot="selectedSnapshot" OnClose="() => selectedSnapshot = null" OnDelete="HandleDeleteSnapshotAsync" />
+                    }
+                }
+            }
         </div>
-
-        <EmptyState IsVisible="@(filteredSnapshots.Count == 0)" Message="Add net worth entries to render trend charts." />
-
-        @if (filteredSnapshots.Count > 0)
-        {
-            <div class="chart-grid">
-                <section class="chart-surface">
-                    <div class="section-header">
-                        <h3>@GetSelectedRangeChartTitle()</h3>
-                    </div>
-                    <ApexChart TItem="SnapshotTrendPoint" Title="@($"Total Net Worth ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateCurrencyChartOptions()">
-                        <ApexPointSeries TItem="SnapshotTrendPoint"
-                                         Items="rangeTrendPoints"
-                                         Name="Net Worth"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="point => point.Label"
-                                         YValue="point => point.Total" />
-                    </ApexChart>
-                </section>
-
-                <section class="chart-surface">
-                    <div class="section-header">
-                        <h3>All-Time</h3>
-                    </div>
-                    <ApexChart TItem="SnapshotTrendPoint" Title="Total Net Worth (All-Time)" Height="320" Options="@CreateCurrencyChartOptions()">
-                        <ApexPointSeries TItem="SnapshotTrendPoint"
-                                         Items="allTimeTrendPoints"
-                                         Name="Net Worth"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="point => point.Label"
-                                         YValue="point => point.Total" />
-                    </ApexChart>
-                </section>
-            </div>
-        }
-    </section>
-
-    @foreach (var groupChart in accountTypeGroupCharts)
-    {
-        <section class="chart-panel">
-            <div class="section-header">
-                <h2>@groupChart.GroupName</h2>
-            </div>
-            <div class="chart-grid">
-                <section class="chart-surface">
-                    <div class="section-header">
-                        <h3>@GetSelectedRangeChartTitle()</h3>
-                    </div>
-                    <ApexChart TItem="SnapshotTrendPoint" Title="@($"{groupChart.GroupName} ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateCurrencyChartOptions()">
-                        <ApexPointSeries TItem="SnapshotTrendPoint"
-                                         Items="groupChart.RangePoints"
-                                         Name="@groupChart.GroupName"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="point => point.Label"
-                                         YValue="point => point.Total" />
-                    </ApexChart>
-                </section>
-
-                <section class="chart-surface">
-                    <div class="section-header">
-                        <h3>All-Time</h3>
-                    </div>
-                    <ApexChart TItem="SnapshotTrendPoint" Title="@($"{groupChart.GroupName} (All-Time)")" Height="320" Options="@CreateCurrencyChartOptions()">
-                        <ApexPointSeries TItem="SnapshotTrendPoint"
-                                         Items="groupChart.AllTimePoints"
-                                         Name="@groupChart.GroupName"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="point => point.Label"
-                                         YValue="point => point.Total" />
-                    </ApexChart>
-                </section>
-            </div>
-        </section>
-    }
-
-    @if (selectedSnapshot is not null)
-    {
-        <section class="detail-panel">
-            <div class="section-header">
-                <h2>Net Worth Entry Detail</h2>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-sm align-middle">
-                    <thead>
-                        <tr>
-                            <th>Account</th>
-                            <th>Institution</th>
-                            <th>Type</th>
-                            <th>Group</th>
-                            <th class="text-end">Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var balance in selectedSnapshot.AccountBalances.OrderBy(b => b.Account.Name))
-                        {
-                            <tr>
-                                <td>@balance.Account.Name</td>
-                                <td>@balance.Account.Institution.Name</td>
-                                <td>@balance.Account.Type.Name</td>
-                                <td>@balance.Account.Type.Group.Name</td>
-                                <td class="text-end">@FormatCurrency(balance.Balance)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    }
+    </div>
 </div>
 
 @code {
     private readonly List<AccountResponse> accounts = [];
     private readonly List<FinanceSnapshotResponse> snapshots = [];
+    private readonly List<FinanceSnapshotResponse> matrixSnapshots = [];
     private readonly List<FinanceSnapshotResponse> filteredSnapshots = [];
     private readonly List<AccountMatrixGroup> matrixGroups = [];
     private readonly List<SnapshotTrendPoint> rangeTrendPoints = [];
     private readonly List<SnapshotTrendPoint> allTimeTrendPoints = [];
     private readonly List<AccountTypeGroupTrendChart> accountTypeGroupCharts = [];
+    private readonly List<MilestoneSeries> milestoneSeries = [];
+    private readonly HashSet<(string SeriesName, int Year)> expandedMilestoneYears = [];
     private readonly Dictionary<int, decimal> totalsBySnapshotId = [];
     private readonly Dictionary<(int SnapshotId, int AccountId), decimal> matrixCellEdits = [];
     private readonly Dictionary<(int SnapshotId, int AccountId), string> matrixCellInputOverrides = [];
@@ -327,16 +402,22 @@
     private bool isLoading = true;
     private bool isSubmitting;
     private bool hasPendingMatrixEntry;
-    private bool showRangePicker;
     private bool isMatrixEditMode;
+    private bool showCustomRangeInputs;
+    private bool shouldScrollLedgerToEnd;
+    private string activeSection = "grid";
+    private string selectedHeroGroupName = string.Empty;
     private string selectedRangePreset = "ytd";
     private DateTime customStartDate = new(DateTime.Today.Year, 1, 1);
     private DateTime customEndDate = DateTime.Today;
     private decimal latestTotal;
-    private decimal previousTotal;
-    private int activeAccountCount;
-    private int matrixStartColumnIndex;
-    private const int MatrixColumnPageSize = 8;
+    private int chartVersion;
+    private HeroDelta? sinceLastEntryDelta;
+    private HeroDelta? ytdDelta;
+    private HeroDelta? oneYearDelta;
+    private int? sinceLastEntryBaselineSnapshotId;
+    private int? ytdBaselineSnapshotId;
+    private int? oneYearBaselineSnapshotId;
     private const int PendingMatrixSnapshotId = -1;
 
     private bool HasPendingMatrixEdits => matrixCellEdits.Count > 0;
@@ -346,6 +427,15 @@
     {
         await LoadAccountsAsync();
         await LoadListAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!shouldScrollLedgerToEnd)
+            return;
+
+        shouldScrollLedgerToEnd = false;
+        await JSRuntime.InvokeVoidAsync("perfiNetWorth.scrollToRight", "ledger-scroll");
     }
 
     private async Task LoadAccountsAsync()
@@ -387,7 +477,6 @@
 
     private async Task LoadDetailAsync(int id)
     {
-
         try
         {
             selectedSnapshot = await SnapshotsApiClient.GetByIdAsync(id);
@@ -401,20 +490,44 @@
         }
     }
 
+    private void SetSection(string section)
+    {
+        activeSection = section;
+    }
+
     private void StartNewMatrixEntry()
     {
-
         hasPendingMatrixEntry = true;
         isMatrixEditMode = true;
         RemoveWhere(matrixCellValidationErrors, key => key.SnapshotId == PendingMatrixSnapshotId);
         RemoveWhere(matrixCellInputOverrides, key => key.SnapshotId == PendingMatrixSnapshotId);
         RemoveWhere(matrixCellEdits, key => key.SnapshotId == PendingMatrixSnapshotId);
-        ResetMatrixPagingToLatest();
+        shouldScrollLedgerToEnd = true;
+    }
+
+    private async Task OnMatrixColumnHeaderClicked(MatrixSnapshotColumn column)
+    {
+        if (column.IsDraft)
+            return;
+
+        await LoadDetailAsync(column.Id);
+    }
+
+    private async Task OnMilestoneQuarterClicked(QuarterPeriod quarter)
+    {
+        if (quarter.DetailSnapshotId is not { } id)
+            return;
+
+        await LoadDetailAsync(id);
+    }
+
+    private async Task HandleDeleteSnapshotAsync(int id)
+    {
+        await DeleteAsync(id);
     }
 
     private async Task DeleteAsync(int id)
     {
-
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete net worth entry from your timeline? (ID {id})");
         if (!confirmed)
             return;
@@ -437,8 +550,13 @@
     private void SetRangePreset(string preset)
     {
         selectedRangePreset = preset;
-        showRangePicker = false;
+        showCustomRangeInputs = false;
         RebuildSnapshotView();
+    }
+
+    private void ToggleCustomRangeInputs()
+    {
+        showCustomRangeInputs = !showCustomRangeInputs;
     }
 
     private void ApplyCustomRange()
@@ -447,13 +565,8 @@
             (customStartDate, customEndDate) = (customEndDate, customStartDate);
 
         selectedRangePreset = "custom";
-        showRangePicker = false;
+        showCustomRangeInputs = false;
         RebuildSnapshotView();
-    }
-
-    private void ToggleRangePicker()
-    {
-        showRangePicker = !showRangePicker;
     }
 
     private void EnterMatrixEditMode()
@@ -469,20 +582,6 @@
         RemoveWhere(matrixCellValidationErrors, key => key.SnapshotId == PendingMatrixSnapshotId);
         DiscardMatrixEdits();
         isMatrixEditMode = false;
-    }
-
-    private string GetRangeButtonLabel()
-    {
-        return selectedRangePreset switch
-        {
-            "ytd" => "Range: YTD",
-            "3m" => "Range: 3M",
-            "6m" => "Range: 6M",
-            "12m" => "Range: 12M",
-            "all" => "Range: All",
-            "custom" => $"Range: {customStartDate:MMM d} - {customEndDate:MMM d}",
-            _ => "Range"
-        };
     }
 
     private string GetRangeLabel()
@@ -532,64 +631,54 @@
 
     private void RebuildSnapshotView()
     {
+        chartVersion++;
+        matrixSnapshots.Clear();
         filteredSnapshots.Clear();
         matrixGroups.Clear();
         rangeTrendPoints.Clear();
         allTimeTrendPoints.Clear();
         accountTypeGroupCharts.Clear();
         totalsBySnapshotId.Clear();
+        milestoneSeries.Clear();
 
         var orderedSnapshots = snapshots
             .OrderBy(s => s.Date)
             .ToList();
 
+        matrixSnapshots.AddRange(orderedSnapshots);
+        shouldScrollLedgerToEnd = true;
+
         if (orderedSnapshots.Count == 0)
         {
             latestTotal = 0m;
-            previousTotal = 0m;
-            activeAccountCount = 0;
-            matrixStartColumnIndex = 0;
+            ResetHeroDeltas();
             return;
         }
 
-        var visibleSnapshots = FilterSnapshotsBySelectedRange(orderedSnapshots);
-        filteredSnapshots.AddRange(visibleSnapshots);
-
-        var allTimeTotalsBySnapshotId = new Dictionary<int, decimal>();
-
         foreach (var snapshot in orderedSnapshots)
         {
-            allTimeTotalsBySnapshotId[snapshot.Id] = snapshot.AccountBalances.Sum(b => b.Balance);
+            totalsBySnapshotId[snapshot.Id] = snapshot.AccountBalances.Sum(b => b.Balance);
             allTimeTrendPoints.Add(new SnapshotTrendPoint(
                 snapshot.Date.ToString("MMM dd, yyyy"),
-                allTimeTotalsBySnapshotId[snapshot.Id]));
+                totalsBySnapshotId[snapshot.Id]));
         }
+
+        latestTotal = totalsBySnapshotId[orderedSnapshots[^1].Id];
+        ComputeHeroDeltas(orderedSnapshots);
+
+        var visibleRangeSnapshots = FilterSnapshotsBySelectedRange(orderedSnapshots);
+        filteredSnapshots.AddRange(visibleRangeSnapshots);
 
         foreach (var snapshot in filteredSnapshots)
         {
-            totalsBySnapshotId[snapshot.Id] = snapshot.AccountBalances.Sum(b => b.Balance);
             rangeTrendPoints.Add(new SnapshotTrendPoint(
                 snapshot.Date.ToString("MMM dd, yyyy"),
                 totalsBySnapshotId[snapshot.Id]));
         }
 
-        latestTotal = filteredSnapshots.Count > 0
-            ? totalsBySnapshotId[filteredSnapshots[^1].Id]
-            : 0m;
-
-        previousTotal = filteredSnapshots.Count > 1
-            ? totalsBySnapshotId[filteredSnapshots[^2].Id]
-            : 0m;
-
-        activeAccountCount = filteredSnapshots
-            .SelectMany(s => s.AccountBalances)
-            .Select(b => b.Account.Id)
-            .Distinct()
-            .Count();
-
         var accountLookup = accounts.ToDictionary(a => a.Id);
 
-        var rows = filteredSnapshots
+        var rows = orderedSnapshots
             .SelectMany(s => s.AccountBalances)
             .GroupBy(b => b.Account.Id)
             .Select(group =>
@@ -640,18 +729,41 @@
             .ToList();
 
         matrixGroups.AddRange(groupedRows);
-        ResetMatrixPagingToLatest();
 
         var groupNames = matrixGroups
             .Select(group => group.AccountTypeGroupName)
             .Distinct()
             .ToList();
 
+        if (!groupNames.Contains(selectedHeroGroupName, StringComparer.OrdinalIgnoreCase))
+        {
+            selectedHeroGroupName = groupNames.FirstOrDefault(name => string.Equals(name, "Investments", StringComparison.OrdinalIgnoreCase))
+                ?? groupNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).FirstOrDefault()
+                ?? string.Empty;
+        }
+
         foreach (var groupName in groupNames)
         {
             var rangePoints = BuildGroupTrendPoints(filteredSnapshots, groupName);
             var allTimePoints = BuildGroupTrendPoints(orderedSnapshots, groupName);
             accountTypeGroupCharts.Add(new AccountTypeGroupTrendChart(groupName, rangePoints, allTimePoints));
+        }
+
+        milestoneSeries.Add(BuildMilestoneSeries("Net Worth", orderedSnapshots, s => s.AccountBalances.Sum(b => b.Balance)));
+        foreach (var groupName in groupNames)
+        {
+            milestoneSeries.Add(BuildMilestoneSeries(
+                groupName,
+                orderedSnapshots,
+                s => s.AccountBalances
+                    .Where(b => string.Equals(b.Account.Type.Group.Name, groupName, StringComparison.OrdinalIgnoreCase))
+                    .Sum(b => b.Balance)));
+        }
+
+        foreach (var series in milestoneSeries)
+        {
+            if (series.YearRows.Count > 0 && !series.YearRows.Any(row => expandedMilestoneYears.Contains((series.Name, row.Year))))
+                expandedMilestoneYears.Add((series.Name, series.YearRows[0].Year));
         }
     }
 
@@ -695,6 +807,220 @@
             .ToList();
     }
 
+    private void ComputeHeroDeltas(List<FinanceSnapshotResponse> orderedSnapshots)
+    {
+        var latest = orderedSnapshots[^1];
+        var latestValue = totalsBySnapshotId[latest.Id];
+
+        var previous = orderedSnapshots.Count > 1 ? orderedSnapshots[^2] : null;
+        sinceLastEntryBaselineSnapshotId = previous?.Id;
+        sinceLastEntryDelta = previous is not null
+            ? BuildHeroDelta(latestValue, totalsBySnapshotId[previous.Id])
+            : null;
+
+        var yearStart = new DateOnly(latest.Date.Year, 1, 1);
+        var ytdBaseline = orderedSnapshots.LastOrDefault(s => s.Date < yearStart);
+        ytdBaselineSnapshotId = ytdBaseline?.Id;
+        ytdDelta = ytdBaseline is not null
+            ? BuildHeroDelta(latestValue, totalsBySnapshotId[ytdBaseline.Id])
+            : null;
+
+        var oneYearThreshold = latest.Date.AddYears(-1);
+        var oneYearBaseline = orderedSnapshots.LastOrDefault(s => s.Date <= oneYearThreshold);
+        oneYearBaselineSnapshotId = oneYearBaseline?.Id;
+        oneYearDelta = oneYearBaseline is not null
+            ? BuildHeroDelta(latestValue, totalsBySnapshotId[oneYearBaseline.Id])
+            : null;
+    }
+
+    private void ResetHeroDeltas()
+    {
+        sinceLastEntryDelta = null;
+        ytdDelta = null;
+        oneYearDelta = null;
+        sinceLastEntryBaselineSnapshotId = null;
+        ytdBaselineSnapshotId = null;
+        oneYearBaselineSnapshotId = null;
+    }
+
+    private static HeroDelta BuildHeroDelta(decimal current, decimal baseline)
+    {
+        var amount = current - baseline;
+        decimal? percent = baseline != 0m ? amount / Math.Abs(baseline) * 100m : null;
+        return new HeroDelta(amount, percent);
+    }
+
+    private IReadOnlyList<HeroChip> GetHeroChips()
+    {
+        return
+        [
+            new HeroChip("Since Last Entry", sinceLastEntryDelta, GetGroupHeroDelta(sinceLastEntryBaselineSnapshotId)),
+            new HeroChip("Year to Date", ytdDelta, GetGroupHeroDelta(ytdBaselineSnapshotId)),
+            new HeroChip("1 Year", oneYearDelta, GetGroupHeroDelta(oneYearBaselineSnapshotId))
+        ];
+    }
+
+    private decimal GetHeroSecondMetricTotal()
+    {
+        if (matrixSnapshots.Count == 0)
+            return 0m;
+
+        var group = matrixGroups.FirstOrDefault(g => g.AccountTypeGroupName == selectedHeroGroupName);
+        return group is null ? 0m : GetGroupTotal(group, matrixSnapshots[^1].Id);
+    }
+
+    private HeroDelta? GetGroupHeroDelta(int? baselineSnapshotId)
+    {
+        if (baselineSnapshotId is null || matrixSnapshots.Count == 0)
+            return null;
+
+        var group = matrixGroups.FirstOrDefault(g => g.AccountTypeGroupName == selectedHeroGroupName);
+        if (group is null)
+            return null;
+
+        var latestValue = GetGroupTotal(group, matrixSnapshots[^1].Id);
+        var baselineValue = GetGroupTotal(group, baselineSnapshotId.Value);
+        return BuildHeroDelta(latestValue, baselineValue);
+    }
+
+    private static HeroDelta? GetTrendDelta(IReadOnlyList<SnapshotTrendPoint> points)
+    {
+        if (points.Count < 2)
+            return null;
+
+        return BuildHeroDelta(points[^1].Total, points[0].Total);
+    }
+
+    private static MilestoneSeries BuildMilestoneSeries(string name, List<FinanceSnapshotResponse> orderedSnapshots, Func<FinanceSnapshotResponse, decimal> valueSelector)
+    {
+        var points = orderedSnapshots
+            .Select(s => new SeriesPoint(s.Date, s.Id, valueSelector(s)))
+            .ToList();
+
+        var first = orderedSnapshots[0].Date;
+        var last = orderedSnapshots[^1].Date;
+        var (year, quarter) = (first.Year, (first.Month - 1) / 3 + 1);
+        var (lastYear, lastQuarter) = (last.Year, (last.Month - 1) / 3 + 1);
+
+        var quarterPeriods = new List<QuarterPeriod>();
+
+        while (year < lastYear || (year == lastYear && quarter <= lastQuarter))
+        {
+            var quarterEnd = GetQuarterEndDate(year, quarter);
+            var value = ComputePeriodValue(points, quarterEnd);
+            var priorTotal = quarterPeriods.Count > 0 ? quarterPeriods[^1].EndTotal : null;
+            quarterPeriods.Add(new QuarterPeriod(year, quarter, value.Total, priorTotal, value.DetailSnapshotId, value.IsInterpolated));
+
+            quarter++;
+            if (quarter > 4)
+            {
+                quarter = 1;
+                year++;
+            }
+        }
+
+        var yearRows = new List<MilestoneYearRow>();
+        var currentYear = DateTime.Today.Year;
+        decimal? priorYearEnd = null;
+
+        foreach (var yearGroup in quarterPeriods.GroupBy(q => q.Year).OrderBy(g => g.Key))
+        {
+            var yearEnd = new DateOnly(yearGroup.Key, 12, 31);
+            var yearValue = ComputePeriodValue(points, yearEnd);
+            var quartersDescending = yearGroup.OrderByDescending(q => q.Quarter).ToList();
+
+            yearRows.Add(new MilestoneYearRow(
+                yearGroup.Key,
+                yearGroup.Key == currentYear,
+                yearValue.Total,
+                priorYearEnd,
+                yearValue.DetailSnapshotId,
+                yearValue.IsInterpolated,
+                quartersDescending));
+
+            if (yearValue.Total is { } endTotal)
+                priorYearEnd = endTotal;
+        }
+
+        yearRows.Reverse();
+        return new MilestoneSeries(name, yearRows);
+    }
+
+    private static DateOnly GetQuarterEndDate(int year, int quarter)
+    {
+        var endMonth = quarter * 3;
+        return new DateOnly(year, endMonth, DateTime.DaysInMonth(year, endMonth));
+    }
+
+    // Finds the two closest snapshot points bracketing the target date and linearly interpolates between them;
+    // falls back to carrying forward the last known value when there's nothing past the target date yet.
+    private static PeriodValue ComputePeriodValue(List<SeriesPoint> points, DateOnly target)
+    {
+        SeriesPoint? before = null;
+        SeriesPoint? after = null;
+
+        foreach (var point in points)
+        {
+            if (point.Date <= target)
+            {
+                before = point;
+                continue;
+            }
+
+            after = point;
+            break;
+        }
+
+        if (before is not { } beforePoint)
+            return new PeriodValue(null, null, false);
+
+        if (beforePoint.Date == target || after is null)
+            return new PeriodValue(beforePoint.Total, beforePoint.Id, false);
+
+        var afterPoint = after.Value;
+        var totalDays = afterPoint.Date.DayNumber - beforePoint.Date.DayNumber;
+        var elapsedDays = target.DayNumber - beforePoint.Date.DayNumber;
+        var fraction = totalDays == 0 ? 0m : (decimal)elapsedDays / totalDays;
+        var interpolated = beforePoint.Total + fraction * (afterPoint.Total - beforePoint.Total);
+
+        return new PeriodValue(interpolated, beforePoint.Id, true);
+    }
+
+    private void ToggleMilestoneYear(string seriesName, int year)
+    {
+        var key = (seriesName, year);
+        if (!expandedMilestoneYears.Add(key))
+            expandedMilestoneYears.Remove(key);
+    }
+
+    private bool IsMilestoneYearExpanded(string seriesName, int year) => expandedMilestoneYears.Contains((seriesName, year));
+
+    private CellDeltaDisplay GetMilestoneDeltaDisplay(decimal? current, decimal? prior)
+    {
+        if (!current.HasValue || !prior.HasValue)
+            return new CellDeltaDisplay("-", "amount-muted");
+
+        var delta = current.Value - prior.Value;
+        if (delta == 0m)
+            return new CellDeltaDisplay(FormatCurrency(0m), "amount-muted");
+
+        var percent = prior.Value != 0m ? delta / Math.Abs(prior.Value) * 100m : (decimal?)null;
+        var text = percent.HasValue
+            ? $"{FormatDeltaCurrency(delta)} ({FormatPercent(percent)})"
+            : FormatDeltaCurrency(delta);
+
+        return new CellDeltaDisplay(text, GetDeltaClass(delta));
+    }
+
+    private static string FormatPercent(decimal? percent)
+    {
+        if (!percent.HasValue)
+            return "-";
+
+        var sign = percent.Value > 0 ? "+" : string.Empty;
+        return $"{sign}{percent.Value.ToString("0.0", CultureInfo.InvariantCulture)}%";
+    }
+
     private decimal GetSnapshotTotal(int snapshotId)
     {
         var total = totalsBySnapshotId.TryGetValue(snapshotId, out var existingTotal)
@@ -719,14 +1045,19 @@
         return value.ToString("C");
     }
 
-    private static ApexChartOptions<SnapshotTrendPoint> CreateCurrencyChartOptions()
-    {
-        const string currencyFormatter = "function (value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value); }";
+    private const string CurrencyFormatter = "function (value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value); }";
 
+    private static ApexChartOptions<SnapshotTrendPoint> CreateCurrencyChartOptions(bool stacked = false)
+    {
         return new ApexChartOptions<SnapshotTrendPoint>
         {
             Chart = new Chart
             {
+                Stacked = stacked,
+                Animations = new Animations
+                {
+                    Enabled = false
+                },
                 Toolbar = new Toolbar
                 {
                     Show = false
@@ -751,7 +1082,7 @@
                 {
                     Labels = new YAxisLabels
                     {
-                        Formatter = currencyFormatter
+                        Formatter = CurrencyFormatter
                     }
                 }
             },
@@ -759,7 +1090,29 @@
             {
                 Y = new TooltipY
                 {
-                    Formatter = currencyFormatter
+                    Formatter = CurrencyFormatter
+                }
+            }
+        };
+    }
+
+    private static ApexChartOptions<SnapshotTrendPoint> CreateSparklineChartOptions()
+    {
+        return new ApexChartOptions<SnapshotTrendPoint>
+        {
+            Chart = new Chart
+            {
+                Sparkline = new ChartSparkline { Enabled = true },
+                Animations = new Animations { Enabled = false },
+                Toolbar = new Toolbar { Show = false },
+                Zoom = new Zoom { Enabled = false },
+                Selection = new Selection { Enabled = false }
+            },
+            Tooltip = new Tooltip
+            {
+                Y = new TooltipY
+                {
+                    Formatter = CurrencyFormatter
                 }
             }
         };
@@ -777,52 +1130,14 @@
     }
 
     private IReadOnlyList<MatrixSnapshotColumn> GetVisibleMatrixSnapshots()
-    {
-        var columns = BuildMatrixColumns();
-        if (columns.Count == 0)
-            return [];
-
-        var start = Math.Clamp(matrixStartColumnIndex, 0, Math.Max(0, columns.Count - 1));
-        var count = Math.Min(MatrixColumnPageSize, columns.Count - start);
-        return columns.GetRange(start, count);
-    }
-
-    private void ResetMatrixPagingToLatest()
-    {
-        var columnCount = GetMatrixColumnCount();
-        matrixStartColumnIndex = columnCount <= MatrixColumnPageSize
-            ? 0
-            : columnCount - MatrixColumnPageSize;
-    }
-
-    private bool CanGoToPreviousMatrixPage()
-        => matrixStartColumnIndex > 0;
-
-    private bool CanGoToNextMatrixPage()
-        => GetMatrixColumnCount() > 0 && matrixStartColumnIndex + MatrixColumnPageSize < GetMatrixColumnCount();
-
-    private void PreviousMatrixPage()
-    {
-        if (!CanGoToPreviousMatrixPage())
-            return;
-
-        matrixStartColumnIndex = Math.Max(0, matrixStartColumnIndex - MatrixColumnPageSize);
-    }
-
-    private void NextMatrixPage()
-    {
-        if (!CanGoToNextMatrixPage())
-            return;
-
-        matrixStartColumnIndex = Math.Min(Math.Max(0, GetMatrixColumnCount() - MatrixColumnPageSize), matrixStartColumnIndex + MatrixColumnPageSize);
-    }
+        => BuildMatrixColumns();
 
     private int GetMatrixColumnCount()
-        => filteredSnapshots.Count + (hasPendingMatrixEntry ? 1 : 0);
+        => matrixSnapshots.Count + (hasPendingMatrixEntry ? 1 : 0);
 
     private List<MatrixSnapshotColumn> BuildMatrixColumns()
     {
-        var columns = filteredSnapshots
+        var columns = matrixSnapshots
             .Select(snapshot => new MatrixSnapshotColumn(snapshot.Id, snapshot.Date, false))
             .ToList();
 
@@ -887,12 +1202,12 @@
     private int? GetPreviousSnapshotId(int snapshotId)
     {
         if (snapshotId == PendingMatrixSnapshotId)
-            return filteredSnapshots.Count > 0 ? filteredSnapshots[^1].Id : null;
+            return matrixSnapshots.Count > 0 ? matrixSnapshots[^1].Id : null;
 
-        for (var index = 1; index < filteredSnapshots.Count; index++)
+        for (var index = 1; index < matrixSnapshots.Count; index++)
         {
-            if (filteredSnapshots[index].Id == snapshotId)
-                return filteredSnapshots[index - 1].Id;
+            if (matrixSnapshots[index].Id == snapshotId)
+                return matrixSnapshots[index - 1].Id;
         }
 
         return null;
@@ -1116,6 +1431,20 @@
         await LoadListAsync();
     }
 
+    private static void RemoveWhere(Dictionary<(int SnapshotId, int AccountId), decimal> source, Func<(int SnapshotId, int AccountId), bool> predicate)
+    {
+        var keys = source.Keys.Where(predicate).ToList();
+        foreach (var key in keys)
+            source.Remove(key);
+    }
+
+    private static void RemoveWhere(Dictionary<(int SnapshotId, int AccountId), string> source, Func<(int SnapshotId, int AccountId), bool> predicate)
+    {
+        var keys = source.Keys.Where(predicate).ToList();
+        foreach (var key in keys)
+            source.Remove(key);
+    }
+
     private sealed record AccountMatrixGroup(
         string AccountTypeGroupName,
         List<AccountMatrixRow> Rows);
@@ -1144,18 +1473,24 @@
         IReadOnlyList<SnapshotTrendPoint> RangePoints,
         IReadOnlyList<SnapshotTrendPoint> AllTimePoints);
 
+    private sealed record HeroDelta(decimal Amount, decimal? Percent);
 
-    private static void RemoveWhere(Dictionary<(int SnapshotId, int AccountId), decimal> source, Func<(int SnapshotId, int AccountId), bool> predicate)
-    {
-        var keys = source.Keys.Where(predicate).ToList();
-        foreach (var key in keys)
-            source.Remove(key);
-    }
+    private sealed record HeroChip(string Label, HeroDelta? NetWorthDelta, HeroDelta? GroupDelta);
 
-    private static void RemoveWhere(Dictionary<(int SnapshotId, int AccountId), string> source, Func<(int SnapshotId, int AccountId), bool> predicate)
-    {
-        var keys = source.Keys.Where(predicate).ToList();
-        foreach (var key in keys)
-            source.Remove(key);
-    }
+    private readonly record struct SeriesPoint(DateOnly Date, int Id, decimal Total);
+
+    private sealed record PeriodValue(decimal? Total, int? DetailSnapshotId, bool IsInterpolated);
+
+    private sealed record QuarterPeriod(int Year, int Quarter, decimal? EndTotal, decimal? PriorTotal, int? DetailSnapshotId, bool IsInterpolated);
+
+    private sealed record MilestoneYearRow(
+        int Year,
+        bool IsCurrentYear,
+        decimal? EndTotal,
+        decimal? PriorYearEndTotal,
+        int? DetailSnapshotId,
+        bool IsInterpolated,
+        List<QuarterPeriod> Quarters);
+
+    private sealed record MilestoneSeries(string Name, List<MilestoneYearRow> YearRows);
 }

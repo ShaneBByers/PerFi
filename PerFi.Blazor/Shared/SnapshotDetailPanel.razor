@@ -1,0 +1,92 @@
+@using PerFi.Blazor.Contracts
+
+@if (Snapshot is not null)
+{
+    <section class="snapshot-detail-panel">
+        <div class="section-header snapshot-detail-header">
+            <div>
+                <h2>Snapshot Detail</h2>
+                <p>@Snapshot.Date.ToString("MMMM dd, yyyy")</p>
+            </div>
+            <div class="snapshot-detail-actions">
+                <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => OnDelete.InvokeAsync(Snapshot.Id)">Delete Entry</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="() => OnClose.InvokeAsync()">Close</button>
+            </div>
+        </div>
+
+        <div class="snapshot-detail-allocation" aria-label="Allocation by account type group">
+            @foreach (var group in GetGroupBreakdown())
+            {
+                <div class="allocation-row">
+                    <div class="allocation-row-label">
+                        <span>@group.GroupName</span>
+                        <span class="allocation-row-value">@FormatCurrency(group.Total)</span>
+                    </div>
+                    <div class="allocation-bar-track">
+                        <div class="allocation-bar-fill" style="width: @(group.Percentage.ToString("0.#"))%"></div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Institution</th>
+                        <th>Type</th>
+                        <th>Group</th>
+                        <th class="text-end">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var balance in Snapshot.AccountBalances.OrderBy(b => b.Account.Name))
+                    {
+                        <tr>
+                            <td>@balance.Account.Name</td>
+                            <td>@balance.Account.Institution.Name</td>
+                            <td>@balance.Account.Type.Name</td>
+                            <td>@balance.Account.Type.Group.Name</td>
+                            <td class="text-end">@FormatCurrency(balance.Balance)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public FinanceSnapshotResponse? Snapshot { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDelete { get; set; }
+
+    private IReadOnlyList<GroupBreakdown> GetGroupBreakdown()
+    {
+        if (Snapshot is null)
+            return [];
+
+        var total = Snapshot.AccountBalances.Sum(b => b.Balance);
+
+        return Snapshot.AccountBalances
+            .GroupBy(b => b.Account.Type.Group.Name)
+            .Select(group =>
+            {
+                var groupTotal = group.Sum(b => b.Balance);
+                var percentage = total == 0m ? 0m : Math.Max(0m, groupTotal / total * 100m);
+                return new GroupBreakdown(group.Key, groupTotal, percentage);
+            })
+            .OrderByDescending(group => group.Total)
+            .ToList();
+    }
+
+    private static string FormatCurrency(decimal value) => value.ToString("C");
+
+    private sealed record GroupBreakdown(string GroupName, decimal Total, decimal Percentage);
+}
