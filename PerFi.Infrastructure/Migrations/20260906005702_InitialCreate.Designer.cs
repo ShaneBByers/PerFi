@@ -12,8 +12,8 @@ using PerFi.Infrastructure;
 namespace PerFi.Infrastructure.Migrations
 {
     [DbContext(typeof(PerFiDbContext))]
-    [Migration("20260830003818_FixContributionEntity")]
-    partial class FixContributionEntity
+    [Migration("20260906005702_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -190,6 +190,55 @@ namespace PerFi.Infrastructure.Migrations
                     b.ToTable("AccountBalances");
                 });
 
+            modelBuilder.Entity("PerFi.Infrastructure.Entities.AccountContributionPlanEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ContributorType")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("DollarAmountAnnual")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DollarAmountAnnualIncrease")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DollarAmountPerPayCycle")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DollarAmountPerPayCycleAnnualIncrease")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateOnly>("EffectiveDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("PercentageAnnual")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("PercentageAnnualIncrease")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("PercentagePerPayCycle")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("PercentagePerPayCycleAnnualIncrease")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "ContributorType", "EffectiveDate")
+                        .IsUnique();
+
+                    b.ToTable("AccountContributionPlans");
+                });
+
             modelBuilder.Entity("PerFi.Infrastructure.Entities.AccountEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -203,6 +252,9 @@ namespace PerFi.Infrastructure.Migrations
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("ExpectedAnnualGrowthPercentage")
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int>("InstitutionId")
                         .HasColumnType("int");
@@ -351,33 +403,6 @@ namespace PerFi.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("PerFi.Infrastructure.Entities.ContributionContributorEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ContributionContributors");
-                });
-
             modelBuilder.Entity("PerFi.Infrastructure.Entities.ContributionEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -392,7 +417,7 @@ namespace PerFi.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ContributorId")
+                    b.Property<int>("Contributor")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("Date")
@@ -405,8 +430,6 @@ namespace PerFi.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("ContributorId");
 
                     b.HasIndex("UserId");
 
@@ -460,6 +483,32 @@ namespace PerFi.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Institutions");
+                });
+
+            modelBuilder.Entity("PerFi.Infrastructure.Entities.SalaryProgressionEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AnnualSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateOnly>("EffectiveDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "EffectiveDate")
+                        .IsUnique();
+
+                    b.ToTable("SalaryProgressions");
                 });
 
             modelBuilder.Entity("PerFi.Infrastructure.Entities.TransactionCategoryEntity", b =>
@@ -569,6 +618,41 @@ namespace PerFi.Infrastructure.Migrations
                     b.ToTable("Transactions");
                 });
 
+            modelBuilder.Entity("PerFi.Infrastructure.Entities.UserConfigurationEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("BirthDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("ExpectedAnnualInflationPercentage")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("ExpectedAnnualSalaryRaisePercentage")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("PayCycleType")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("ReferencePayDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserConfigurations");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -645,6 +729,17 @@ namespace PerFi.Infrastructure.Migrations
                     b.Navigation("FinanceSnapshot");
                 });
 
+            modelBuilder.Entity("PerFi.Infrastructure.Entities.AccountContributionPlanEntity", b =>
+                {
+                    b.HasOne("PerFi.Infrastructure.Entities.AccountEntity", "Account")
+                        .WithMany("ContributionPlans")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("PerFi.Infrastructure.Entities.AccountEntity", b =>
                 {
                     b.HasOne("PerFi.Infrastructure.Entities.AccountTypeEntity", "AccountType")
@@ -696,26 +791,11 @@ namespace PerFi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PerFi.Infrastructure.Entities.ContributionContributorEntity", b =>
-                {
-                    b.HasOne("PerFi.Infrastructure.Entities.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("PerFi.Infrastructure.Entities.ContributionEntity", b =>
                 {
                     b.HasOne("PerFi.Infrastructure.Entities.AccountEntity", "Account")
                         .WithMany("Contributions")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PerFi.Infrastructure.Entities.ContributionContributorEntity", "Contributor")
-                        .WithMany("Contributions")
-                        .HasForeignKey("ContributorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -726,8 +806,6 @@ namespace PerFi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
-
-                    b.Navigation("Contributor");
                 });
 
             modelBuilder.Entity("PerFi.Infrastructure.Entities.FinanceSnapshotEntity", b =>
@@ -740,6 +818,15 @@ namespace PerFi.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("PerFi.Infrastructure.Entities.InstitutionEntity", b =>
+                {
+                    b.HasOne("PerFi.Infrastructure.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PerFi.Infrastructure.Entities.SalaryProgressionEntity", b =>
                 {
                     b.HasOne("PerFi.Infrastructure.Entities.ApplicationUser", null)
                         .WithMany()
@@ -803,9 +890,20 @@ namespace PerFi.Infrastructure.Migrations
                     b.Navigation("TransactionCategory");
                 });
 
+            modelBuilder.Entity("PerFi.Infrastructure.Entities.UserConfigurationEntity", b =>
+                {
+                    b.HasOne("PerFi.Infrastructure.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PerFi.Infrastructure.Entities.AccountEntity", b =>
                 {
                     b.Navigation("AccountBalances");
+
+                    b.Navigation("ContributionPlans");
 
                     b.Navigation("Contributions");
 
@@ -820,11 +918,6 @@ namespace PerFi.Infrastructure.Migrations
             modelBuilder.Entity("PerFi.Infrastructure.Entities.AccountTypeGroupEntity", b =>
                 {
                     b.Navigation("AccountTypes");
-                });
-
-            modelBuilder.Entity("PerFi.Infrastructure.Entities.ContributionContributorEntity", b =>
-                {
-                    b.Navigation("Contributions");
                 });
 
             modelBuilder.Entity("PerFi.Infrastructure.Entities.FinanceSnapshotEntity", b =>
