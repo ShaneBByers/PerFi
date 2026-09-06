@@ -23,6 +23,17 @@
       "problemMatcher": "$msCompile"
     },
     {
+      "label": "run-tests",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["test", "${workspaceFolder}/PerFi.slnx", "--verbosity", "minimal"],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
       "label": "Publish + Deploy API to Azure",
       "type": "shell",
       "command": "bash ./scripts/publish-api-azure.sh && bash ./scripts/deploy-api-azure.sh",

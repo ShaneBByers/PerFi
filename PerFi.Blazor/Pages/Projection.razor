@@ -1,4 +1,4 @@
-@page "/projection"
+@page "/projection/{Section?}"
 @attribute [Authorize]
 @inject INetWorthProjectionApiClient NetWorthProjectionApiClient
 @inject IToastService ToastService
@@ -75,11 +75,6 @@
     @if (!isLoading && yearRows.Count > 0)
     {
         <div class="projection-shell">
-            <nav class="projection-nav" aria-label="Projection sections">
-                <button class="projection-nav-item @(activeSection == "trends" ? "active" : null)" type="button" @onclick='() => SetSection("trends")'>Trends</button>
-                <button class="projection-nav-item @(activeSection == "detail" ? "active" : null)" type="button" @onclick='() => SetSection("detail")'>Detail</button>
-            </nav>
-
             <div class="projection-content">
                 @if (activeSection == "trends")
                 {
@@ -249,7 +244,12 @@
 
     private const string CurrencyFormatter = "function (value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value); }";
 
+    [Parameter]
+    public string? Section { get; set; }
+
     protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    protected override void OnParametersSet() => activeSection = Section ?? "trends";
 
     private async Task LoadAsync()
     {
@@ -454,8 +454,6 @@
 
     private string GetDollarViewClass(bool todaysDollars) =>
         useTodaysDollars == todaysDollars ? "btn btn-sm btn-primary" : "btn btn-sm btn-outline-secondary";
-
-    private void SetSection(string section) => activeSection = section;
 
     private void ToggleYear(int year)
     {

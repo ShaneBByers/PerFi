@@ -1,4 +1,4 @@
-@page "/settings"
+@page "/settings/{Section?}"
 @attribute [Authorize]
 @inject IUserConfigurationApiClient UserConfigurationApiClient
 @inject ISalaryProgressionsApiClient SalaryProgressionsApiClient
@@ -27,31 +27,6 @@
 
 
     <div class="settings-shell">
-        <nav class="settings-nav" aria-label="Settings sections">
-            <div class="settings-nav-group">
-                <div class="settings-nav-group-title">Profile</div>
-                <button class="settings-nav-item @(activeSection == "profile" ? "active" : null)" type="button" @onclick='() => SetSection("profile")'>Personal Info</button>
-                <button class="settings-nav-item @(activeSection == "salary" ? "active" : null)" type="button" @onclick='() => SetSection("salary")'>
-                    Salary History <span class="settings-nav-count">@salaryProgressions.Count</span>
-                </button>
-            </div>
-            <div class="settings-nav-group">
-                <div class="settings-nav-group-title">Net Worth Setup</div>
-                <button class="settings-nav-item @(activeSection == "accounts" ? "active" : null)" type="button" @onclick='() => SetSection("accounts")'>
-                    Accounts <span class="settings-nav-count">@accounts.Count</span>
-                </button>
-                <button class="settings-nav-item @(activeSection == "account-types" ? "active" : null)" type="button" @onclick='() => SetSection("account-types")'>
-                    Account Types <span class="settings-nav-count">@accountTypeGroups.Count</span>
-                </button>
-            </div>
-            <div class="settings-nav-group">
-                <div class="settings-nav-group-title">Cash Flow Setup</div>
-                <button class="settings-nav-item @(activeSection == "transaction-categories" ? "active" : null)" type="button" @onclick='() => SetSection("transaction-categories")'>
-                    Transaction Categories <span class="settings-nav-count">@transactionCategories.Count</span>
-                </button>
-            </div>
-        </nav>
-
         <div class="settings-content">
             @if (activeSection == "profile")
             {
@@ -966,7 +941,12 @@
     private bool isSubmitting;
     private string activeSection = "profile";
 
+    [Parameter]
+    public string? Section { get; set; }
+
     protected override async Task OnInitializedAsync() => await LoadAllAsync();
+
+    protected override void OnParametersSet() => activeSection = Section ?? "profile";
 
     private async Task LoadAllAsync()
     {
@@ -1033,8 +1013,6 @@
             isLoading = false;
         }
     }
-
-    private void SetSection(string section) => activeSection = section;
 
     private void ToggleAccountTypeGroupExpanded(int groupId)
     {

@@ -1,6 +1,7 @@
-@page "/cash-flow"
+@page "/cash-flow/{Section?}"
 @attribute [Authorize]
 @using System.Globalization
+@inject NavigationManager NavigationManager
 @inject ITransactionsApiClient TransactionsApiClient
 @inject IContributionsApiClient ContributionsApiClient
 @inject ITransactionCategoriesApiClient TransactionCategoriesApiClient
@@ -98,13 +99,6 @@
     </header>
 
     <div class="cash-flow-shell">
-        <nav class="cash-flow-nav" aria-label="Cash flow sections">
-            <button class="cash-flow-nav-item @(activeSection == "overview" ? "active" : null)" type="button" @onclick='() => SetSection("overview")'>Overview</button>
-            <button class="cash-flow-nav-item @(activeSection == "transactions" ? "active" : null)" type="button" @onclick='() => SetSection("transactions")'>Transactions</button>
-            <button class="cash-flow-nav-item @(activeSection == "contributions" ? "active" : null)" type="button" @onclick='() => SetSection("contributions")'>Contributions</button>
-            <button class="cash-flow-nav-item @(activeSection == "categories" ? "active" : null)" type="button" @onclick='() => SetSection("categories")'>Categories</button>
-        </nav>
-
         <div class="cash-flow-content">
             <LoadingState IsVisible="@isLoading" />
 
@@ -731,7 +725,12 @@
         }
     }
 
+    [Parameter]
+    public string? Section { get; set; }
+
     protected override async Task OnInitializedAsync() => await LoadAllAsync();
+
+    protected override void OnParametersSet() => activeSection = Section ?? "overview";
 
     private async Task LoadAllAsync()
     {
@@ -765,8 +764,6 @@
             isLoading = false;
         }
     }
-
-    private void SetSection(string section) => activeSection = section;
 
     private void ToggleRangePicker() => showRangePicker = !showRangePicker;
 
@@ -855,7 +852,7 @@
     {
         categoryGroupFilterId = transactionCategories.FirstOrDefault(c => c.Id == categoryId)?.Group.Id ?? 0;
         categoryFilterId = categoryId;
-        activeSection = "transactions";
+        NavigationManager.NavigateTo("/cash-flow/transactions");
     }
 
     private void ClearCategoryFilters()

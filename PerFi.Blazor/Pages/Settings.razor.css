@@ -26,73 +26,6 @@
     gap: 0.5rem;
 }
 
-.settings-shell {
-    display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
-    gap: 1.25rem;
-    align-items: start;
-}
-
-.settings-nav {
-    display: grid;
-    gap: 1.1rem;
-    position: sticky;
-    top: 5.5rem;
-    border: 1px solid var(--pf-border-soft);
-    background: var(--pf-bg-elevated);
-    border-radius: 14px;
-    padding: 1rem 0.75rem;
-}
-
-.settings-nav-group {
-    display: grid;
-    gap: 0.2rem;
-}
-
-.settings-nav-group-title {
-    color: var(--pf-text-tertiary);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0.3rem 0.6rem;
-}
-
-.settings-nav-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--pf-text-secondary);
-    padding: 0.5rem 0.6rem;
-    font-weight: 600;
-    text-align: left;
-}
-
-.settings-nav-item:hover {
-    color: var(--pf-text-primary);
-    background: var(--pf-surface-subtle);
-}
-
-.settings-nav-item.active {
-    color: var(--pf-text-primary);
-    border-color: var(--pf-accent);
-    background: var(--pf-accent-muted);
-}
-
-.settings-nav-count {
-    color: var(--pf-text-tertiary);
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-
-.settings-nav-item.active .settings-nav-count {
-    color: var(--pf-text-secondary);
-}
-
 .settings-content {
     min-width: 0;
 }
@@ -204,16 +137,3 @@
     padding-left: 2.1rem;
 }
 
-@media (max-width: 991px) {
-    .settings-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .settings-nav {
-        position: static;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        overflow-x: auto;
-        gap: 1rem;
-    }
-}

@@ -1,0 +1,314 @@
+.side-nav {
+    --side-nav-width: 15rem;
+    --side-nav-width-collapsed: 4.25rem;
+
+    width: var(--side-nav-width);
+    flex: 0 0 auto;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0.75rem;
+    border-right: 1px solid var(--pf-border-strong);
+    background: linear-gradient(180deg, rgba(13, 17, 27, 0.95), rgba(13, 17, 27, 0.86));
+    backdrop-filter: blur(10px);
+    transition: width 0.18s ease;
+    z-index: 100;
+}
+
+.side-nav.collapsed {
+    width: var(--side-nav-width-collapsed);
+}
+
+.side-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0 0.35rem;
+}
+
+.brand-mark {
+    color: var(--pf-text-primary);
+    text-decoration: none;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-size: 1.12rem;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.collapse-toggle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--pf-border);
+    border-radius: 8px;
+    background: var(--pf-surface-subtle);
+    color: var(--pf-text-secondary);
+}
+
+.collapse-toggle:hover {
+    color: var(--pf-text-primary);
+}
+
+.side-nav.collapsed .collapse-toggle svg {
+    transform: rotate(180deg);
+}
+
+.side-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.nav-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.side-nav-links ::deep .nav-item,
+.side-nav-footer ::deep .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.55rem 0.6rem;
+    color: var(--pf-text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    width: 100%;
+    background: transparent;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.side-nav-links ::deep .nav-item:hover,
+.side-nav-footer ::deep .nav-item:hover {
+    color: var(--pf-text-primary);
+    background: var(--pf-surface-subtle);
+}
+
+.side-nav-links ::deep .nav-item.active {
+    color: var(--pf-text-primary);
+    border-color: var(--pf-accent);
+    background: var(--pf-accent-muted);
+}
+
+.nav-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.nav-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.side-nav.collapsed .nav-label,
+.side-nav.collapsed .brand-mark {
+    display: none;
+}
+
+.nav-subitems {
+    display: none;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding-left: 1.9rem;
+    margin: 0.15rem 0 0.35rem;
+}
+
+.side-nav:not(.collapsed) .nav-subitems--active {
+    display: flex;
+}
+
+/* Collapsed rail: reveal a floating flyout of sub-links, driven by explicit hover/focus tracking in
+   code (see SideNav.razor's hoveredGroup/focusedGroup) rather than :hover/:focus-within - reacting to
+   the pseudo-classes directly made a click-to-close unfixable, since hiding the flyout changes what's
+   under the pointer, which just re-triggers the pseudo-class and reopens it. */
+.side-nav.collapsed .nav-group--open .nav-subitems {
+    display: flex;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin: 0 0 0 0.5rem;
+    padding: 0.4rem;
+    min-width: 11rem;
+    border: 1px solid var(--pf-border-soft);
+    border-radius: 10px;
+    background: var(--pf-bg-elevated);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    z-index: 300;
+}
+
+/* Invisible hit-area bridging the gap between the icon and the flyout, so hover isn't lost while moving the pointer across it */
+.side-nav.collapsed .nav-subitems::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -0.5rem;
+    width: 0.5rem;
+}
+
+.side-nav.collapsed .nav-group--footer.nav-group--open .nav-subitems {
+    top: auto;
+    bottom: 0;
+}
+
+/* Names the page a collapsed-rail flyout belongs to; hidden in expanded mode since the nav-item label already shows it */
+.nav-subitems-header {
+    display: none;
+    padding: 0 0.6rem 0.4rem;
+    margin-bottom: 0.2rem;
+    border-bottom: 1px solid var(--pf-border-soft);
+    color: var(--pf-text-tertiary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.side-nav.collapsed .nav-group--open .nav-subitems-header {
+    display: block;
+}
+
+.nav-subitems ::deep .nav-subitem {
+    display: block;
+    border-radius: 8px;
+    padding: 0.38rem 0.6rem;
+    color: var(--pf-text-tertiary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-subitems ::deep .nav-subitem:hover {
+    color: var(--pf-text-primary);
+    background: var(--pf-surface-subtle);
+}
+
+.nav-subitems ::deep .nav-subitem.active {
+    color: var(--pf-text-primary);
+    background: var(--pf-accent-muted);
+}
+
+.side-nav-footer {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--pf-border-soft);
+}
+
+.nav-subitems--footer {
+    padding-left: 0.6rem;
+}
+
+.side-nav-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.side-nav-footer-row ::deep .nav-item {
+    flex: 1 1 auto;
+    justify-content: center;
+}
+
+.side-nav-footer-row ::deep .nav-item--icon-only {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    justify-content: center;
+    padding: 0.55rem;
+}
+
+/* Collapsed rail: stack Settings and Sign out vertically instead of squeezing them side by side */
+.side-nav.collapsed .side-nav-footer-row {
+    flex-direction: column;
+}
+
+.side-nav.collapsed .side-nav-footer-row ::deep .nav-item {
+    flex: 0 0 auto;
+    width: 2.4rem;
+}
+
+.mobile-nav-toggle {
+    display: none;
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 210;
+    width: 2.75rem;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--pf-border);
+    border-radius: 999px;
+    background: var(--pf-bg-elevated);
+    color: var(--pf-text-primary);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.nav-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 880px) {
+    .nav-backdrop {
+        display: block;
+    }
+
+    .side-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .side-nav.mobile-open {
+        transform: translateX(0);
+    }
+
+    .side-nav.collapsed {
+        width: var(--side-nav-width);
+    }
+
+    .side-nav.collapsed .nav-label,
+    .side-nav.collapsed .brand-mark {
+        display: unset;
+    }
+
+    .side-nav.collapsed .nav-subitems--active {
+        display: flex;
+    }
+
+    .collapse-toggle {
+        display: none;
+    }
+
+    .mobile-nav-toggle {
+        display: flex;
+    }
+}

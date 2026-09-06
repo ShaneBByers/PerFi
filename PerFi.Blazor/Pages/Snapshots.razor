@@ -1,6 +1,7 @@
-@page "/snapshots"
+@page "/snapshots/{Section?}"
 @attribute [Authorize]
 @using System.Globalization
+@inject NavigationManager NavigationManager
 @inject ISnapshotsApiClient SnapshotsApiClient
 @inject IAccountsApiClient AccountsApiClient
 @inject IJSRuntime JSRuntime
@@ -80,12 +81,6 @@
     </header>
 
     <div class="networth-shell">
-        <nav class="networth-nav" aria-label="Net worth sections">
-            <button class="networth-nav-item @(activeSection == "grid" ? "active" : null)" type="button" @onclick='() => SetSection("grid")'>Data Grid</button>
-            <button class="networth-nav-item @(activeSection == "trends" ? "active" : null)" type="button" @onclick='() => SetSection("trends")'>Trends</button>
-            <button class="networth-nav-item @(activeSection == "milestones" ? "active" : null)" type="button" @onclick='() => SetSection("milestones")'>Milestones</button>
-        </nav>
-
         <div class="networth-content">
             <LoadingState IsVisible="@isLoading" />
 
@@ -423,11 +418,16 @@
     private bool HasPendingMatrixEdits => matrixCellEdits.Count > 0;
     private bool HasMatrixValidationErrors => matrixCellValidationErrors.Count > 0;
 
+    [Parameter]
+    public string? Section { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadAccountsAsync();
         await LoadListAsync();
     }
+
+    protected override void OnParametersSet() => activeSection = Section ?? "grid";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -488,11 +488,6 @@
         {
             ToastService.ShowError(ex.Message);
         }
-    }
-
-    private void SetSection(string section)
-    {
-        activeSection = section;
     }
 
     private void StartNewMatrixEntry()

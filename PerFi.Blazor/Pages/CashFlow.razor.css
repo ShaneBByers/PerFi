@@ -150,47 +150,11 @@
     color: var(--pf-text-tertiary) !important;
 }
 
-/* Shell / sidebar nav */
+/* Shell / content wrapper */
 
 .cash-flow-shell {
     display: grid;
-    grid-template-columns: 200px minmax(0, 1fr);
     gap: 1.25rem;
-    align-items: start;
-}
-
-.cash-flow-nav {
-    display: grid;
-    gap: 0.2rem;
-    position: sticky;
-    top: 5.5rem;
-    border: 1px solid var(--pf-border-soft);
-    background: var(--pf-bg-elevated);
-    border-radius: 14px;
-    padding: 0.75rem;
-}
-
-.cash-flow-nav-item {
-    display: flex;
-    align-items: center;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--pf-text-secondary);
-    padding: 0.55rem 0.65rem;
-    font-weight: 600;
-    text-align: left;
-}
-
-.cash-flow-nav-item:hover {
-    color: var(--pf-text-primary);
-    background: var(--pf-surface-subtle);
-}
-
-.cash-flow-nav-item.active {
-    color: var(--pf-text-primary);
-    border-color: var(--pf-accent);
-    background: var(--pf-accent-muted);
 }
 
 .cash-flow-content {
@@ -427,18 +391,6 @@
 }
 
 @media (max-width: 991px) {
-    .cash-flow-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .cash-flow-nav {
-        position: static;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        overflow-x: auto;
-        gap: 0.4rem;
-    }
-
     .hero-top {
         grid-template-columns: 1fr;
     }
