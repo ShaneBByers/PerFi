@@ -11,9 +11,12 @@ namespace PerFi.Console.Operations;
 public sealed class ExportBackupOperation(
     UserManager<ApplicationUser> userManager,
     ConsoleCurrentUserService currentUser,
+    IUserConfigurationService userConfigurationService,
+    ISalaryProgressionService salaryProgressionService,
     IAccountTypeGroupService accountTypeGroupService,
     IAccountTypeService accountTypeService,
     IInstitutionService institutionService,
+    IAccountContributionPlanService accountContributionPlanService,
     IFinanceSnapshotService financeSnapshotService,
     ITransactionCategoryGroupService transactionCategoryGroupService,
     ITransactionCategoryService transactionCategoryService,
@@ -45,6 +48,18 @@ public sealed class ExportBackupOperation(
         var categories = await transactionCategoryService.GetAllTransactionCategoriesAsync(cancellationToken);
         var transactions = await transactionService.GetAllTransactionsAsync(cancellationToken);
         var contributions = await contributionService.GetAllContributionsAsync(cancellationToken);
+        var userConfiguration = await userConfigurationService.GetUserConfigurationAsync(cancellationToken);
+        var salaryProgressions = await salaryProgressionService.GetAllSalaryProgressionsAsync(cancellationToken);
+
+        var contributionPlansByAccountId = new Dictionary<int, IReadOnlyList<AccountContributionPlan>>();
+        foreach (var institution in institutions)
+        {
+            foreach (var account in institution.Accounts)
+            {
+                contributionPlansByAccountId[account.Id] =
+                    await accountContributionPlanService.GetAllByAccountIdAsync(account.Id, cancellationToken);
+            }
+        }
 
         var accountLookup = BuildAccountLookup(institutions);
 
@@ -52,8 +67,10 @@ public sealed class ExportBackupOperation(
             BackupDocument.CurrentSchemaVersion,
             DateTimeOffset.UtcNow,
             username,
+            BuildUserConfiguration(userConfiguration),
+            BuildSalaryProgressions(salaryProgressions),
             BuildAccountTypeGroups(accountTypeGroups, accountTypes),
-            BuildInstitutions(institutions),
+            BuildInstitutions(institutions, contributionPlansByAccountId),
             BuildFinanceSnapshots(snapshots, accountLookup),
             BuildTransactionCategoryGroups(categoryGroups, categories),
             BuildTransactions(transactions, accountLookup),
@@ -66,6 +83,8 @@ public sealed class ExportBackupOperation(
         }
 
         System.Console.WriteLine("Export summary");
+        System.Console.WriteLine($"User configuration: {(userConfiguration is null ? "none" : "1")}");
+        System.Console.WriteLine($"Salary progressions: {salaryProgressions.Count}");
         System.Console.WriteLine($"Account type groups: {accountTypeGroups.Count}");
         System.Console.WriteLine($"Institutions: {institutions.Count}");
         System.Console.WriteLine($"Snapshots: {snapshots.Count}");
@@ -102,7 +121,24 @@ public sealed class ExportBackupOperation(
                 .Where(type => type.Group.Id == group.Id)
                 .Select(type => new BackupAccountType(type.Name, type.DisplayOrder))]))];
 
-    private static IReadOnlyList<BackupInstitution> BuildInstitutions(IReadOnlyList<Institution> institutions)
+    private static BackupUserConfiguration? BuildUserConfiguration(UserConfiguration? userConfiguration)
+        => userConfiguration is null
+            ? null
+            : new BackupUserConfiguration(
+                userConfiguration.BirthDate,
+                userConfiguration.PayCycleType.ToString(),
+                userConfiguration.ReferencePayDate,
+                userConfiguration.ExpectedAnnualSalaryRaisePercentage,
+                userConfiguration.ExpectedAnnualInflationPercentage);
+
+    private static IReadOnlyList<BackupSalaryProgression> BuildSalaryProgressions(IReadOnlyList<SalaryProgression> salaryProgressions)
+        => [.. salaryProgressions
+            .OrderBy(progression => progression.EffectiveDate)
+            .Select(progression => new BackupSalaryProgression(progression.EffectiveDate, progression.AnnualSalary))];
+
+    private static IReadOnlyList<BackupInstitution> BuildInstitutions(
+        IReadOnlyList<Institution> institutions,
+        IReadOnlyDictionary<int, IReadOnlyList<AccountContributionPlan>> contributionPlansByAccountId)
         => [.. institutions.Select(institution => new BackupInstitution(
             institution.Name,
             institution.DisplayOrder,
@@ -110,7 +146,26 @@ public sealed class ExportBackupOperation(
                 account.Name,
                 account.DisplayOrder,
                 account.Type.Group.Name,
-                account.Type.Name))]))];
+                account.Type.Name,
+                account.ExpectedAnnualGrowthPercentage,
+                BuildAccountContributionPlans(contributionPlansByAccountId[account.Id])))]))];
+
+    private static IReadOnlyList<BackupAccountContributionPlan> BuildAccountContributionPlans(
+        IReadOnlyList<AccountContributionPlan> plans)
+        => [.. plans
+            .OrderBy(plan => plan.EffectiveDate)
+            .ThenBy(plan => plan.ContributorType)
+            .Select(plan => new BackupAccountContributionPlan(
+                plan.ContributorType.ToString(),
+                plan.EffectiveDate,
+                plan.DollarAmountPerPayCycle,
+                plan.DollarAmountPerPayCycleAnnualIncrease,
+                plan.DollarAmountAnnual,
+                plan.DollarAmountAnnualIncrease,
+                plan.PercentagePerPayCycle,
+                plan.PercentagePerPayCycleAnnualIncrease,
+                plan.PercentageAnnual,
+                plan.PercentageAnnualIncrease))];
 
     private static IReadOnlyList<BackupFinanceSnapshot> BuildFinanceSnapshots(
         IReadOnlyList<FinanceSnapshot> snapshots,

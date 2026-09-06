@@ -1,7 +1,24 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "exportedAtUtc": "2026-01-01T00:00:00+00:00",
   "username": "example",
+  "userConfiguration": {
+    "birthDate": "1985-06-15",
+    "payCycleType": "BiWeekly",
+    "referencePayDate": "2024-01-05",
+    "expectedAnnualSalaryRaisePercentage": 3,
+    "expectedAnnualInflationPercentage": 2.5
+  },
+  "salaryProgressions": [
+    {
+      "effectiveDate": "2023-01-01",
+      "annualSalary": 82000
+    },
+    {
+      "effectiveDate": "2024-01-01",
+      "annualSalary": 86000
+    }
+  ],
   "accountTypeGroups": [
     {
       "name": "Assets",
@@ -69,13 +86,17 @@
           "name": "Everyday Checking",
           "displayOrder": 1,
           "accountTypeGroup": "Assets",
-          "accountType": "Checking"
+          "accountType": "Checking",
+          "expectedAnnualGrowthPercentage": 0,
+          "contributionPlans": []
         },
         {
           "name": "Emergency Fund",
           "displayOrder": 2,
           "accountTypeGroup": "Assets",
-          "accountType": "Savings"
+          "accountType": "Savings",
+          "expectedAnnualGrowthPercentage": 2,
+          "contributionPlans": []
         }
       ]
     },
@@ -87,13 +108,17 @@
           "name": "High-Yield Savings",
           "displayOrder": 3,
           "accountTypeGroup": "Assets",
-          "accountType": "Savings"
+          "accountType": "Savings",
+          "expectedAnnualGrowthPercentage": 4,
+          "contributionPlans": []
         },
         {
           "name": "Cash Reserve",
           "displayOrder": 4,
           "accountTypeGroup": "Assets",
-          "accountType": "Money Market"
+          "accountType": "Money Market",
+          "expectedAnnualGrowthPercentage": 2,
+          "contributionPlans": []
         }
       ]
     },
@@ -105,13 +130,17 @@
           "name": "Rewards Visa",
           "displayOrder": 5,
           "accountTypeGroup": "Liabilities",
-          "accountType": "Credit Card"
+          "accountType": "Credit Card",
+          "expectedAnnualGrowthPercentage": 0,
+          "contributionPlans": []
         },
         {
           "name": "Home Equity Line",
           "displayOrder": 6,
           "accountTypeGroup": "Liabilities",
-          "accountType": "Line of Credit"
+          "accountType": "Line of Credit",
+          "expectedAnnualGrowthPercentage": 0,
+          "contributionPlans": []
         }
       ]
     },
@@ -123,13 +152,17 @@
           "name": "Everyday Checking",
           "displayOrder": 7,
           "accountTypeGroup": "Assets",
-          "accountType": "Checking"
+          "accountType": "Checking",
+          "expectedAnnualGrowthPercentage": 0,
+          "contributionPlans": []
         },
         {
           "name": "Travel Rewards Card",
           "displayOrder": 8,
           "accountTypeGroup": "Liabilities",
-          "accountType": "Credit Card"
+          "accountType": "Credit Card",
+          "expectedAnnualGrowthPercentage": 0,
+          "contributionPlans": []
         }
       ]
     },
@@ -141,13 +174,30 @@
           "name": "Brokerage Account",
           "displayOrder": 9,
           "accountTypeGroup": "Investments",
-          "accountType": "Brokerage"
+          "accountType": "Brokerage",
+          "expectedAnnualGrowthPercentage": 6.5,
+          "contributionPlans": []
         },
         {
           "name": "Roth IRA",
           "displayOrder": 10,
           "accountTypeGroup": "Retirement",
-          "accountType": "IRA"
+          "accountType": "IRA",
+          "expectedAnnualGrowthPercentage": 7,
+          "contributionPlans": [
+            {
+              "contributorType": "Self",
+              "effectiveDate": "2024-01-01",
+              "dollarAmountPerPayCycle": 250,
+              "dollarAmountPerPayCycleAnnualIncrease": 0,
+              "dollarAmountAnnual": 0,
+              "dollarAmountAnnualIncrease": 0,
+              "percentagePerPayCycle": 0,
+              "percentagePerPayCycleAnnualIncrease": 0,
+              "percentageAnnual": 0,
+              "percentageAnnualIncrease": 0
+            }
+          ]
         }
       ]
     },
@@ -159,13 +209,42 @@
           "name": "401k Rollover",
           "displayOrder": 11,
           "accountTypeGroup": "Retirement",
-          "accountType": "401k"
+          "accountType": "401k",
+          "expectedAnnualGrowthPercentage": 7,
+          "contributionPlans": [
+            {
+              "contributorType": "Self",
+              "effectiveDate": "2024-01-01",
+              "dollarAmountPerPayCycle": 0,
+              "dollarAmountPerPayCycleAnnualIncrease": 0,
+              "dollarAmountAnnual": 0,
+              "dollarAmountAnnualIncrease": 0,
+              "percentagePerPayCycle": 6,
+              "percentagePerPayCycleAnnualIncrease": 0.5,
+              "percentageAnnual": 0,
+              "percentageAnnualIncrease": 0
+            },
+            {
+              "contributorType": "Employer",
+              "effectiveDate": "2024-01-01",
+              "dollarAmountPerPayCycle": 0,
+              "dollarAmountPerPayCycleAnnualIncrease": 0,
+              "dollarAmountAnnual": 0,
+              "dollarAmountAnnualIncrease": 0,
+              "percentagePerPayCycle": 3,
+              "percentagePerPayCycleAnnualIncrease": 0,
+              "percentageAnnual": 0,
+              "percentageAnnualIncrease": 0
+            }
+          ]
         },
         {
           "name": "Taxable Brokerage",
           "displayOrder": 12,
           "accountTypeGroup": "Investments",
-          "accountType": "Brokerage"
+          "accountType": "Brokerage",
+          "expectedAnnualGrowthPercentage": 6.5,
+          "contributionPlans": []
         }
       ]
     }

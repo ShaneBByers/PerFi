@@ -15,10 +15,13 @@ public sealed class ImportBackupOperation(
     PerFiDbContext dbContext,
     UserManager<ApplicationUser> userManager,
     ConsoleCurrentUserService currentUser,
+    IUserConfigurationService userConfigurationService,
+    ISalaryProgressionService salaryProgressionService,
     IAccountTypeGroupService accountTypeGroupService,
     IAccountTypeService accountTypeService,
     IInstitutionService institutionService,
     IAccountService accountService,
+    IAccountContributionPlanService accountContributionPlanService,
     IFinanceSnapshotService financeSnapshotService,
     ITransactionCategoryGroupService transactionCategoryGroupService,
     ITransactionCategoryService transactionCategoryService,
@@ -94,10 +97,15 @@ public sealed class ImportBackupOperation(
             || await dbContext.FinanceSnapshots.AnyAsync(s => s.UserId == currentUser.UserId, cancellationToken)
             || await dbContext.TransactionCategoryGroups.AnyAsync(g => g.UserId == currentUser.UserId, cancellationToken)
             || await dbContext.Transactions.AnyAsync(t => t.UserId == currentUser.UserId, cancellationToken)
-            || await dbContext.Contributions.AnyAsync(c => c.UserId == currentUser.UserId, cancellationToken);
+            || await dbContext.Contributions.AnyAsync(c => c.UserId == currentUser.UserId, cancellationToken)
+            || await dbContext.UserConfigurations.AnyAsync(c => c.UserId == currentUser.UserId, cancellationToken)
+            || await dbContext.SalaryProgressions.AnyAsync(s => s.UserId == currentUser.UserId, cancellationToken);
 
     private async Task RestoreAsync(BackupDocument document, CancellationToken cancellationToken)
     {
+        await RestoreUserConfigurationAsync(document.UserConfiguration, cancellationToken);
+        await RestoreSalaryProgressionsAsync(document.SalaryProgressions ?? [], cancellationToken);
+
         var accountTypeGroupIds = await CreateAccountTypeGroupsAsync(document.AccountTypeGroups, cancellationToken);
         await ReorderAccountTypeGroupsAsync(document.AccountTypeGroups, accountTypeGroupIds, cancellationToken);
 
@@ -110,6 +118,8 @@ public sealed class ImportBackupOperation(
         var accountIds = await CreateAccountsAsync(document.Institutions, institutionIds, accountTypeIds, cancellationToken);
         await ReorderAccountsAsync(document.Institutions, accountIds, cancellationToken);
 
+        await CreateAccountContributionPlansAsync(document.Institutions, accountIds, cancellationToken);
+
         await CreateFinanceSnapshotsAsync(document.FinanceSnapshots, accountIds, cancellationToken);
 
         var categoryGroupIds = await CreateTransactionCategoryGroupsAsync(document.TransactionCategoryGroups, cancellationToken);
@@ -121,6 +131,97 @@ public sealed class ImportBackupOperation(
         await CreateTransactionsAsync(document.Transactions, categoryIds, accountIds, cancellationToken);
 
         await CreateContributionsAsync(document.Contributions, accountIds, cancellationToken);
+    }
+
+    private async Task RestoreUserConfigurationAsync(BackupUserConfiguration? userConfiguration, CancellationToken cancellationToken)
+    {
+        if (userConfiguration is null)
+            return;
+
+        if (!Enum.TryParse<PayCycleType>(userConfiguration.PayCycleType, ignoreCase: true, out var payCycleType))
+        {
+            throw new InvalidOperationException(
+                $"Unknown pay cycle type '{userConfiguration.PayCycleType}'. Expected one of: {string.Join(", ", Enum.GetNames<PayCycleType>())}.");
+        }
+
+        var result = await userConfigurationService.CreateUserConfigurationAsync(
+            new CreateUserConfigurationCommand(
+                userConfiguration.BirthDate,
+                payCycleType,
+                userConfiguration.ReferencePayDate,
+                userConfiguration.ExpectedAnnualSalaryRaisePercentage,
+                userConfiguration.ExpectedAnnualInflationPercentage),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException($"Failed to create user configuration: {result.Error}");
+
+        System.Console.WriteLine("Created user configuration.");
+    }
+
+    private async Task RestoreSalaryProgressionsAsync(IReadOnlyList<BackupSalaryProgression> salaryProgressions, CancellationToken cancellationToken)
+    {
+        foreach (var salaryProgression in salaryProgressions.OrderBy(progression => progression.EffectiveDate))
+        {
+            var result = await salaryProgressionService.CreateSalaryProgressionAsync(
+                new CreateSalaryProgressionCommand(salaryProgression.EffectiveDate, salaryProgression.AnnualSalary),
+                cancellationToken);
+
+            if (result.IsFailure)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to create salary progression for {salaryProgression.EffectiveDate:yyyy-MM-dd}: {result.Error}");
+            }
+        }
+
+        System.Console.WriteLine($"Created {salaryProgressions.Count} salary progressions.");
+    }
+
+    private async Task CreateAccountContributionPlansAsync(
+        IReadOnlyList<BackupInstitution> institutions,
+        IReadOnlyDictionary<string, int> accountIds,
+        CancellationToken cancellationToken)
+    {
+        var createdCount = 0;
+
+        foreach (var institution in institutions)
+        {
+            foreach (var account in institution.Accounts)
+            {
+                var accountId = accountIds[MakeAccountKey(institution.Name, account.Name)];
+
+                foreach (var plan in account.ContributionPlans ?? [])
+                {
+                    if (!Enum.TryParse<ContributionContributorType>(plan.ContributorType, ignoreCase: true, out var contributorType))
+                    {
+                        throw new InvalidOperationException(
+                            $"Unknown contributor type '{plan.ContributorType}' for account '{account.Name}'. Expected one of: {string.Join(", ", Enum.GetNames<ContributionContributorType>())}.");
+                    }
+
+                    var result = await accountContributionPlanService.CreateAsync(
+                        new CreateAccountContributionPlanCommand(
+                            accountId,
+                            contributorType,
+                            plan.EffectiveDate,
+                            plan.DollarAmountPerPayCycle,
+                            plan.DollarAmountPerPayCycleAnnualIncrease,
+                            plan.DollarAmountAnnual,
+                            plan.DollarAmountAnnualIncrease,
+                            plan.PercentagePerPayCycle,
+                            plan.PercentagePerPayCycleAnnualIncrease,
+                            plan.PercentageAnnual,
+                            plan.PercentageAnnualIncrease),
+                        cancellationToken);
+
+                    if (result.IsFailure)
+                        throw new InvalidOperationException($"Failed to create contribution plan for account '{account.Name}': {result.Error}");
+
+                    createdCount++;
+                }
+            }
+        }
+
+        System.Console.WriteLine($"Created {createdCount} account contribution plans.");
     }
 
     private async Task<Dictionary<string, int>> CreateAccountTypeGroupsAsync(
@@ -264,7 +365,7 @@ public sealed class ImportBackupOperation(
             {
                 var accountTypeId = accountTypeIds[NormalizeKey(account.AccountType)];
                 var result = await accountService.CreateAccountAsync(
-                    new CreateAccountCommand(account.Name, institutionId, accountTypeId, ExpectedAnnualGrowthPercentage: 0m),
+                    new CreateAccountCommand(account.Name, institutionId, accountTypeId, account.ExpectedAnnualGrowthPercentage),
                     cancellationToken);
 
                 if (result.IsFailure || result.Value is null)
@@ -467,6 +568,8 @@ public sealed class ImportBackupOperation(
         System.Console.WriteLine($"Backup exported at: {document.ExportedAtUtc:u}");
         System.Console.WriteLine($"Backup username: {document.Username}");
         System.Console.WriteLine($"Existing data for target user: {hasExistingData}");
+        System.Console.WriteLine($"User configuration: {(document.UserConfiguration is null ? "none" : "1")}");
+        System.Console.WriteLine($"Salary progressions: {document.SalaryProgressions?.Count ?? 0}");
         System.Console.WriteLine($"Account type groups: {document.AccountTypeGroups.Count}");
         System.Console.WriteLine($"Institutions: {document.Institutions.Count}");
         System.Console.WriteLine($"Snapshots: {document.FinanceSnapshots.Count}");

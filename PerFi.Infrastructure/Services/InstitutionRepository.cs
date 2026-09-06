@@ -37,7 +37,7 @@ internal class InstitutionRepository(
             .OrderBy(account => account.DisplayOrder)
             .ThenBy(account => account.Name)
             .ThenBy(account => account.Id)
-            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrder, account.InstitutionId, account.AccountTypeId))
+            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrder, account.InstitutionId, account.AccountTypeId, account.ExpectedAnnualGrowthPercentage))
             .ToListAsync(cancellationToken);
 
         var accountTypesById = accountTypeRows.ToDictionary(row => row.Id);
@@ -56,7 +56,8 @@ internal class InstitutionRepository(
 
                     return new Account(a.Id, a.Name, new AccountType(accountType.Id, accountType.Name, new AccountTypeGroup(accountTypeGroup.Id, accountTypeGroup.Name)), i.Id)
                 {
-                    DisplayOrder = a.DisplayOrder
+                    DisplayOrder = a.DisplayOrder,
+                    ExpectedAnnualGrowthPercentage = a.ExpectedAnnualGrowthPercentage
                 };
                 })]
                 : [])
@@ -81,7 +82,7 @@ internal class InstitutionRepository(
             .ThenBy(a => a.Name)
             .ThenBy(a => a.Id)
             .Where(account => account.InstitutionId == id)
-            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrder, account.InstitutionId, account.AccountTypeId))
+            .Select(account => new AccountRow(account.Id, account.Name, account.DisplayOrder, account.InstitutionId, account.AccountTypeId, account.ExpectedAnnualGrowthPercentage))
             .ToListAsync(cancellationToken);
 
         var accountTypeRows = await dbContext.AccountTypes
@@ -105,7 +106,8 @@ internal class InstitutionRepository(
 
                 return new Account(a.Id, a.Name, new AccountType(accountType.Id, accountType.Name, new AccountTypeGroup(accountTypeGroup.Id, accountTypeGroup.Name)), institutionEntity.Id)
             {
-                DisplayOrder = a.DisplayOrder
+                DisplayOrder = a.DisplayOrder,
+                ExpectedAnnualGrowthPercentage = a.ExpectedAnnualGrowthPercentage
             };
             })])
         {
@@ -225,7 +227,8 @@ internal class InstitutionRepository(
         string Name,
         int DisplayOrder,
         int InstitutionId,
-        int AccountTypeId);
+        int AccountTypeId,
+        decimal ExpectedAnnualGrowthPercentage);
 
     private sealed record AccountTypeRow(
         int Id,

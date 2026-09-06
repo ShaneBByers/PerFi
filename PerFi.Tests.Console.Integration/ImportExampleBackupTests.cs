@@ -40,6 +40,9 @@ public sealed class ImportExampleBackupTests
         Assert.Equal(17, await host.DbContext.TransactionCategories.CountAsync());
         Assert.Equal(72, await host.DbContext.Transactions.CountAsync());
         Assert.Equal(26, await host.DbContext.Contributions.CountAsync());
+        Assert.Equal(1, await host.DbContext.UserConfigurations.CountAsync());
+        Assert.Equal(2, await host.DbContext.SalaryProgressions.CountAsync());
+        Assert.Equal(3, await host.DbContext.AccountContributionPlans.CountAsync());
 
         var rentPayments = await host.DbContext.Transactions
             .Where(t => t.CounterpartyName == "Riverside Rentals LLC")

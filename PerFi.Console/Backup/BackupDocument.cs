@@ -10,6 +10,8 @@ public sealed record BackupDocument(
     string SchemaVersion,
     DateTimeOffset ExportedAtUtc,
     string Username,
+    BackupUserConfiguration? UserConfiguration,
+    IReadOnlyList<BackupSalaryProgression>? SalaryProgressions,
     IReadOnlyList<BackupAccountTypeGroup> AccountTypeGroups,
     IReadOnlyList<BackupInstitution> Institutions,
     IReadOnlyList<BackupFinanceSnapshot> FinanceSnapshots,
@@ -17,8 +19,17 @@ public sealed record BackupDocument(
     IReadOnlyList<BackupTransaction> Transactions,
     IReadOnlyList<BackupContribution> Contributions)
 {
-    public const string CurrentSchemaVersion = "1.0";
+    public const string CurrentSchemaVersion = "1.1";
 }
+
+public sealed record BackupUserConfiguration(
+    DateOnly BirthDate,
+    string PayCycleType,
+    DateOnly ReferencePayDate,
+    decimal ExpectedAnnualSalaryRaisePercentage,
+    decimal ExpectedAnnualInflationPercentage);
+
+public sealed record BackupSalaryProgression(DateOnly EffectiveDate, decimal AnnualSalary);
 
 public sealed record BackupAccountTypeGroup(string Name, int DisplayOrder, IReadOnlyList<BackupAccountType> AccountTypes);
 
@@ -26,7 +37,25 @@ public sealed record BackupAccountType(string Name, int DisplayOrder);
 
 public sealed record BackupInstitution(string Name, int DisplayOrder, IReadOnlyList<BackupAccount> Accounts);
 
-public sealed record BackupAccount(string Name, int DisplayOrder, string AccountTypeGroup, string AccountType);
+public sealed record BackupAccount(
+    string Name,
+    int DisplayOrder,
+    string AccountTypeGroup,
+    string AccountType,
+    decimal ExpectedAnnualGrowthPercentage,
+    IReadOnlyList<BackupAccountContributionPlan>? ContributionPlans);
+
+public sealed record BackupAccountContributionPlan(
+    string ContributorType,
+    DateOnly EffectiveDate,
+    decimal DollarAmountPerPayCycle,
+    decimal DollarAmountPerPayCycleAnnualIncrease,
+    decimal DollarAmountAnnual,
+    decimal DollarAmountAnnualIncrease,
+    decimal PercentagePerPayCycle,
+    decimal PercentagePerPayCycleAnnualIncrease,
+    decimal PercentageAnnual,
+    decimal PercentageAnnualIncrease);
 
 public sealed record BackupFinanceSnapshot(DateOnly Date, IReadOnlyList<BackupAccountBalance> AccountBalances);
 
