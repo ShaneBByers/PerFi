@@ -1,0 +1,437 @@
+@page "/projection"
+@attribute [Authorize]
+@inject INetWorthProjectionApiClient NetWorthProjectionApiClient
+
+<PageTitle>Projection</PageTitle>
+
+<div class="projection-page">
+    <header class="page-hero">
+        <div>
+            <h1>Projection</h1>
+            <p>Forward-looking net worth projection based on your accounts, contributions, and growth assumptions through retirement.</p>
+        </div>
+        <div class="hero-actions">
+            <div class="filter-presets" role="toolbar" aria-label="Dollar view">
+                <button class="@GetDollarViewClass(false)" type="button" @onclick="() => SetDollarView(false)">Nominal</button>
+                <button class="@GetDollarViewClass(true)" type="button" @onclick="() => SetDollarView(true)">Today's Dollars</button>
+            </div>
+            <button class="btn btn-outline-secondary" type="button" @onclick="LoadAsync" disabled="@isLoading">Refresh</button>
+        </div>
+    </header>
+
+    <ErrorState Message="@errorMessage" />
+    <LoadingState IsVisible="@isLoading" />
+    <EmptyState IsVisible="@(!isLoading && errorMessage is null && yearRows.Count == 0)" Message="Add accounts, a net worth entry, and complete Settings to see a projection." />
+
+    @if (!isLoading && yearRows.Count > 0)
+    {
+        <section class="summary-grid" aria-label="Projection highlights">
+            <article class="summary-card">
+                <span class="summary-label">Current Net Worth</span>
+                <strong>@FormatCurrency(currentNetWorth)</strong>
+            </article>
+            <article class="summary-card">
+                <span class="summary-label">Projected at Retirement (Age @retirementAge)</span>
+                <strong>@FormatCurrency(projectedAtRetirement)</strong>
+            </article>
+            <article class="summary-card">
+                <span class="summary-label">Total Projected Growth</span>
+                <strong class="@(totalProjectedGrowth >= 0 ? "positive" : "negative")">@FormatCurrency(totalProjectedGrowth)</strong>
+            </article>
+            <article class="summary-card">
+                <span class="summary-label">Years to Retirement</span>
+                <strong>@yearsToRetirement</strong>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="section-header group-select-header">
+                <div>
+                    <h2>Account Type Breakdown</h2>
+                    <p>Choose a group to drive the charts and table below.</p>
+                </div>
+                <select class="form-select group-select" @bind="selectedGroupName" @bind:after="OnGroupSelectionChanged">
+                    <option value="Total">Total</option>
+                    @foreach (var groupName in groupNames)
+                    {
+                        <option value="@groupName">@groupName</option>
+                    }
+                </select>
+            </div>
+        </section>
+
+        <section class="chart-panel">
+            <div class="section-header">
+                <h2>Composition Over Time (Annual)</h2>
+            </div>
+            <ApexChart TItem="CompositionPoint" Title="Net Worth Composition by Account Type" Height="320" Options="@CreateCompositionChartOptions()">
+                @foreach (var groupName in groupNames)
+                {
+                    <ApexPointSeries TItem="CompositionPoint"
+                                     Items="compositionPoints"
+                                     Name="@groupName"
+                                     SeriesType="SeriesType.Bar"
+                                     XValue="point => point.Label"
+                                     YValue="point => point.GetValue(groupName)" />
+                }
+            </ApexChart>
+        </section>
+
+        <section class="chart-panel">
+            <div class="section-header">
+                <h2>@selectedGroupName Trend (Annual)</h2>
+            </div>
+            <ApexChart TItem="TrendPoint" Title="@($"{selectedGroupName}: Contributions, Growth & Net Worth")" Height="320" Options="@CreateTrendChartOptions()">
+                <ApexPointSeries TItem="TrendPoint" Items="trendPoints" Name="Contributed" SeriesType="SeriesType.Bar" XValue="point => point.Label" YValue="point => point.Contributed" />
+                <ApexPointSeries TItem="TrendPoint" Items="trendPoints" Name="Growth" SeriesType="SeriesType.Bar" XValue="point => point.Label" YValue="point => point.Growth" />
+                <ApexPointSeries TItem="TrendPoint" Items="trendPoints" Name="Actual Net Worth" SeriesType="SeriesType.Line" XValue="point => point.Label" YValue="point => point.ActualFinal" />
+                <ApexPointSeries TItem="TrendPoint" Items="trendPoints" Name="Projected Net Worth" SeriesType="SeriesType.Line" XValue="point => point.Label" YValue="point => point.ProjectedFinal" />
+            </ApexChart>
+        </section>
+
+        <section class="panel">
+            <div class="section-header">
+                <h2>@selectedGroupName Detail (@(useTodaysDollars ? "Today's Dollars" : "Nominal"))</h2>
+                <p>Click a year to expand quarterly detail.</p>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle projection-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Period</th>
+                            <th>Age</th>
+                            <th class="text-end">Starting</th>
+                            <th class="text-end">Contributed</th>
+                            <th class="text-end">Growth</th>
+                            <th class="text-end">Final</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in yearRows)
+                        {
+                            var annualAmounts = GetAmounts(GetGroup(row.Annual, selectedGroupName));
+                            <tr class="year-row" @onclick="() => ToggleYear(row.Annual.CalendarYear)">
+                                <td>
+                                    <span class="expand-toggle @(IsExpanded(row.Annual.CalendarYear) ? "expanded" : null)" aria-hidden="true">&#9656;</span>
+                                </td>
+                                <td>@row.Annual.CalendarYear</td>
+                                <td>@row.Annual.UserAgeAtStart&ndash;@row.Annual.UserAgeAtEnd</td>
+                                <td class="text-end">@FormatCurrency(annualAmounts.StartingAmount)</td>
+                                <td class="text-end">@FormatCurrency(annualAmounts.ContributedAmount)</td>
+                                <td class="text-end @GetAmountClass(annualAmounts.GrowthAmount)">@FormatCurrency(annualAmounts.GrowthAmount)</td>
+                                <td class="text-end">@FormatCurrency(annualAmounts.FinalAmount)</td>
+                                <td><span class="@(row.Annual.IsProjected ? "badge-projected" : "badge-actual")">@(row.Annual.IsProjected ? "Projected" : "Actual")</span></td>
+                            </tr>
+
+                            @if (IsExpanded(row.Annual.CalendarYear))
+                            {
+                                @foreach (var quarter in row.Quarters)
+                                {
+                                    var quarterAmounts = GetAmounts(GetGroup(quarter, selectedGroupName));
+                                    <tr class="quarter-row">
+                                        <td></td>
+                                        <td>Q@(quarter.Quarter)</td>
+                                        <td>@quarter.UserAgeAtStart&ndash;@quarter.UserAgeAtEnd</td>
+                                        <td class="text-end">@FormatCurrency(quarterAmounts.StartingAmount)</td>
+                                        <td class="text-end">@FormatCurrency(quarterAmounts.ContributedAmount)</td>
+                                        <td class="text-end @GetAmountClass(quarterAmounts.GrowthAmount)">@FormatCurrency(quarterAmounts.GrowthAmount)</td>
+                                        <td class="text-end">@FormatCurrency(quarterAmounts.FinalAmount)</td>
+                                        <td><span class="@(quarter.IsProjected ? "badge-projected" : "badge-actual")">@(quarter.IsProjected ? "Projected" : "Actual")</span></td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        @if (accuracyRows.Count > 0)
+        {
+            <section class="panel">
+                <div class="section-header">
+                    <h2>Projection Accuracy: @selectedGroupName</h2>
+                    <p>How past projections compared to what actually happened, once each year completed.</p>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th class="text-end">Expected</th>
+                                <th class="text-end">Actual</th>
+                                <th class="text-end">Variance</th>
+                                <th class="text-end">Variance %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in accuracyRows)
+                            {
+                                <tr>
+                                    <td>@row.Year</td>
+                                    <td class="text-end">@FormatCurrency(row.ExpectedFinal)</td>
+                                    <td class="text-end">@FormatCurrency(row.ActualFinal)</td>
+                                    <td class="text-end @GetAmountClass(row.VarianceAmount)">@FormatCurrency(row.VarianceAmount)</td>
+                                    <td class="text-end @GetAmountClass(row.VarianceAmount)">@row.VariancePercent.ToString("+0.0%;-0.0%;0.0%")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
+    }
+</div>
+
+@code {
+    private readonly List<ProjectionPeriodResponse> allPeriods = [];
+    private readonly List<string> groupNames = [];
+    private readonly List<YearRow> yearRows = [];
+    private readonly HashSet<int> expandedYears = [];
+    private readonly List<CompositionPoint> compositionPoints = [];
+    private readonly List<TrendPoint> trendPoints = [];
+    private readonly List<AccuracyRow> accuracyRows = [];
+    private string selectedGroupName = "Total";
+    private bool useTodaysDollars;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private decimal currentNetWorth;
+    private decimal projectedAtRetirement;
+    private decimal totalProjectedGrowth;
+    private int retirementAge;
+    private int yearsToRetirement;
+
+    private const string CurrencyFormatter = "function (value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value); }";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            allPeriods.Clear();
+            allPeriods.AddRange(await NetWorthProjectionApiClient.GetProjectionAsync());
+            RebuildDerivedData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void RebuildDerivedData()
+    {
+        groupNames.Clear();
+        groupNames.AddRange(allPeriods
+            .SelectMany(period => period.Groups)
+            .Select(group => group.GroupName)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
+
+        if (selectedGroupName != "Total" && !groupNames.Contains(selectedGroupName, StringComparer.OrdinalIgnoreCase))
+            selectedGroupName = "Total";
+
+        yearRows.Clear();
+        foreach (var year in allPeriods.Select(period => period.CalendarYear).Distinct().OrderBy(year => year))
+        {
+            var annual = allPeriods.FirstOrDefault(period => period.PeriodType == ProjectionPeriodType.Annual && period.CalendarYear == year);
+            if (annual is null)
+                continue;
+
+            var quarters = allPeriods
+                .Where(period => period.PeriodType == ProjectionPeriodType.Quarterly && period.CalendarYear == year)
+                .OrderBy(period => period.Quarter)
+                .ToList();
+
+            yearRows.Add(new YearRow(annual, quarters));
+        }
+
+        RebuildCompositionPoints();
+        RebuildSelectionDependentData();
+    }
+
+    private void OnGroupSelectionChanged() => RebuildSelectionDependentData();
+
+    private void RebuildSelectionDependentData()
+    {
+        RebuildTrendPoints();
+        RebuildAccuracyRows();
+        RebuildSummaryMetrics();
+    }
+
+    private void RebuildCompositionPoints()
+    {
+        compositionPoints.Clear();
+
+        foreach (var row in yearRows)
+        {
+            var amountsByGroup = row.Annual.Groups.ToDictionary(
+                group => group.GroupName,
+                group => GetAmounts(group).FinalAmount,
+                StringComparer.OrdinalIgnoreCase);
+
+            compositionPoints.Add(new CompositionPoint(row.Annual.CalendarYear.ToString(), amountsByGroup));
+        }
+    }
+
+    private void RebuildTrendPoints()
+    {
+        trendPoints.Clear();
+
+        foreach (var row in yearRows)
+        {
+            var amounts = GetAmounts(GetGroup(row.Annual, selectedGroupName));
+
+            trendPoints.Add(new TrendPoint
+            {
+                Label = row.Annual.CalendarYear.ToString(),
+                Contributed = amounts.ContributedAmount,
+                Growth = amounts.GrowthAmount,
+                ActualFinal = row.Annual.IsProjected ? null : amounts.FinalAmount,
+                ProjectedFinal = row.Annual.IsProjected ? amounts.FinalAmount : null
+            });
+        }
+
+        // bridge the actual/projected series so the line connects at the historical-to-projected transition
+        for (var index = 1; index < trendPoints.Count; index++)
+        {
+            if (trendPoints[index].ProjectedFinal is not null && trendPoints[index - 1] is { ActualFinal: not null, ProjectedFinal: null } previous)
+                previous.ProjectedFinal = previous.ActualFinal;
+        }
+    }
+
+    private void RebuildAccuracyRows()
+    {
+        accuracyRows.Clear();
+
+        foreach (var row in yearRows.Where(row => !row.Annual.IsProjected))
+        {
+            var group = GetGroup(row.Annual, selectedGroupName);
+            var expected = GetExpectedAmounts(group);
+            if (expected is null)
+                continue;
+
+            var actualFinal = GetAmounts(group).FinalAmount;
+            var varianceAmount = actualFinal - expected.FinalAmount;
+            var variancePercent = expected.FinalAmount == 0m ? 0m : varianceAmount / expected.FinalAmount;
+
+            accuracyRows.Add(new AccuracyRow(row.Annual.CalendarYear, expected.FinalAmount, actualFinal, varianceAmount, variancePercent));
+        }
+    }
+
+    private void RebuildSummaryMetrics()
+    {
+        var latestHistoricalQuarter = allPeriods
+            .Where(period => period.PeriodType == ProjectionPeriodType.Quarterly && !period.IsProjected)
+            .OrderByDescending(period => period.PeriodEnd)
+            .FirstOrDefault();
+
+        var lastAnnual = yearRows.Count > 0 ? yearRows[^1].Annual : null;
+
+        currentNetWorth = latestHistoricalQuarter is null ? 0m : GetAmounts(GetGroup(latestHistoricalQuarter, selectedGroupName)).FinalAmount;
+        projectedAtRetirement = lastAnnual is null ? 0m : GetAmounts(GetGroup(lastAnnual, selectedGroupName)).FinalAmount;
+        retirementAge = lastAnnual?.UserAgeAtEnd ?? 0;
+        yearsToRetirement = lastAnnual is not null && latestHistoricalQuarter is not null
+            ? Math.Max(0, lastAnnual.UserAgeAtEnd - latestHistoricalQuarter.UserAgeAtEnd)
+            : 0;
+
+        totalProjectedGrowth = allPeriods
+            .Where(period => period.PeriodType == ProjectionPeriodType.Annual && period.IsProjected)
+            .Sum(period => GetAmounts(GetGroup(period, selectedGroupName)).GrowthAmount);
+    }
+
+    private static ProjectionGroupResponse GetGroup(ProjectionPeriodResponse period, string groupName)
+    {
+        if (groupName == "Total")
+            return period.Total;
+
+        return period.Groups.FirstOrDefault(group => string.Equals(group.GroupName, groupName, StringComparison.OrdinalIgnoreCase)) ?? period.Total;
+    }
+
+    private ProjectionAmountsResponse GetAmounts(ProjectionGroupResponse group) =>
+        useTodaysDollars ? group.AmountsInTodaysDollars : group.Amounts;
+
+    private ProjectionAmountsResponse? GetExpectedAmounts(ProjectionGroupResponse group) =>
+        useTodaysDollars ? group.ExpectedAmountsInTodaysDollars : group.ExpectedAmounts;
+
+    private void SetDollarView(bool todaysDollars)
+    {
+        useTodaysDollars = todaysDollars;
+        RebuildCompositionPoints();
+        RebuildSelectionDependentData();
+    }
+
+    private string GetDollarViewClass(bool todaysDollars) =>
+        useTodaysDollars == todaysDollars ? "btn btn-sm btn-primary" : "btn btn-sm btn-outline-secondary";
+
+    private void ToggleYear(int year)
+    {
+        if (!expandedYears.Add(year))
+            expandedYears.Remove(year);
+    }
+
+    private bool IsExpanded(int year) => expandedYears.Contains(year);
+
+    private static string FormatCurrency(decimal value) => value.ToString("C");
+
+    private static string GetAmountClass(decimal value) => value switch
+    {
+        > 0m => "amount-positive",
+        < 0m => "amount-negative",
+        _ => "amount-muted"
+    };
+
+    private static ApexChartOptions<CompositionPoint> CreateCompositionChartOptions() => new()
+    {
+        Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+            Stacked = true,
+            Zoom = new Zoom { Enabled = false },
+            Selection = new Selection { Enabled = false }
+        },
+        Xaxis = new XAxis { TickPlacement = TickPlacement.On },
+        Yaxis = new List<YAxis> { new() { Labels = new YAxisLabels { Formatter = CurrencyFormatter } } },
+        Tooltip = new Tooltip { Y = new TooltipY { Formatter = CurrencyFormatter } }
+    };
+
+    private static ApexChartOptions<TrendPoint> CreateTrendChartOptions() => new()
+    {
+        Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+            Zoom = new Zoom { Enabled = false },
+            Selection = new Selection { Enabled = false }
+        },
+        Xaxis = new XAxis { TickPlacement = TickPlacement.On },
+        Yaxis = new List<YAxis> { new() { Labels = new YAxisLabels { Formatter = CurrencyFormatter } } },
+        Tooltip = new Tooltip { Y = new TooltipY { Formatter = CurrencyFormatter } }
+    };
+
+    private sealed record YearRow(ProjectionPeriodResponse Annual, IReadOnlyList<ProjectionPeriodResponse> Quarters);
+
+    private sealed record CompositionPoint(string Label, IReadOnlyDictionary<string, decimal> AmountsByGroup)
+    {
+        public decimal GetValue(string groupName) => AmountsByGroup.TryGetValue(groupName, out var value) ? value : 0m;
+    }
+
+    private sealed class TrendPoint
+    {
+        public required string Label { get; init; }
+        public decimal Contributed { get; init; }
+        public decimal Growth { get; init; }
+        public decimal? ActualFinal { get; set; }
+        public decimal? ProjectedFinal { get; set; }
+    }
+
+    private sealed record AccuracyRow(int Year, decimal ExpectedFinal, decimal ActualFinal, decimal VarianceAmount, decimal VariancePercent);
+}

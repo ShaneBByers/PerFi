@@ -70,3 +70,37 @@ public sealed record TransactionCategoryResponse(int Id, string Name, int Displa
 public sealed record TransactionCategoryIdentityResponse(int Id, string Name, TransactionCategoryGroupIdentityResponse Group);
 
 public sealed record TransactionResponse(int Id, DateOnly Date, string CounterpartyName, decimal Amount, string? Description, TransactionCategoryIdentityResponse Category, AccountIdentityResponse Account);
+
+// Mirrors PerFi.Domain.Entities.Projections.ProjectionPeriodType; ordinal values must stay in sync since the wire format is numeric.
+public enum ProjectionPeriodType
+{
+    Annual,
+    Quarterly
+}
+
+public sealed record ProjectionAmountsResponse(
+    decimal StartingAmount,
+    decimal ContributedAmount,
+    decimal GrowthAmount,
+    decimal FinalAmount);
+
+public sealed record ProjectionGroupResponse(
+    string GroupName,
+    ProjectionAmountsResponse Amounts,
+    ProjectionAmountsResponse AmountsInTodaysDollars,
+    ProjectionAmountsResponse? ExpectedAmounts,
+    ProjectionAmountsResponse? ExpectedAmountsInTodaysDollars);
+
+public sealed record ProjectionPeriodResponse(
+    ProjectionPeriodType PeriodType,
+    DateOnly PeriodStart,
+    DateOnly PeriodEnd,
+    int CalendarYear,
+    int? Quarter,
+    bool IsProjected,
+    int UserAgeAtStart,
+    int UserAgeAtEnd,
+    decimal SalaryAtStart,
+    decimal SalaryAtEnd,
+    IReadOnlyList<ProjectionGroupResponse> Groups,
+    ProjectionGroupResponse Total);

@@ -107,6 +107,12 @@ builder.Services.AddHttpClient<ITransactionsApiClient, TransactionsApiClient>(cl
 }).AddHttpMessageHandler<CookieRequestHandler>()
 	.AddHttpMessageHandler<AuthMessageHandler>();
 
+builder.Services.AddHttpClient<INetWorthProjectionApiClient, NetWorthProjectionApiClient>(client =>
+{
+	client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<CookieRequestHandler>()
+	.AddHttpMessageHandler<AuthMessageHandler>();
+
 await builder.Build().RunAsync();
 
 static string ResolveApiBaseUrl(string? configuredBaseUrl, IWebAssemblyHostEnvironment hostEnvironment)
