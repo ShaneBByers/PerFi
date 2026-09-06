@@ -22,6 +22,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISalaryProgressionService, SalaryProgressionService>();
         services.AddScoped<IAccountContributionPlanService, AccountContributionPlanService>();
         services.AddScoped<IUserConfigurationService, UserConfigurationService>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<INetWorthProjectionService, NetWorthProjectionService>();
 
         return services;
     }

@@ -6,6 +6,7 @@ public sealed record AccountContributionPlanResponse(
     int Id,
     int AccountId,
     ContributionContributorType ContributorType,
+    DateOnly EffectiveDate,
     decimal DollarAmountPerPayCycle,
     decimal DollarAmountPerPayCycleAnnualIncrease,
     decimal DollarAmountAnnual,

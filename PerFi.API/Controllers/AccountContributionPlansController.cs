@@ -43,6 +43,7 @@ public class AccountContributionPlansController(IAccountContributionPlanService 
         var command = new CreateAccountContributionPlanCommand(
             accountId,
             request.ContributorType,
+            request.EffectiveDate,
             request.DollarAmountPerPayCycle,
             request.DollarAmountPerPayCycleAnnualIncrease,
             request.DollarAmountAnnual,
@@ -77,6 +78,7 @@ public class AccountContributionPlansController(IAccountContributionPlanService 
             id,
             accountId,
             request.ContributorType,
+            request.EffectiveDate,
             request.DollarAmountPerPayCycle,
             request.DollarAmountPerPayCycleAnnualIncrease,
             request.DollarAmountAnnual,
@@ -113,6 +115,7 @@ public class AccountContributionPlansController(IAccountContributionPlanService 
         plan.Id,
         plan.AccountId,
         plan.ContributorType,
+        plan.EffectiveDate,
         plan.DollarAmountPerPayCycle,
         plan.DollarAmountPerPayCycleAnnualIncrease,
         plan.DollarAmountAnnual,

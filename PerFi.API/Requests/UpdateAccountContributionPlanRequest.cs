@@ -4,6 +4,7 @@ namespace PerFi.API.Requests;
 
 public record UpdateAccountContributionPlanRequest(
     ContributionContributorType ContributorType,
+    DateOnly EffectiveDate,
     decimal DollarAmountPerPayCycle,
     decimal DollarAmountPerPayCycleAnnualIncrease,
     decimal DollarAmountAnnual,

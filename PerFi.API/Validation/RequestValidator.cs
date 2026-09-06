@@ -108,6 +108,7 @@ public static class RequestValidator
     {
         return ValidateAccountContributionPlanFields(
             request.ContributorType,
+            request.EffectiveDate,
             request.DollarAmountPerPayCycle,
             request.DollarAmountPerPayCycleAnnualIncrease,
             request.DollarAmountAnnual,
@@ -122,6 +123,7 @@ public static class RequestValidator
     {
         return ValidateAccountContributionPlanFields(
             request.ContributorType,
+            request.EffectiveDate,
             request.DollarAmountPerPayCycle,
             request.DollarAmountPerPayCycleAnnualIncrease,
             request.DollarAmountAnnual,
@@ -280,6 +282,7 @@ public static class RequestValidator
 
     private static IReadOnlyDictionary<string, string[]> ValidateAccountContributionPlanFields(
         ContributionContributorType contributorType,
+        DateOnly effectiveDate,
         decimal dollarAmountPerPayCycle,
         decimal dollarAmountPerPayCycleAnnualIncrease,
         decimal dollarAmountAnnual,
@@ -293,6 +296,9 @@ public static class RequestValidator
 
         if (!Enum.IsDefined(contributorType))
             errors[nameof(contributorType)] = ["Contributor type must be a valid contribution contributor type."];
+
+        if (effectiveDate == default)
+            errors[nameof(effectiveDate)] = ["Effective date is required."];
 
         if (dollarAmountPerPayCycle < 0)
             errors[nameof(dollarAmountPerPayCycle)] = ["Dollar amount per pay cycle cannot be negative."];

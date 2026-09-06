@@ -5,6 +5,7 @@ public sealed record AccountContributionPlan
     public int Id { get; set; }
     public int AccountId { get; }
     public ContributionContributorType ContributorType { get; }
+    public DateOnly EffectiveDate { get; }
     public decimal DollarAmountPerPayCycle { get; }
     public decimal DollarAmountPerPayCycleAnnualIncrease { get; }
     public decimal DollarAmountAnnual { get; }
@@ -17,6 +18,7 @@ public sealed record AccountContributionPlan
     public AccountContributionPlan(
         int accountId,
         ContributionContributorType contributorType,
+        DateOnly effectiveDate,
         decimal dollarAmountPerPayCycle,
         decimal dollarAmountPerPayCycleAnnualIncrease,
         decimal dollarAmountAnnual,
@@ -32,8 +34,12 @@ public sealed record AccountContributionPlan
         if (!Enum.IsDefined(contributorType))
             throw new ArgumentOutOfRangeException(nameof(contributorType), "Contributor type must be a valid contribution contributor type.");
 
+        if (effectiveDate == default)
+            throw new ArgumentOutOfRangeException(nameof(effectiveDate), "Effective date must be provided.");
+
         AccountId = accountId;
         ContributorType = contributorType;
+        EffectiveDate = effectiveDate;
         DollarAmountPerPayCycle = dollarAmountPerPayCycle;
         DollarAmountPerPayCycleAnnualIncrease = dollarAmountPerPayCycleAnnualIncrease;
         DollarAmountAnnual = dollarAmountAnnual;
@@ -48,6 +54,7 @@ public sealed record AccountContributionPlan
         int id,
         int accountId,
         ContributionContributorType contributorType,
+        DateOnly effectiveDate,
         decimal dollarAmountPerPayCycle,
         decimal dollarAmountPerPayCycleAnnualIncrease,
         decimal dollarAmountAnnual,
@@ -59,6 +66,7 @@ public sealed record AccountContributionPlan
         : this(
             accountId,
             contributorType,
+            effectiveDate,
             dollarAmountPerPayCycle,
             dollarAmountPerPayCycleAnnualIncrease,
             dollarAmountAnnual,

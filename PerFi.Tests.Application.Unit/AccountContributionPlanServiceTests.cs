@@ -11,12 +11,12 @@ namespace PerFi.Tests.Application.Unit;
 public class AccountContributionPlanServiceTests
 {
     private static CreateAccountContributionPlanCommand CreateCommand(int accountId = 1)
-        => new(accountId, ContributionContributorType.Self, 100m, 10m, 0m, 0m, 0m, 0m, 0m, 0m);
+        => new(accountId, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 10m, 0m, 0m, 0m, 0m, 0m, 0m);
 
     [Fact]
     public async Task GetAllByAccountIdAsync_DelegatesToRepository()
     {
-        var plans = new List<AccountContributionPlan> { new(1, 1, ContributionContributorType.Self, 100m, 0, 0, 0, 0, 0, 0, 0) };
+        var plans = new List<AccountContributionPlan> { new(1, 1, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0, 0, 0, 0, 0, 0, 0) };
         var repo = new Mock<IAccountContributionPlanRepository>();
         repo.Setup(r => r.GetAllByAccountIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(plans);
 

@@ -17,11 +17,37 @@ internal class AccountContributionPlanRepository(
             .AsNoTracking()
             .Where(plan => plan.AccountId == accountId && plan.Account.UserId == currentUserService.UserId)
             .OrderBy(plan => plan.ContributorType)
+            .ThenBy(plan => plan.EffectiveDate)
             .ThenBy(plan => plan.Id)
             .Select(plan => new AccountContributionPlan(
                 plan.Id,
                 plan.AccountId,
                 plan.ContributorType,
+                plan.EffectiveDate,
+                plan.DollarAmountPerPayCycle,
+                plan.DollarAmountPerPayCycleAnnualIncrease,
+                plan.DollarAmountAnnual,
+                plan.DollarAmountAnnualIncrease,
+                plan.PercentagePerPayCycle,
+                plan.PercentagePerPayCycleAnnualIncrease,
+                plan.PercentageAnnual,
+                plan.PercentageAnnualIncrease))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AccountContributionPlan>> GetAllForCurrentUserAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.AccountContributionPlans
+            .AsNoTracking()
+            .Where(plan => plan.Account.UserId == currentUserService.UserId)
+            .OrderBy(plan => plan.AccountId)
+            .ThenBy(plan => plan.ContributorType)
+            .ThenBy(plan => plan.EffectiveDate)
+            .Select(plan => new AccountContributionPlan(
+                plan.Id,
+                plan.AccountId,
+                plan.ContributorType,
+                plan.EffectiveDate,
                 plan.DollarAmountPerPayCycle,
                 plan.DollarAmountPerPayCycleAnnualIncrease,
                 plan.DollarAmountAnnual,
@@ -56,10 +82,12 @@ internal class AccountContributionPlanRepository(
             return Result<int>.Failure($"Account with ID '{plan.AccountId}' does not exist.");
 
         if (await dbContext.AccountContributionPlans.AnyAsync(
-                existing => existing.AccountId == plan.AccountId && existing.ContributorType == plan.ContributorType,
+                existing => existing.AccountId == plan.AccountId
+                            && existing.ContributorType == plan.ContributorType
+                            && existing.EffectiveDate == plan.EffectiveDate,
                 cancellationToken))
         {
-            return Result<int>.Failure($"A contribution plan for contributor type '{plan.ContributorType}' already exists for this account.");
+            return Result<int>.Failure($"A contribution plan for contributor type '{plan.ContributorType}' effective '{plan.EffectiveDate}' already exists for this account.");
         }
 
         var entity = new AccountContributionPlanEntity
@@ -67,6 +95,7 @@ internal class AccountContributionPlanRepository(
             AccountId = account.Id,
             Account = account,
             ContributorType = plan.ContributorType,
+            EffectiveDate = plan.EffectiveDate,
             DollarAmountPerPayCycle = plan.DollarAmountPerPayCycle,
             DollarAmountPerPayCycleAnnualIncrease = plan.DollarAmountPerPayCycleAnnualIncrease,
             DollarAmountAnnual = plan.DollarAmountAnnual,
@@ -96,13 +125,15 @@ internal class AccountContributionPlanRepository(
         if (await dbContext.AccountContributionPlans.AnyAsync(
                 existing => existing.AccountId == plan.AccountId
                             && existing.ContributorType == plan.ContributorType
+                            && existing.EffectiveDate == plan.EffectiveDate
                             && existing.Id != plan.Id,
                 cancellationToken))
         {
-            return Result.Failure($"A contribution plan for contributor type '{plan.ContributorType}' already exists for this account.");
+            return Result.Failure($"A contribution plan for contributor type '{plan.ContributorType}' effective '{plan.EffectiveDate}' already exists for this account.");
         }
 
         entity.ContributorType = plan.ContributorType;
+        entity.EffectiveDate = plan.EffectiveDate;
         entity.DollarAmountPerPayCycle = plan.DollarAmountPerPayCycle;
         entity.DollarAmountPerPayCycleAnnualIncrease = plan.DollarAmountPerPayCycleAnnualIncrease;
         entity.DollarAmountAnnual = plan.DollarAmountAnnual;
@@ -139,6 +170,7 @@ internal class AccountContributionPlanRepository(
             entity.Id,
             entity.AccountId,
             entity.ContributorType,
+            entity.EffectiveDate,
             entity.DollarAmountPerPayCycle,
             entity.DollarAmountPerPayCycleAnnualIncrease,
             entity.DollarAmountAnnual,

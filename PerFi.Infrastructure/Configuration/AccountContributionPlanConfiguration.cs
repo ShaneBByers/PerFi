@@ -17,7 +17,7 @@ internal sealed class AccountContributionPlanConfiguration : IEntityTypeConfigur
         entity.Property(plan => plan.PercentageAnnual).HasColumnType("decimal(18,4)");
         entity.Property(plan => plan.PercentageAnnualIncrease).HasColumnType("decimal(18,4)");
 
-        entity.HasIndex(plan => new { plan.AccountId, plan.ContributorType })
+        entity.HasIndex(plan => new { plan.AccountId, plan.ContributorType, plan.EffectiveDate })
             .IsUnique();
 
         entity.HasOne(plan => plan.Account)

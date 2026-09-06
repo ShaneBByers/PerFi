@@ -496,6 +496,7 @@
                                                 <div class="d-flex justify-content-between gap-2 align-items-start">
                                                     <div class="small">
                                                         <strong>@plan.ContributorType</strong>
+                                                        <div>Effective @plan.EffectiveDate.ToString("yyyy-MM-dd")</div>
                                                         <div>$@plan.DollarAmountPerPayCycle.ToString("0.##")/cycle (+$@plan.DollarAmountPerPayCycleAnnualIncrease.ToString("0.##")/yr)</div>
                                                         <div>$@plan.DollarAmountAnnual.ToString("0.##")/yr (+$@plan.DollarAmountAnnualIncrease.ToString("0.##")/yr)</div>
                                                         <div>@plan.PercentagePerPayCycle.ToString("0.####")%/cycle (+@plan.PercentagePerPayCycleAnnualIncrease.ToString("0.####")%/yr)</div>
@@ -524,6 +525,10 @@
                                                         <option value="@contributorType">@contributorType</option>
                                                     }
                                                 </InputSelect>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small" for="planEffectiveDate">Effective Date</label>
+                                                <InputDate id="planEffectiveDate" class="form-control form-control-sm" @bind-Value="createContributionPlanModel.EffectiveDate" />
                                             </div>
                                             <div class="col-6">
                                                 <label class="form-label small" for="planDollarPerCycle">$/Cycle</label>
@@ -576,6 +581,10 @@
                                                         <option value="@contributorType">@contributorType</option>
                                                     }
                                                 </InputSelect>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small" for="editPlanEffectiveDate">Effective Date</label>
+                                                <InputDate id="editPlanEffectiveDate" class="form-control form-control-sm" @bind-Value="editContributionPlanModel.EffectiveDate" />
                                             </div>
                                             <div class="col-6">
                                                 <label class="form-label small" for="editPlanDollarPerCycle">$/Cycle</label>
@@ -1378,6 +1387,7 @@
 
         var request = new CreateAccountContributionPlanRequest(
             createContributionPlanModel.ContributorType,
+            createContributionPlanModel.EffectiveDate,
             createContributionPlanModel.DollarAmountPerPayCycle,
             createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease,
             createContributionPlanModel.DollarAmountAnnual,
@@ -1398,6 +1408,7 @@
         }
 
         createContributionPlanModel.ContributorType = ContributionContributorType.Self;
+        createContributionPlanModel.EffectiveDate = DateOnly.FromDateTime(DateTime.Today);
         createContributionPlanModel.DollarAmountPerPayCycle = 0;
         createContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease = 0;
         createContributionPlanModel.DollarAmountAnnual = 0;
@@ -1419,6 +1430,7 @@
         {
             Id = plan.Id,
             ContributorType = plan.ContributorType,
+            EffectiveDate = plan.EffectiveDate,
             DollarAmountPerPayCycle = plan.DollarAmountPerPayCycle,
             DollarAmountPerPayCycleAnnualIncrease = plan.DollarAmountPerPayCycleAnnualIncrease,
             DollarAmountAnnual = plan.DollarAmountAnnual,
@@ -1444,6 +1456,7 @@
 
         var request = new UpdateAccountContributionPlanRequest(
             editContributionPlanModel.ContributorType,
+            editContributionPlanModel.EffectiveDate,
             editContributionPlanModel.DollarAmountPerPayCycle,
             editContributionPlanModel.DollarAmountPerPayCycleAnnualIncrease,
             editContributionPlanModel.DollarAmountAnnual,
@@ -1965,6 +1978,7 @@
     private sealed class CreateContributionPlanModel
     {
         public ContributionContributorType ContributorType { get; set; } = ContributionContributorType.Self;
+        public DateOnly EffectiveDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
         public decimal DollarAmountPerPayCycle { get; set; }
         public decimal DollarAmountPerPayCycleAnnualIncrease { get; set; }
         public decimal DollarAmountAnnual { get; set; }
@@ -1979,6 +1993,7 @@
     {
         public int Id { get; set; }
         public ContributionContributorType ContributorType { get; set; }
+        public DateOnly EffectiveDate { get; set; }
         public decimal DollarAmountPerPayCycle { get; set; }
         public decimal DollarAmountPerPayCycleAnnualIncrease { get; set; }
         public decimal DollarAmountAnnual { get; set; }

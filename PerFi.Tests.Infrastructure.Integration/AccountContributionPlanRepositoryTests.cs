@@ -46,7 +46,7 @@ public sealed class AccountContributionPlanRepositoryTests
         await using var dbContext = new PerFiDbContext(options);
         var repository = new AccountContributionPlanRepository(dbContext, new FakeCurrentUserService());
 
-        var result = await repository.AddAsync(new AccountContributionPlan(999, ContributionContributorType.Self, 100m, 10m, 0, 0, 0, 0, 0, 0));
+        var result = await repository.AddAsync(new AccountContributionPlan(999, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 10m, 0, 0, 0, 0, 0, 0));
 
         Assert.True(result.IsFailure);
     }
@@ -58,7 +58,7 @@ public sealed class AccountContributionPlanRepositoryTests
         await using var dbContext = new PerFiDbContext(options);
         var repository = new AccountContributionPlanRepository(dbContext, new FakeCurrentUserService());
 
-        var result = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, 100m, 10m, 0, 0, 0, 0, 0, 0));
+        var result = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 10m, 0, 0, 0, 0, 0, 0));
 
         Assert.True(result.IsSuccess);
         var created = await repository.GetByIdAsync(result.Value);
@@ -73,10 +73,10 @@ public sealed class AccountContributionPlanRepositoryTests
         await using var dbContext = new PerFiDbContext(options);
         var repository = new AccountContributionPlanRepository(dbContext, new FakeCurrentUserService());
 
-        var first = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, 100m, 0, 0, 0, 0, 0, 0, 0));
+        var first = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0, 0, 0, 0, 0, 0, 0));
         Assert.True(first.IsSuccess);
 
-        var second = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, 200m, 0, 0, 0, 0, 0, 0, 0));
+        var second = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 200m, 0, 0, 0, 0, 0, 0, 0));
         Assert.True(second.IsFailure);
         Assert.Contains("already exists", second.Error, StringComparison.OrdinalIgnoreCase);
     }
@@ -88,8 +88,8 @@ public sealed class AccountContributionPlanRepositoryTests
         await using var dbContext = new PerFiDbContext(options);
         var repository = new AccountContributionPlanRepository(dbContext, new FakeCurrentUserService());
 
-        await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, 100m, 0, 0, 0, 0, 0, 0, 0));
-        await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Employer, 50m, 0, 0, 0, 0, 0, 0, 0));
+        await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0, 0, 0, 0, 0, 0, 0));
+        await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Employer, new DateOnly(2024, 1, 1), 50m, 0, 0, 0, 0, 0, 0, 0));
 
         var plans = await repository.GetAllByAccountIdAsync(accountId);
 
@@ -103,7 +103,7 @@ public sealed class AccountContributionPlanRepositoryTests
         await using var dbContext = new PerFiDbContext(options);
         var repository = new AccountContributionPlanRepository(dbContext, new FakeCurrentUserService());
 
-        var result = await repository.UpdateAsync(new AccountContributionPlan(999, accountId, ContributionContributorType.Self, 100m, 0, 0, 0, 0, 0, 0, 0));
+        var result = await repository.UpdateAsync(new AccountContributionPlan(999, accountId, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0, 0, 0, 0, 0, 0, 0));
 
         Assert.True(result.IsFailure);
         Assert.Contains("not found", result.Error, StringComparison.OrdinalIgnoreCase);
@@ -116,7 +116,7 @@ public sealed class AccountContributionPlanRepositoryTests
         await using var dbContext = new PerFiDbContext(options);
         var repository = new AccountContributionPlanRepository(dbContext, new FakeCurrentUserService());
 
-        var added = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, 100m, 0, 0, 0, 0, 0, 0, 0));
+        var added = await repository.AddAsync(new AccountContributionPlan(accountId, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0, 0, 0, 0, 0, 0, 0));
 
         var result = await repository.DeleteAsync(added.Value);
 

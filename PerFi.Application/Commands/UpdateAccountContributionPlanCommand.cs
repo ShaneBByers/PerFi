@@ -6,6 +6,7 @@ public record UpdateAccountContributionPlanCommand(
     int AccountContributionPlanId,
     int AccountId,
     ContributionContributorType ContributorType,
+    DateOnly EffectiveDate,
     decimal DollarAmountPerPayCycle,
     decimal DollarAmountPerPayCycleAnnualIncrease,
     decimal DollarAmountAnnual,

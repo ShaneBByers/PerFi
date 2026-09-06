@@ -8,6 +8,7 @@ public class AccountContributionPlanEntity
     public int AccountId { get; set; }
     public AccountEntity Account { get; set; } = null!;
     public ContributionContributorType ContributorType { get; set; }
+    public DateOnly EffectiveDate { get; set; }
 
     public decimal DollarAmountPerPayCycle { get; set; }
     public decimal DollarAmountPerPayCycleAnnualIncrease { get; set; }

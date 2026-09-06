@@ -5,6 +5,7 @@ namespace PerFi.Application.Commands;
 public record CreateAccountContributionPlanCommand(
     int AccountId,
     ContributionContributorType ContributorType,
+    DateOnly EffectiveDate,
     decimal DollarAmountPerPayCycle,
     decimal DollarAmountPerPayCycleAnnualIncrease,
     decimal DollarAmountAnnual,

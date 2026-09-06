@@ -25,6 +25,7 @@ internal class AccountContributionPlanService(IAccountContributionPlanRepository
             var plan = new AccountContributionPlan(
                 command.AccountId,
                 command.ContributorType,
+                command.EffectiveDate,
                 command.DollarAmountPerPayCycle,
                 command.DollarAmountPerPayCycleAnnualIncrease,
                 command.DollarAmountAnnual,
@@ -59,6 +60,7 @@ internal class AccountContributionPlanService(IAccountContributionPlanRepository
                 command.AccountContributionPlanId,
                 command.AccountId,
                 command.ContributorType,
+                command.EffectiveDate,
                 command.DollarAmountPerPayCycle,
                 command.DollarAmountPerPayCycleAnnualIncrease,
                 command.DollarAmountAnnual,

@@ -45,6 +45,7 @@ public sealed record UpdateUserConfigurationRequest(
 
 public sealed record CreateAccountContributionPlanRequest(
     ContributionContributorType ContributorType,
+    DateOnly EffectiveDate,
     decimal DollarAmountPerPayCycle,
     decimal DollarAmountPerPayCycleAnnualIncrease,
     decimal DollarAmountAnnual,
@@ -56,6 +57,7 @@ public sealed record CreateAccountContributionPlanRequest(
 
 public sealed record UpdateAccountContributionPlanRequest(
     ContributionContributorType ContributorType,
+    DateOnly EffectiveDate,
     decimal DollarAmountPerPayCycle,
     decimal DollarAmountPerPayCycleAnnualIncrease,
     decimal DollarAmountAnnual,

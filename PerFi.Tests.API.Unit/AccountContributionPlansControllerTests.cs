@@ -19,7 +19,7 @@ public sealed class AccountContributionPlansControllerTests
         };
 
     private static CreateAccountContributionPlanRequest CreateRequest()
-        => new(ContributionContributorType.Self, 100m, 0m, 0m, 0m, 0m, 0m, 0m, 0m);
+        => new(ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0m, 0m, 0m, 0m, 0m, 0m, 0m);
 
     [Fact]
     public async Task GetAll_ReturnsOk()
@@ -46,7 +46,7 @@ public sealed class AccountContributionPlansControllerTests
     {
         var service = new RecordingAccountContributionPlanService
         {
-            CreateResult = Result<AccountContributionPlan>.Success(new AccountContributionPlan(5, 1, ContributionContributorType.Self, 100m, 0, 0, 0, 0, 0, 0, 0))
+            CreateResult = Result<AccountContributionPlan>.Success(new AccountContributionPlan(5, 1, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0, 0, 0, 0, 0, 0, 0))
         };
         var controller = CreateController(service);
 
@@ -73,7 +73,7 @@ public sealed class AccountContributionPlansControllerTests
         var service = new RecordingAccountContributionPlanService { UpdateResult = Result.Failure("Account contribution plan with ID '1' not found.") };
         var controller = CreateController(service);
 
-        var result = await controller.Update(1, 1, new UpdateAccountContributionPlanRequest(ContributionContributorType.Self, 100m, 0m, 0m, 0m, 0m, 0m, 0m, 0m));
+        var result = await controller.Update(1, 1, new UpdateAccountContributionPlanRequest(ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0m, 0m, 0m, 0m, 0m, 0m, 0m));
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -91,7 +91,7 @@ public sealed class AccountContributionPlansControllerTests
 
     private sealed class RecordingAccountContributionPlanService : IAccountContributionPlanService
     {
-        public AccountContributionPlan? PlanToReturn { get; set; } = new(1, 1, ContributionContributorType.Self, 100m, 0, 0, 0, 0, 0, 0, 0);
+        public AccountContributionPlan? PlanToReturn { get; set; } = new(1, 1, ContributionContributorType.Self, new DateOnly(2024, 1, 1), 100m, 0, 0, 0, 0, 0, 0, 0);
         public Result<AccountContributionPlan> CreateResult { get; set; } = Result<AccountContributionPlan>.Failure("Not implemented in test.");
         public Result UpdateResult { get; set; } = Result.Failure("Not implemented in test.");
         public Result DeleteResult { get; set; } = Result.Failure("Not implemented in test.");
