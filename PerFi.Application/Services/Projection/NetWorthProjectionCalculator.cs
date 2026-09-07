@@ -23,7 +23,7 @@ internal static class NetWorthProjectionCalculator
 
         var cutoffDate = new DateOnly(userConfiguration.BirthDate.AddYears(RetirementAge).Year, 12, 31);
         var earliestSnapshotDate = snapshots.Count > 0 ? snapshots.Min(snapshot => snapshot.Date) : today;
-        var overallStart = new DateOnly(earliestSnapshotDate.Year, 1, 1);
+        var overallStart = snapshots.Count > 0 ? GetQuarterStart(earliestSnapshotDate) : new DateOnly(earliestSnapshotDate.Year, 1, 1);
 
         if (cutoffDate < overallStart)
             cutoffDate = overallStart;
@@ -80,7 +80,7 @@ internal static class NetWorthProjectionCalculator
                 periods.Add(BuildPeriod(
                     ProjectionPeriodType.Annual,
                     checkpoints,
-                    index - 4,
+                    Math.Max(0, index - 4),
                     index,
                     null,
                     accountTimelines,
@@ -101,19 +101,32 @@ internal static class NetWorthProjectionCalculator
         IReadOnlyDictionary<DateOnly, decimal> ContributedEndingAtCheckpoint,
         DateOnly? FirstSnapshotDate);
 
+    private static DateOnly GetQuarterStart(DateOnly date)
+    {
+        var quarterStartMonth = (((date.Month - 1) / 3) * 3) + 1;
+        return new DateOnly(date.Year, quarterStartMonth, 1);
+    }
+
     private static List<DateOnly> BuildQuarterEndCheckpoints(DateOnly overallStart, DateOnly cutoffDate)
     {
         var checkpoints = new List<DateOnly> { overallStart };
 
         for (var year = overallStart.Year; year <= cutoffDate.Year; year++)
         {
-            checkpoints.Add(new DateOnly(year, 3, 31));
-            checkpoints.Add(new DateOnly(year, 6, 30));
-            checkpoints.Add(new DateOnly(year, 9, 30));
-            checkpoints.Add(new DateOnly(year, 12, 31));
+            AddQuarterEndIfAfterStart(checkpoints, new DateOnly(year, 3, 31), overallStart);
+            AddQuarterEndIfAfterStart(checkpoints, new DateOnly(year, 6, 30), overallStart);
+            AddQuarterEndIfAfterStart(checkpoints, new DateOnly(year, 9, 30), overallStart);
+            AddQuarterEndIfAfterStart(checkpoints, new DateOnly(year, 12, 31), overallStart);
         }
 
         return checkpoints;
+    }
+
+    // Skips any quarter-end at or before the anchor, so pre-first-snapshot quarters within the anchor's own year are never generated.
+    private static void AddQuarterEndIfAfterStart(List<DateOnly> checkpoints, DateOnly quarterEnd, DateOnly overallStart)
+    {
+        if (quarterEnd > overallStart)
+            checkpoints.Add(quarterEnd);
     }
 
     private static AccountTimeline BuildAccountTimeline(
@@ -145,6 +158,7 @@ internal static class NetWorthProjectionCalculator
 
         var balances = new Dictionary<DateOnly, decimal>();
         var contributedEndingAt = new Dictionary<DateOnly, decimal>();
+        DateOnly? lastPastCheckpoint = null;
 
         for (var index = 0; index < checkpoints.Count; index++)
         {
@@ -156,6 +170,8 @@ internal static class NetWorthProjectionCalculator
 
             if (index > 0)
                 contributedEndingAt[checkpoint] = GetHistoricalContributed(checkpoints[index - 1], checkpoint);
+
+            lastPastCheckpoint = checkpoint;
         }
 
         var futureCheckpoints = checkpoints.Where(checkpoint => checkpoint > today).ToList();
@@ -174,7 +190,13 @@ internal static class NetWorthProjectionCalculator
 
             var currentBalance = GetHistoricalBalance(today);
             var currentDate = today;
-            var contributedSinceLastCheckpoint = 0m;
+
+            // The first future checkpoint is the in-progress quarter's end: seed it with the actual
+            // contributions already made this quarter (start-of-quarter to today) so they aren't
+            // misattributed to Growth once the projected remainder of the quarter is simulated below.
+            var contributedSinceLastCheckpoint = lastPastCheckpoint.HasValue
+                ? GetHistoricalContributed(lastPastCheckpoint.Value, today)
+                : 0m;
 
             foreach (var eventDate in events)
             {
@@ -301,7 +323,7 @@ internal static class NetWorthProjectionCalculator
             !isFullyHistorical,
             ageAtStart,
             ageAtEnd,
-            CalculateFractionalAge(userConfiguration.BirthDate, periodStart, periodEnd, ageAtStart, ageAtEnd),
+            CalculateFractionalAge(userConfiguration.BirthDate, periodStart, periodEnd),
             SalaryLookup.GetSalaryAt(salaryProgressions, userConfiguration.ExpectedAnnualSalaryRaisePercentage, periodStart),
             SalaryLookup.GetSalaryAt(salaryProgressions, userConfiguration.ExpectedAnnualSalaryRaisePercentage, periodEnd),
             groups,
@@ -441,31 +463,28 @@ internal static class NetWorthProjectionCalculator
         return age;
     }
 
-    // Weighted average age across the period based on the real birthday date, rounded to the nearest quarter (e.g. 34.5) so the UI can show a single intuitive age instead of a start-end range.
-    private static decimal CalculateFractionalAge(DateOnly birthDate, DateOnly periodStart, DateOnly periodEnd, int ageAtStart, int ageAtEnd)
+    // Age at the period's midpoint expressed as a decimal (e.g. 34.5), rounded to the nearest quarter, so the UI shows a single intuitive age instead of a start-end range.
+    private static decimal CalculateFractionalAge(DateOnly birthDate, DateOnly periodStart, DateOnly periodEnd)
     {
-        if (ageAtStart == ageAtEnd)
-            return ageAtStart;
+        var referenceDate = DateOnly.FromDayNumber((periodStart.DayNumber + periodEnd.DayNumber) / 2);
 
-        var birthday = GetBirthdayOccurrence(birthDate, periodStart, periodEnd);
-        var totalDays = periodEnd.DayNumber - periodStart.DayNumber + 1;
-        var daysAtNewAge = periodEnd.DayNumber - birthday.DayNumber + 1;
-        var fraction = Math.Clamp((decimal)daysAtNewAge / totalDays, 0m, 1m);
+        var mostRecentBirthday = ToDateInYear(birthDate, referenceDate.Year);
+        if (mostRecentBirthday > referenceDate)
+            mostRecentBirthday = ToDateInYear(birthDate, referenceDate.Year - 1);
+
+        var nextBirthday = ToDateInYear(birthDate, mostRecentBirthday.Year + 1);
+        var ageAtMostRecentBirthday = mostRecentBirthday.Year - birthDate.Year;
+
+        var fraction = (decimal)(referenceDate.DayNumber - mostRecentBirthday.DayNumber) / (nextBirthday.DayNumber - mostRecentBirthday.DayNumber);
         var roundedQuarter = Math.Round(fraction * 4, MidpointRounding.AwayFromZero) / 4m;
 
-        return ageAtStart + roundedQuarter;
-    }
-
-    private static DateOnly GetBirthdayOccurrence(DateOnly birthDate, DateOnly periodStart, DateOnly periodEnd)
-    {
-        for (var year = periodStart.Year; year <= periodEnd.Year; year++)
+        if (roundedQuarter >= 1m)
         {
-            var birthday = ToDateInYear(birthDate, year);
-            if (birthday >= periodStart && birthday <= periodEnd)
-                return birthday;
+            roundedQuarter = 0m;
+            ageAtMostRecentBirthday++;
         }
 
-        return periodStart;
+        return ageAtMostRecentBirthday + roundedQuarter;
     }
 
     private static DateOnly ToDateInYear(DateOnly birthDate, int year)

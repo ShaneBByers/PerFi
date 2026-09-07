@@ -241,6 +241,12 @@
     gap: 0.35rem;
 }
 
+.table-total-row td {
+    font-weight: 600;
+    border-bottom: 2px solid var(--pf-border-soft);
+    background: rgba(28, 42, 62, 0.4);
+}
+
 .row-actions .btn {
     white-space: nowrap;
 }

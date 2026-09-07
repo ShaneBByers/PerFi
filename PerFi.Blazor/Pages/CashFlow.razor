@@ -112,23 +112,23 @@
                             <p class="range-delta @GetAmountClass(netCashFlow)">Net for range: @FormatCurrency(netCashFlow)</p>
                         </div>
 
-                        <EmptyState IsVisible="@(netCashFlowPoints.Count == 0)" Message="Add transactions or contributions to render the trend chart." />
+                        <EmptyState IsVisible="@(netCashFlowPoints.Count == 0)" Message="Add transactions to render the trend chart." />
 
                         @if (netCashFlowPoints.Count > 0)
                         {
-                            <ApexChart TItem="CashFlowMonthPoint" Title="Contributions vs Transactions" Height="320" Options="@CreateMonthlyChartOptions()">
+                            <ApexChart TItem="CashFlowMonthPoint" Title="Income vs Expenses" Height="320" Options="@CreateMonthlyChartOptions()">
                                 <ApexPointSeries TItem="CashFlowMonthPoint"
                                                  Items="netCashFlowPoints"
-                                                 Name="Contributions"
+                                                 Name="Income"
                                                  SeriesType="SeriesType.Bar"
                                                  XValue="point => point.Label"
-                                                 YValue="point => point.ContributionsTotal" />
+                                                 YValue="point => point.IncomeTotal" />
                                 <ApexPointSeries TItem="CashFlowMonthPoint"
                                                  Items="netCashFlowPoints"
-                                                 Name="Transactions"
+                                                 Name="Expenses"
                                                  SeriesType="SeriesType.Bar"
                                                  XValue="point => point.Label"
-                                                 YValue="point => point.TransactionsTotal" />
+                                                 YValue="point => point.ExpensesTotal" />
                                 <ApexPointSeries TItem="CashFlowMonthPoint"
                                                  Items="netCashFlowPoints"
                                                  Name="Net"
@@ -139,103 +139,23 @@
                         }
                     </section>
 
-                    <div class="chart-grid">
-                        <section class="chart-panel" @key='("spending-by-category-group", chartVersion)'>
-                            <div class="section-header">
-                                <h2>Spending by Category Group</h2>
-                            </div>
-
-                            <EmptyState IsVisible="@(categoryGroupSpendingPoints.Count == 0)" Message="No transactions in this period." />
-
-                            @if (categoryGroupSpendingPoints.Count > 0)
-                            {
-                                <ApexChart TItem="CategoryBreakdownPoint" Title="@($"Spending by Category Group ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateDonutChartOptions()">
-                                    <ApexPointSeries TItem="CategoryBreakdownPoint"
-                                                     Items="categoryGroupSpendingPoints"
-                                                     Name="Spending"
-                                                     SeriesType="SeriesType.Donut"
-                                                     XValue="point => point.Name"
-                                                     YValue="point => point.Total" />
-                                </ApexChart>
-                            }
-                        </section>
-
-                        <section class="chart-panel" @key='("contributions-by-contributor", chartVersion)'>
-                            <div class="section-header">
-                                <h2>Contributions by Contributor</h2>
-                            </div>
-
-                            <EmptyState IsVisible="@(contributorBreakdownPoints.Count == 0)" Message="No contributions in this period." />
-
-                            @if (contributorBreakdownPoints.Count > 0)
-                            {
-                                <ApexChart TItem="CategoryBreakdownPoint" Title="@($"Contributions by Contributor ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateDonutChartOptions()">
-                                    <ApexPointSeries TItem="CategoryBreakdownPoint"
-                                                     Items="contributorBreakdownPoints"
-                                                     Name="Contributions"
-                                                     SeriesType="SeriesType.Donut"
-                                                     XValue="point => point.Name"
-                                                     YValue="point => point.Total" />
-                                </ApexChart>
-                            }
-                        </section>
-                    </div>
-
-                    <section class="chart-panel" @key='("contributions-by-account", chartVersion)'>
+                    <section class="chart-panel" @key='("spending-by-category-group", chartVersion)'>
                         <div class="section-header">
-                            <h2>Contributions by Account</h2>
+                            <h2>Spending by Category Group</h2>
                         </div>
 
-                        <EmptyState IsVisible="@(contributionAccountBreakdownPoints.Count == 0)" Message="No contributions in this period." />
+                        <EmptyState IsVisible="@(categoryGroupSpendingPoints.Count == 0)" Message="No transactions in this period." />
 
-                        @if (contributionAccountBreakdownPoints.Count > 0)
+                        @if (categoryGroupSpendingPoints.Count > 0)
                         {
-                            <ApexChart TItem="ContributionAccountBreakdownPoint" Title="@($"Contributions by Account ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateContributionBreakdownChartOptions()">
-                                <ApexPointSeries TItem="ContributionAccountBreakdownPoint"
-                                                 Items="contributionAccountBreakdownPoints"
-                                                 Name="Self"
-                                                 SeriesType="SeriesType.Bar"
-                                                 XValue="point => point.AccountName"
-                                                 YValue="point => point.Self" />
-                                <ApexPointSeries TItem="ContributionAccountBreakdownPoint"
-                                                 Items="contributionAccountBreakdownPoints"
-                                                 Name="Employer"
-                                                 SeriesType="SeriesType.Bar"
-                                                 XValue="point => point.AccountName"
-                                                 YValue="point => point.Employer" />
-                                <ApexPointSeries TItem="ContributionAccountBreakdownPoint"
-                                                 Items="contributionAccountBreakdownPoints"
-                                                 Name="Other"
-                                                 SeriesType="SeriesType.Bar"
-                                                 XValue="point => point.AccountName"
-                                                 YValue="point => point.Other" />
+                            <ApexChart TItem="CategoryBreakdownPoint" Title="@($"Spending by Category Group ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateDonutChartOptions()">
+                                <ApexPointSeries TItem="CategoryBreakdownPoint"
+                                                 Items="categoryGroupSpendingPoints"
+                                                 Name="Spending"
+                                                 SeriesType="SeriesType.Donut"
+                                                 XValue="point => point.Name"
+                                                 YValue="point => point.Total" />
                             </ApexChart>
-
-                            <div class="table-responsive contribution-breakdown-table">
-                                <table class="table table-striped table-sm align-middle cash-flow-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Account</th>
-                                            <th class="text-end">Self</th>
-                                            <th class="text-end">Employer</th>
-                                            <th class="text-end">Other</th>
-                                            <th class="text-end">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var point in contributionAccountBreakdownPoints)
-                                        {
-                                            <tr>
-                                                <td>@point.AccountName</td>
-                                                <td class="text-end">@FormatCurrency(point.Self)</td>
-                                                <td class="text-end">@FormatCurrency(point.Employer)</td>
-                                                <td class="text-end">@FormatCurrency(point.Other)</td>
-                                                <td class="text-end">@FormatCurrency(point.Self + point.Employer + point.Other)</td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
                         }
                     </section>
                 }
@@ -288,6 +208,11 @@
                                             <th class="text-end">Amount</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
+                                        <tr class="table-total-row">
+                                            <td colspan="4">Total (@tableTransactions.Count)</td>
+                                            <td class="text-end">@FormatCurrency(tableTransactions.Sum(t => t.Amount))</td>
+                                            <td></td>
+                                        </tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var transaction in tableTransactions)
@@ -322,6 +247,112 @@
                 @if (activeSection == "contributions")
                 {
                     var tableContributions = GetContributionsForTable();
+
+                    <section class="chart-panel" @key='("contributions-by-contributor", chartVersion)'>
+                        <div class="section-header">
+                            <h2>Contributions by Contributor</h2>
+                        </div>
+
+                        <EmptyState IsVisible="@(contributorBreakdownPoints.Count == 0)" Message="No contributions in this period." />
+
+                        @if (contributorBreakdownPoints.Count > 0)
+                        {
+                            <ApexChart TItem="CategoryBreakdownPoint" Title="@($"Contributions by Contributor ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateDonutChartOptions()">
+                                <ApexPointSeries TItem="CategoryBreakdownPoint"
+                                                 Items="contributorBreakdownPoints"
+                                                 Name="Contributions"
+                                                 SeriesType="SeriesType.Donut"
+                                                 XValue="point => point.Name"
+                                                 YValue="point => point.Total" />
+                            </ApexChart>
+                        }
+                    </section>
+
+                    <section class="chart-panel" @key='("contributions-by-account", chartVersion)'>
+                        <div class="section-header">
+                            <h2>Contributions by Account</h2>
+                        </div>
+
+                        <EmptyState IsVisible="@(contributionAccountBreakdownPoints.Count == 0)" Message="No contributions in this period." />
+
+                        @if (contributionAccountBreakdownPoints.Count > 0)
+                        {
+                            <ApexChart TItem="ContributionAccountBreakdownPoint" Title="@($"Contributions by Account ({GetSelectedRangeChartLabel()})")" Height="320" Options="@CreateContributionBreakdownChartOptions()">
+                                @if (ShowSelfContributions)
+                                {
+                                    <ApexPointSeries TItem="ContributionAccountBreakdownPoint"
+                                                     Items="contributionAccountBreakdownPoints"
+                                                     Name="Self"
+                                                     SeriesType="SeriesType.Bar"
+                                                     XValue="point => point.AccountName"
+                                                     YValue="point => point.Self" />
+                                }
+                                @if (ShowEmployerContributions)
+                                {
+                                    <ApexPointSeries TItem="ContributionAccountBreakdownPoint"
+                                                     Items="contributionAccountBreakdownPoints"
+                                                     Name="Employer"
+                                                     SeriesType="SeriesType.Bar"
+                                                     XValue="point => point.AccountName"
+                                                     YValue="point => point.Employer" />
+                                }
+                                @if (ShowOtherContributions)
+                                {
+                                    <ApexPointSeries TItem="ContributionAccountBreakdownPoint"
+                                                     Items="contributionAccountBreakdownPoints"
+                                                     Name="Other"
+                                                     SeriesType="SeriesType.Bar"
+                                                     XValue="point => point.AccountName"
+                                                     YValue="point => point.Other" />
+                                }
+                            </ApexChart>
+
+                            <div class="table-responsive contribution-breakdown-table">
+                                <table class="table table-striped table-sm align-middle cash-flow-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Account</th>
+                                            @if (ShowSelfContributions)
+                                            {
+                                                <th class="text-end">Self</th>
+                                            }
+                                            @if (ShowEmployerContributions)
+                                            {
+                                                <th class="text-end">Employer</th>
+                                            }
+                                            @if (ShowOtherContributions)
+                                            {
+                                                <th class="text-end">Other</th>
+                                            }
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var point in contributionAccountBreakdownPoints)
+                                        {
+                                            <tr>
+                                                <td>@point.AccountName</td>
+                                                @if (ShowSelfContributions)
+                                                {
+                                                    <td class="text-end">@FormatCurrency(point.Self)</td>
+                                                }
+                                                @if (ShowEmployerContributions)
+                                                {
+                                                    <td class="text-end">@FormatCurrency(point.Employer)</td>
+                                                }
+                                                @if (ShowOtherContributions)
+                                                {
+                                                    <td class="text-end">@FormatCurrency(point.Other)</td>
+                                                }
+                                                <td class="text-end">@FormatCurrency(point.Self + point.Employer + point.Other)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </section>
+
                     <section class="content-section">
                         <div class="content-section-header">
                             <div>
@@ -361,6 +392,11 @@
                                             <th>Account</th>
                                             <th class="text-end">Amount</th>
                                             <th class="text-end">Actions</th>
+                                        </tr>
+                                        <tr class="table-total-row">
+                                            <td colspan="3">Total (@tableContributions.Count)</td>
+                                            <td class="text-end">@FormatCurrency(tableContributions.Sum(c => c.Amount))</td>
+                                            <td></td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -736,6 +772,10 @@
     private readonly List<CategoryBreakdownPoint> categoryGroupSpendingPoints = [];
     private readonly List<CategoryBreakdownPoint> contributorBreakdownPoints = [];
     private readonly List<ContributionAccountBreakdownPoint> contributionAccountBreakdownPoints = [];
+
+    private bool ShowSelfContributions => contributionAccountBreakdownPoints.Any(point => point.Self != 0m);
+    private bool ShowEmployerContributions => contributionAccountBreakdownPoints.Any(point => point.Employer != 0m);
+    private bool ShowOtherContributions => contributionAccountBreakdownPoints.Any(point => point.Other != 0m);
     private readonly List<CategoryGroupInsight> categoryInsights = [];
     private readonly List<CounterpartySpendPoint> topCounterparties = [];
     private readonly List<TransactionCategoryGroupResponse> transactionCategoryGroups = [];
@@ -764,7 +804,6 @@
     private int accountFilterId;
     private ContributionContributorType? contributorFilter;
     private decimal totalTransactions;
-    private decimal totalContributions;
     private decimal netCashFlow;
     private decimal trailingIncomeTotal;
     private decimal trailingSpendingTotal;
@@ -1040,11 +1079,10 @@
         filteredContributions.AddRange(FilterByRange(contributions, c => c.Date, latestDate).OrderByDescending(c => c.Date).ThenByDescending(c => c.Amount));
 
         totalTransactions = filteredTransactions.Sum(t => t.Amount);
-        totalContributions = filteredContributions.Sum(c => c.Amount);
-        netCashFlow = totalContributions - totalTransactions;
+        netCashFlow = totalTransactions;
 
-        netCashFlowPoints.AddRange(BuildMonthlyPoints(filteredTransactions, filteredContributions));
-        allTimeMonthlyPoints.AddRange(BuildMonthlyPoints(transactions, contributions));
+        netCashFlowPoints.AddRange(BuildMonthlyPoints(filteredTransactions));
+        allTimeMonthlyPoints.AddRange(BuildMonthlyPoints(transactions));
 
         categoryGroupSpendingPoints.AddRange(filteredTransactions
             .Where(t => t.Amount < 0m)
@@ -1084,24 +1122,18 @@
             accountFilterId = 0;
     }
 
-    private static List<CashFlowMonthPoint> BuildMonthlyPoints(IEnumerable<TransactionResponse> transactionsSource, IEnumerable<ContributionResponse> contributionsSource)
+    private static List<CashFlowMonthPoint> BuildMonthlyPoints(IEnumerable<TransactionResponse> transactionsSource)
     {
-        var monthlyContributions = contributionsSource
-            .GroupBy(c => new DateOnly(c.Date.Year, c.Date.Month, 1))
-            .ToDictionary(group => group.Key, group => group.Sum(c => c.Amount));
-
-        var monthlyTransactions = transactionsSource
+        var monthlyGroups = transactionsSource
             .GroupBy(t => new DateOnly(t.Date.Year, t.Date.Month, 1))
-            .ToDictionary(group => group.Key, group => group.Sum(t => t.Amount));
-
-        var months = monthlyContributions.Keys.Concat(monthlyTransactions.Keys).Distinct().OrderBy(month => month);
+            .OrderBy(group => group.Key);
 
         var points = new List<CashFlowMonthPoint>();
-        foreach (var month in months)
+        foreach (var group in monthlyGroups)
         {
-            var contributionsTotal = monthlyContributions.GetValueOrDefault(month, 0m);
-            var transactionsTotal = monthlyTransactions.GetValueOrDefault(month, 0m);
-            points.Add(new CashFlowMonthPoint(month.ToString("MMM yyyy"), contributionsTotal, transactionsTotal, contributionsTotal - transactionsTotal));
+            var incomeTotal = group.Where(t => t.Amount > 0m).Sum(t => t.Amount);
+            var expensesTotal = group.Where(t => t.Amount < 0m).Sum(t => Math.Abs(t.Amount));
+            points.Add(new CashFlowMonthPoint(group.Key.ToString("MMM yyyy"), incomeTotal, expensesTotal, incomeTotal - expensesTotal));
         }
 
         return points;
@@ -1154,8 +1186,8 @@
         var priorTrailingEnd = trailingStart.AddDays(-1);
         var priorTrailingStart = priorTrailingEnd.AddDays(-364);
 
-        trailingIncomeTotal = SumContributions(trailingStart, today);
-        trailingSpendingTotal = SumTransactions(trailingStart, today);
+        trailingIncomeTotal = SumIncome(trailingStart, today);
+        trailingSpendingTotal = SumExpenses(trailingStart, today);
         trailingNetTotal = trailingIncomeTotal - trailingSpendingTotal;
 
         var monthStart = new DateOnly(today.Year, today.Month, 1);
@@ -1176,10 +1208,14 @@
         trailing12Delta = BuildHeroDelta(ComputeNet(trailingStart, today), ComputeNet(priorTrailingStart, priorTrailingEnd));
     }
 
-    private decimal ComputeNet(DateOnly start, DateOnly end) => SumContributions(start, end) - SumTransactions(start, end);
+    // Cash Flow is Income minus Expenses from Transactions only; Contributions are tracked separately.
+    private decimal ComputeNet(DateOnly start, DateOnly end) => SumTransactions(start, end);
 
-    private decimal SumContributions(DateOnly start, DateOnly end) =>
-        contributions.Where(c => c.Date >= start && c.Date <= end).Sum(c => c.Amount);
+    private decimal SumIncome(DateOnly start, DateOnly end) =>
+        transactions.Where(t => t.Date >= start && t.Date <= end && t.Amount > 0m).Sum(t => t.Amount);
+
+    private decimal SumExpenses(DateOnly start, DateOnly end) =>
+        transactions.Where(t => t.Date >= start && t.Date <= end && t.Amount < 0m).Sum(t => Math.Abs(t.Amount));
 
     private decimal SumTransactions(DateOnly start, DateOnly end) =>
         transactions.Where(t => t.Date >= start && t.Date <= end).Sum(t => t.Amount);
@@ -1563,7 +1599,7 @@
         Tooltip = new Tooltip { Y = new TooltipY { Formatter = CurrencyFormatter } }
     };
 
-    private sealed record CashFlowMonthPoint(string Label, decimal ContributionsTotal, decimal TransactionsTotal, decimal Net);
+    private sealed record CashFlowMonthPoint(string Label, decimal IncomeTotal, decimal ExpensesTotal, decimal Net);
 
     private sealed record CategoryBreakdownPoint(string Name, decimal Total);
 

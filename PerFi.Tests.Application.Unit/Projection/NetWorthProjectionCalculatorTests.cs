@@ -132,6 +132,35 @@ public class NetWorthProjectionCalculatorTests
     }
 
     [Fact]
+    public void Calculate_ActualContributionMadeEarlierInTheCurrentInProgressQuarter_CountsAsContributedNotGrowth()
+    {
+        var account = CreateAccount(expectedAnnualGrowthPercentage: 0m);
+        var quarterStart = new DateOnly(2026, 7, 1);
+        var today = new DateOnly(2026, 9, 7); // Mid Q3 2026 (quarter ends 2026-09-30).
+        var snapshots = new List<FinanceSnapshot>
+        {
+            CreateSnapshot(account, quarterStart, 1000m),
+            CreateSnapshot(account, today, 1500m)
+        };
+        var contributions = new List<Contribution>
+        {
+            new(new DateOnly(2026, 8, 15), 500m, ContributionContributorType.Self, account.Id)
+        };
+        var userConfiguration = CreateUserConfiguration();
+
+        var periods = NetWorthProjectionCalculator.Calculate(
+            [account], snapshots, contributions, [], userConfiguration, [], today);
+
+        var q3 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2026 && p.Quarter == 3);
+
+        Assert.True(q3.IsProjected);
+        Assert.Equal(1000m, q3.Total.Amounts.StartingAmount);
+        Assert.Equal(500m, q3.Total.Amounts.ContributedAmount);
+        Assert.Equal(1500m, q3.Total.Amounts.FinalAmount);
+        Assert.Equal(0m, q3.Total.Amounts.GrowthAmount);
+    }
+
+    [Fact]
     public void Calculate_HistoricalBacktest_UsesThePlanRowInEffectAtThatTimeNotANewerRow()
     {
         var account = CreateAccount(expectedAnnualGrowthPercentage: 0m);
@@ -175,5 +204,27 @@ public class NetWorthProjectionCalculatorTests
 
         Assert.NotEmpty(periods);
         Assert.All(periods, period => Assert.Equal(0m, period.Total.Amounts.StartingAmount));
+    }
+
+    [Fact]
+    public void Calculate_FirstSnapshotMidYear_ProducesNoPeriodsBeforeTheFirstSnapshotsQuarter()
+    {
+        var account = CreateAccount(expectedAnnualGrowthPercentage: 0m);
+        var today = new DateOnly(2026, 1, 1);
+        var snapshots = new List<FinanceSnapshot> { CreateSnapshot(account, new DateOnly(2024, 4, 15), 1000m) };
+        var userConfiguration = CreateUserConfiguration();
+
+        var periods = NetWorthProjectionCalculator.Calculate(
+            [account], snapshots, [], [], userConfiguration, [], today);
+
+        // Q1 2024 (Jan-Mar) is entirely before the first snapshot and must not appear.
+        Assert.DoesNotContain(periods, p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2024 && p.Quarter == 1);
+
+        var q2 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2024 && p.Quarter == 2);
+        Assert.Equal(new DateOnly(2024, 4, 1), q2.PeriodStart);
+
+        // The 2024 annual period is scoped to only the available data (Apr-Dec), not a fabricated Jan-Dec range.
+        var year2024 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Annual && p.CalendarYear == 2024);
+        Assert.Equal(new DateOnly(2024, 4, 1), year2024.PeriodStart);
     }
 }

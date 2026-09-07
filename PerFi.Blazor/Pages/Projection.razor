@@ -3,6 +3,7 @@
 @inject INetWorthProjectionApiClient NetWorthProjectionApiClient
 @inject IAccountsApiClient AccountsApiClient
 @inject IAccountContributionPlansApiClient AccountContributionPlansApiClient
+@inject IContributionsApiClient ContributionsApiClient
 @inject IToastService ToastService
 
 <PageTitle>Projection</PageTitle>
@@ -35,7 +36,7 @@
             <div class="hero-sparkline" aria-hidden="true">
                 @if (totalTrendPoints.Count > 1)
                 {
-                    <ApexChart TItem="TrendPoint" Height="64" Options="@CreateSparklineChartOptions()">
+                    <ApexChart @key="useTodaysDollars" TItem="TrendPoint" Height="64" Options="@CreateSparklineChartOptions()">
                         <ApexPointSeries TItem="TrendPoint" Items="totalTrendPoints" Name="Actual" SeriesType="SeriesType.Line" XValue="point => point.Label" YValue="point => point.ActualFinal" />
                         <ApexPointSeries TItem="TrendPoint" Items="totalTrendPoints" Name="Projected" SeriesType="SeriesType.Line" XValue="point => point.Label" YValue="point => point.ProjectedFinal" />
                     </ApexChart>
@@ -84,7 +85,7 @@
                         <div class="section-header">
                             <h2>Composition Over Time (Annual)</h2>
                         </div>
-                        <ApexChart TItem="CompositionPoint" Title="Net Worth Composition by Account Type" Height="320" Options="@CreateCompositionChartOptions()">
+                        <ApexChart @key="useTodaysDollars" TItem="CompositionPoint" Title="Net Worth Composition by Account Type" Height="320" Options="@CreateCompositionChartOptions()">
                             @foreach (var groupName in activeGroupNames)
                             {
                                 <ApexPointSeries TItem="CompositionPoint"
@@ -103,7 +104,7 @@
                             <div class="section-header">
                                 <h2>@groupChart.GroupName Trend (Annual)</h2>
                             </div>
-                            <ApexChart TItem="TrendPoint" Title="@($"{groupChart.GroupName}: Contributions & Growth")" Height="320" Options="@CreateTrendChartOptions()">
+                            <ApexChart @key="@($"{groupChart.GroupName}-{useTodaysDollars}")" TItem="TrendPoint" Title="@($"{groupChart.GroupName}: Contributions & Growth")" Height="320" Options="@CreateTrendChartOptions()">
                                 <ApexPointSeries TItem="TrendPoint" Items="groupChart.Points" Name="Contributed" SeriesType="SeriesType.Bar" XValue="point => point.Label" YValue="point => point.Contributed" />
                                 <ApexPointSeries TItem="TrendPoint" Items="groupChart.Points" Name="Growth" SeriesType="SeriesType.Bar" XValue="point => point.Label" YValue="point => point.Growth" />
                             </ApexChart>
@@ -121,7 +122,7 @@
                             </div>
                             <select class="form-select group-select" @bind="selectedGroupName" @bind:after="OnGroupSelectionChanged">
                                 <option value="Total">Total</option>
-                                @foreach (var groupName in groupNames)
+                                @foreach (var groupName in detailGroupNames)
                                 {
                                     <option value="@groupName">@groupName</option>
                                 }
@@ -152,7 +153,7 @@
                                             </td>
                                             <td>@row.Annual.CalendarYear</td>
                                             <td>@row.Annual.UserAgeAtStart</td>
-                                            <td class="text-end">@FormatCurrency(row.Annual.SalaryAtEnd)</td>
+                                            <td class="text-end">@FormatCurrency(row.Annual.SalaryAtStart)</td>
                                             <td class="text-end">@FormatCurrency(annualAmounts.StartingAmount)</td>
                                             <td class="text-end">@FormatCurrency(annualAmounts.ContributedAmount)</td>
                                             <td class="text-end @GetAmountClass(annualAmounts.GrowthAmount)">@FormatCurrency(annualAmounts.GrowthAmount)</td>
@@ -169,7 +170,7 @@
                                                     <td></td>
                                                     <td>Q@(quarter.Quarter)</td>
                                                     <td>@FormatAge(quarter.FractionalAge)</td>
-                                                    <td class="text-end">@FormatCurrency(quarter.SalaryAtEnd)</td>
+                                                    <td class="text-end">@FormatCurrency(quarter.SalaryAtStart)</td>
                                                     <td class="text-end">@FormatCurrency(quarterAmounts.StartingAmount)</td>
                                                     <td class="text-end">@FormatCurrency(quarterAmounts.ContributedAmount)</td>
                                                     <td class="text-end @GetAmountClass(quarterAmounts.GrowthAmount)">@FormatCurrency(quarterAmounts.GrowthAmount)</td>
@@ -228,7 +229,9 @@
     private readonly List<ProjectionPeriodResponse> allPeriods = [];
     private readonly List<string> groupNames = [];
     private readonly List<string> activeGroupNames = [];
+    private readonly List<string> detailGroupNames = [];
     private readonly HashSet<string> qualifyingGroupNames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> contributionQualifyingGroupNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<YearRow> yearRows = [];
     private readonly HashSet<int> expandedYears = [];
     private List<CompositionPoint> compositionPoints = [];
@@ -269,8 +272,13 @@
             allPeriods.Clear();
             allPeriods.AddRange(await periodsTask);
 
+            var (chartQualifying, contributionQualifying) = await qualifyingGroupNamesTask;
+
             qualifyingGroupNames.Clear();
-            qualifyingGroupNames.UnionWith(await qualifyingGroupNamesTask);
+            qualifyingGroupNames.UnionWith(chartQualifying);
+
+            contributionQualifyingGroupNames.Clear();
+            contributionQualifyingGroupNames.UnionWith(contributionQualifying);
 
             RebuildDerivedData();
         }
@@ -294,7 +302,10 @@
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
 
-        if (selectedGroupName != "Total" && !groupNames.Contains(selectedGroupName, StringComparer.OrdinalIgnoreCase))
+        detailGroupNames.Clear();
+        detailGroupNames.AddRange(groupNames.Where(contributionQualifyingGroupNames.Contains));
+
+        if (selectedGroupName != "Total" && !detailGroupNames.Contains(selectedGroupName, StringComparer.OrdinalIgnoreCase))
             selectedGroupName = "Total";
 
         if (string.IsNullOrEmpty(selectedHeroGroupName) || !groupNames.Contains(selectedHeroGroupName, StringComparer.OrdinalIgnoreCase))
@@ -397,19 +408,31 @@
             groupTrendCharts.Add(new GroupTrendChart(groupName, BuildTrendPoints(groupName)));
     }
 
-    // a group is only chart-worthy if it has at least 1 account with a nonzero growth % and/or an AccountContributionPlan defined
-    private async Task<HashSet<string>> LoadQualifyingGroupNamesAsync(CancellationToken cancellationToken = default)
+    // a group is only chart-worthy if it has at least 1 account with a nonzero growth % and/or an AccountContributionPlan defined;
+    // the Details dropdown instead only cares whether a group has actual contributions or a contribution plan (growth % alone doesn't qualify)
+    private async Task<(HashSet<string> ChartQualifying, HashSet<string> ContributionQualifying)> LoadQualifyingGroupNamesAsync(CancellationToken cancellationToken = default)
     {
-        var accounts = await AccountsApiClient.GetAllAsync(cancellationToken);
+        var accountsTask = AccountsApiClient.GetAllAsync(cancellationToken);
+        var contributionsTask = ContributionsApiClient.GetAllAsync(cancellationToken);
+
+        var accounts = await accountsTask;
+        var contributedAccountIds = (await contributionsTask).Select(contribution => contribution.Account.Id).ToHashSet();
 
         var accountsWithPlanCounts = await Task.WhenAll(accounts.Select(async account =>
             (Account: account, PlanCount: (await AccountContributionPlansApiClient.GetAllByAccountIdAsync(account.Id, cancellationToken)).Count)));
 
         // projection GroupName is the AccountType name, not the AccountTypeGroup name
-        return accountsWithPlanCounts
+        var chartQualifying = accountsWithPlanCounts
             .Where(x => x.Account.ExpectedAnnualGrowthPercentage != 0m || x.PlanCount > 0)
             .Select(x => x.Account.Type.Name)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var contributionQualifying = accountsWithPlanCounts
+            .Where(x => x.PlanCount > 0 || contributedAccountIds.Contains(x.Account.Id))
+            .Select(x => x.Account.Type.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return (chartQualifying, contributionQualifying);
     }
 
     private void RebuildAccuracyRows()
@@ -505,9 +528,9 @@
 
         return quarters switch
         {
-            1 => $"{wholeYears} 1/4",
-            2 => $"{wholeYears} 1/2",
-            3 => $"{wholeYears} 3/4",
+            1 => $"{wholeYears} \u00bc",
+            2 => $"{wholeYears} \u00bd",
+            3 => $"{wholeYears} \u00be",
             _ => $"{wholeYears}"
         };
     }
