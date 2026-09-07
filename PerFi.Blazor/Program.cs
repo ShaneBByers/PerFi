@@ -19,6 +19,7 @@ var apiBaseUrl = ResolveApiBaseUrl(builder.Configuration[$"{ApiOptions.SectionNa
 builder.Services.AddAuthorizationCore();
 builder.Services.AddApexCharts();
 builder.Services.AddScoped<IToastService, ToastService>();
+builder.Services.AddScoped<IDateRangeService, DateRangeService>();
 builder.Services.AddScoped<PerFiAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<PerFiAuthenticationStateProvider>());
 builder.Services.AddScoped<IAuthService, AuthService>();

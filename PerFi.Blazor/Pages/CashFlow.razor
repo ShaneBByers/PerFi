@@ -1,6 +1,7 @@
 @page "/cash-flow/{Section?}"
 @attribute [Authorize]
 @using System.Globalization
+@implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ITransactionsApiClient TransactionsApiClient
 @inject IContributionsApiClient ContributionsApiClient
@@ -9,6 +10,7 @@
 @inject IAccountsApiClient AccountsApiClient
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
+@inject IDateRangeService DateRangeService
 
 <PageTitle>Cash Flow</PageTitle>
 
@@ -95,39 +97,6 @@
                     </article>
                 }
             }
-        </div>
-
-        <div class="hero-actions">
-            <div class="range-control">
-                <button class="btn btn-outline-secondary" type="button" @onclick="ToggleRangePicker">@GetRangeButtonLabel()</button>
-
-                @if (showRangePicker)
-                {
-                    <div class="range-popover" role="dialog" aria-label="Date range options">
-                        <div class="filter-presets" role="toolbar" aria-label="Cash Flow range presets">
-                            <button class='@GetRangeClass("ytd")' @onclick='() => SetRangePreset("ytd")'>YTD</button>
-                            <button class='@GetRangeClass("3m")' @onclick='() => SetRangePreset("3m")'>3M</button>
-                            <button class='@GetRangeClass("6m")' @onclick='() => SetRangePreset("6m")'>6M</button>
-                            <button class='@GetRangeClass("12m")' @onclick='() => SetRangePreset("12m")'>12M</button>
-                            <button class='@GetRangeClass("all")' @onclick='() => SetRangePreset("all")'>All</button>
-                        </div>
-                        <div class="custom-range row g-2 align-items-end mt-1">
-                            <div class="col-md-4">
-                                <label class="form-label" for="cashFlowCustomStart">Start</label>
-                                <InputDate id="cashFlowCustomStart" class="form-control" @bind-Value="customStartDate" />
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label" for="cashFlowCustomEnd">End</label>
-                                <InputDate id="cashFlowCustomEnd" class="form-control" @bind-Value="customEndDate" />
-                            </div>
-                            <div class="col-md-4 d-flex gap-2">
-                                <button class="btn btn-outline-secondary" type="button" @onclick="ApplyCustomRange">Apply</button>
-                                <button class="btn btn-outline-secondary" type="button" @onclick="ToggleRangePicker">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
         </div>
     </header>
 
@@ -825,13 +794,10 @@
     private int bulkGenerateCount = 1;
     private bool isLoading = true;
     private bool isSubmitting;
-    private bool showRangePicker;
     private int chartVersion;
     private string activeSection = "overview";
     private string selectedHeroMetric = "income";
-    private string selectedRangePreset = "ytd";
-    private DateTime customStartDate = new(DateTime.Today.Year, 1, 1);
-    private DateTime customEndDate = DateTime.Today;
+    private DateOnly latestDate = DateOnly.FromDateTime(DateTime.Today);
     private int categoryGroupFilterId;
     private int categoryFilterId;
     private int accountFilterId;
@@ -867,9 +833,15 @@
     [Parameter]
     public string? Section { get; set; }
 
-    protected override async Task OnInitializedAsync() => await LoadAllAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        DateRangeService.OnChange += OnDateRangeChanged;
+        await LoadAllAsync();
+    }
 
     protected override void OnParametersSet() => activeSection = Section ?? "overview";
+
+    public void Dispose() => DateRangeService.OnChange -= OnDateRangeChanged;
 
     private async Task LoadAllAsync()
     {
@@ -904,58 +876,12 @@
         }
     }
 
-    private void ToggleRangePicker() => showRangePicker = !showRangePicker;
+    private string GetSelectedRangeChartLabel() => DateRangeService.GetDescriptionLabel(latestDate);
 
-    private void SetRangePreset(string preset)
+    private void OnDateRangeChanged()
     {
-        selectedRangePreset = preset;
-        showRangePicker = false;
         RebuildCashFlowView();
-    }
-
-    private void ApplyCustomRange()
-    {
-        if (customEndDate < customStartDate)
-            (customStartDate, customEndDate) = (customEndDate, customStartDate);
-
-        selectedRangePreset = "custom";
-        showRangePicker = false;
-        RebuildCashFlowView();
-    }
-
-    private string GetRangeButtonLabel()
-    {
-        return selectedRangePreset switch
-        {
-            "ytd" => "Range: YTD",
-            "3m" => "Range: 3M",
-            "6m" => "Range: 6M",
-            "12m" => "Range: 12M",
-            "all" => "Range: All",
-            "custom" => $"Range: {customStartDate:MMM d} - {customEndDate:MMM d}",
-            _ => "Range"
-        };
-    }
-
-    private string GetSelectedRangeChartLabel()
-    {
-        return selectedRangePreset switch
-        {
-            "ytd" => "YTD",
-            "3m" => "Last 3 Months",
-            "6m" => "Last 6 Months",
-            "12m" => "Last 12 Months",
-            "all" => "All Time",
-            "custom" => $"Custom: {customStartDate:MMM d, yyyy} to {customEndDate:MMM d, yyyy}",
-            _ => "Selected Range"
-        };
-    }
-
-    private string GetRangeClass(string preset)
-    {
-        return selectedRangePreset == preset
-            ? "btn btn-sm btn-primary"
-            : "btn btn-sm btn-outline-secondary";
+        InvokeAsync(StateHasChanged);
     }
 
     private List<TransactionResponse> GetTransactionsForTable() =>
@@ -1103,7 +1029,7 @@
         categoryInsights.Clear();
         topCounterparties.Clear();
 
-        var latestDate = new[] { transactions.Select(t => t.Date), contributions.Select(c => c.Date) }
+        latestDate = new[] { transactions.Select(t => t.Date), contributions.Select(c => c.Date) }
             .SelectMany(dates => dates)
             .DefaultIfEmpty(DateOnly.FromDateTime(DateTime.Today))
             .Max();
@@ -1286,31 +1212,11 @@
 
     private IReadOnlyList<T> FilterByRange<T>(List<T> items, Func<T, DateOnly> dateSelector, DateOnly latestDate)
     {
-        if (selectedRangePreset == "all")
+        var range = DateRangeService.Resolve(latestDate);
+        if (range is null)
             return items;
 
-        if (selectedRangePreset == "custom")
-        {
-            var customStart = DateOnly.FromDateTime(customStartDate);
-            var customEnd = DateOnly.FromDateTime(customEndDate);
-            return items.Where(item => dateSelector(item) >= customStart && dateSelector(item) <= customEnd).ToList();
-        }
-
-        if (selectedRangePreset == "ytd")
-        {
-            var startOfYear = new DateOnly(latestDate.Year, 1, 1);
-            return items.Where(item => dateSelector(item) >= startOfYear && dateSelector(item) <= latestDate).ToList();
-        }
-
-        var months = selectedRangePreset switch
-        {
-            "3m" => 3,
-            "6m" => 6,
-            _ => 12
-        };
-
-        var threshold = latestDate.AddMonths(-months);
-        return items.Where(item => dateSelector(item) >= threshold && dateSelector(item) <= latestDate).ToList();
+        return items.Where(item => dateSelector(item) >= range.Value.Start && dateSelector(item) <= range.Value.End).ToList();
     }
 
     private async Task CreateTransactionAsync()

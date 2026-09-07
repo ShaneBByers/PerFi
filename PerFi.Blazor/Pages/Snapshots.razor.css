@@ -152,12 +152,6 @@
     font-size: 0.9rem;
 }
 
-.filter-presets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-}
-
 ::deep .apexcharts-toolbar {
     display: none !important;
 }

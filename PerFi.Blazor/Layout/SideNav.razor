@@ -16,7 +16,7 @@
 
     <nav class="side-nav-links" aria-label="Primary">
         <div class="nav-group @(IsFlyoutOpen("snapshots") ? "nav-group--open" : null)" @onmouseenter='() => OpenFlyoutOnHover("snapshots")' @onmouseleave='() => CloseFlyoutOnHoverLeave("snapshots")' @onfocusin='() => OpenFlyoutOnFocus("snapshots")' @onfocusout='() => CloseFlyoutOnFocusLeave("snapshots")'>
-            <NavLink class="nav-item" href="snapshots" Match="NavLinkMatch.Prefix" title="Net Worth" @onclick='() => SelectSubitem("snapshots")'>
+            <a class="nav-item @(IsUnderPath("snapshots") ? "active" : null)" href="snapshots/grid" title="Net Worth" @onclick='() => SelectSubitem("snapshots")'>
                 <span class="nav-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="1" x2="12" y2="23" />
@@ -24,7 +24,7 @@
                     </svg>
                 </span>
                 <span class="nav-label">Net Worth</span>
-            </NavLink>
+            </a>
             <div class="nav-subitems @(IsUnderPath("snapshots") ? "nav-subitems--active" : null)">
                 <div class="nav-subitems-header">Net Worth</div>
                 <NavLink class="nav-subitem" href="snapshots/grid" @onclick='() => SelectSubitem("snapshots")'>Data Grid</NavLink>
@@ -34,7 +34,7 @@
         </div>
 
         <div class="nav-group @(IsFlyoutOpen("cash-flow") ? "nav-group--open" : null)" @onmouseenter='() => OpenFlyoutOnHover("cash-flow")' @onmouseleave='() => CloseFlyoutOnHoverLeave("cash-flow")' @onfocusin='() => OpenFlyoutOnFocus("cash-flow")' @onfocusout='() => CloseFlyoutOnFocusLeave("cash-flow")'>
-            <NavLink class="nav-item" href="cash-flow" Match="NavLinkMatch.Prefix" title="Cash Flow" @onclick='() => SelectSubitem("cash-flow")'>
+            <a class="nav-item @(IsUnderPath("cash-flow") ? "active" : null)" href="cash-flow/overview" title="Cash Flow" @onclick='() => SelectSubitem("cash-flow")'>
                 <span class="nav-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 3l4 4-4 4" />
@@ -44,7 +44,7 @@
                     </svg>
                 </span>
                 <span class="nav-label">Cash Flow</span>
-            </NavLink>
+            </a>
             <div class="nav-subitems @(IsUnderPath("cash-flow") ? "nav-subitems--active" : null)">
                 <div class="nav-subitems-header">Cash Flow</div>
                 <NavLink class="nav-subitem" href="cash-flow/overview" @onclick='() => SelectSubitem("cash-flow")'>Overview</NavLink>
@@ -55,7 +55,7 @@
         </div>
 
         <div class="nav-group @(IsFlyoutOpen("projection") ? "nav-group--open" : null)" @onmouseenter='() => OpenFlyoutOnHover("projection")' @onmouseleave='() => CloseFlyoutOnHoverLeave("projection")' @onfocusin='() => OpenFlyoutOnFocus("projection")' @onfocusout='() => CloseFlyoutOnFocusLeave("projection")'>
-            <NavLink class="nav-item" href="projection" Match="NavLinkMatch.Prefix" title="Projection" @onclick='() => SelectSubitem("projection")'>
+            <a class="nav-item @(IsUnderPath("projection") ? "active" : null)" href="projection/trends" title="Projection" @onclick='() => SelectSubitem("projection")'>
                 <span class="nav-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
@@ -63,7 +63,7 @@
                     </svg>
                 </span>
                 <span class="nav-label">Projection</span>
-            </NavLink>
+            </a>
             <div class="nav-subitems @(IsUnderPath("projection") ? "nav-subitems--active" : null)">
                 <div class="nav-subitems-header">Projection</div>
                 <NavLink class="nav-subitem" href="projection/trends" @onclick='() => SelectSubitem("projection")'>Trends</NavLink>
@@ -87,14 +87,14 @@
                 }
                 <div class="side-nav-footer-row">
                     <div class="nav-group nav-group--footer @(IsFlyoutOpen("settings") ? "nav-group--open" : null)" @onmouseenter='() => OpenFlyoutOnHover("settings")' @onmouseleave='() => CloseFlyoutOnHoverLeave("settings")' @onfocusin='() => OpenFlyoutOnFocus("settings")' @onfocusout='() => CloseFlyoutOnFocusLeave("settings")'>
-                        <NavLink class="nav-item nav-item--icon-only" href="settings" Match="NavLinkMatch.Prefix" title="Settings" aria-label="Settings" @onclick='() => SelectSubitem("settings")'>
+                        <a class="nav-item nav-item--icon-only @(IsUnderPath("settings") ? "active" : null)" href="settings/profile" title="Settings" aria-label="Settings" @onclick='() => SelectSubitem("settings")'>
                             <span class="nav-icon" aria-hidden="true">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="3" />
                                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                                 </svg>
                             </span>
-                        </NavLink>
+                        </a>
                         <div class="nav-subitems nav-subitems--footer nav-subitems--flyout">
                             <div class="nav-subitems-header">Settings</div>
                             <NavLink class="nav-subitem" href="settings/profile" @onclick='() => SelectSubitem("settings")'>Personal Info</NavLink>

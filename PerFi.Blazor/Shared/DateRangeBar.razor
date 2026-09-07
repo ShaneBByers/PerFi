@@ -1,0 +1,158 @@
+@inject IDateRangeService DateRangeService
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<AuthorizeView>
+    <Authorized>
+        @if (!IsLoginRoute())
+        {
+            <div class="date-range-bar">
+                <div class="date-range-control">
+                    <button type="button" class="date-range-trigger" @onclick="ToggleOpen" aria-haspopup="true" aria-expanded="@DateRangeService.IsOpen">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <span>@DateRangeService.GetButtonLabel()</span>
+                        <svg class="date-range-chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </button>
+
+                    @if (DateRangeService.IsOpen)
+                    {
+                        <div class="date-range-backdrop" @onclick="ClosePanel"></div>
+                        <div class="date-range-panel" role="dialog" aria-label="Select date range" @onclick:stopPropagation="true" @onkeydown="OnKeyDown" tabindex="-1">
+                            @foreach (var option in PresetOptions)
+                            {
+                                <button type="button" class="date-range-option @(IsActivePreset(option.Value) ? "date-range-option-active" : null)" @onclick="() => SelectPreset(option.Value)">
+                                    <span>@option.Label</span>
+                                    @if (IsActivePreset(option.Value))
+                                    {
+                                        <svg class="date-range-check" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    }
+                                </button>
+                            }
+
+                            <button type="button" class="date-range-option @(showCustomInputs || DateRangeService.Preset == "custom" ? "date-range-option-active" : null)" @onclick="ToggleCustomInputs">
+                                <span>Custom Range</span>
+                                @if (DateRangeService.Preset == "custom" && !showCustomInputs)
+                                {
+                                    <svg class="date-range-check" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                }
+                            </button>
+
+                            @if (showCustomInputs)
+                            {
+                                <div class="date-range-custom">
+                                    <div class="date-range-custom-field">
+                                        <label for="dateRangeBarStart">Start</label>
+                                        <InputDate id="dateRangeBarStart" class="form-control form-control-sm" @bind-Value="customStart" />
+                                    </div>
+                                    <div class="date-range-custom-field">
+                                        <label for="dateRangeBarEnd">End</label>
+                                        <InputDate id="dateRangeBarEnd" class="form-control form-control-sm" @bind-Value="customEnd" />
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-primary date-range-apply" @onclick="ApplyCustomRange">Apply</button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private static readonly (string Value, string Label)[] PresetOptions =
+    [
+        ("ytd", "Year to Date"),
+        ("3m", "Last 3 Months"),
+        ("6m", "Last 6 Months"),
+        ("12m", "Last 12 Months"),
+        ("all", "All Time")
+    ];
+
+    private bool showCustomInputs;
+    private DateTime customStart;
+    private DateTime customEnd;
+
+    protected override void OnInitialized()
+    {
+        DateRangeService.OnChange += HandleServiceChanged;
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    private bool IsActivePreset(string preset) => DateRangeService.Preset == preset;
+
+    private void ToggleOpen()
+    {
+        var wasOpen = DateRangeService.IsOpen;
+        DateRangeService.Toggle();
+
+        if (!wasOpen && DateRangeService.IsOpen)
+        {
+            showCustomInputs = DateRangeService.Preset == "custom";
+            customStart = DateRangeService.CustomStart;
+            customEnd = DateRangeService.CustomEnd;
+        }
+    }
+
+    private void ClosePanel()
+    {
+        DateRangeService.Close();
+        showCustomInputs = false;
+    }
+
+    private void SelectPreset(string preset)
+    {
+        showCustomInputs = false;
+        DateRangeService.SetPreset(preset);
+    }
+
+    private void ToggleCustomInputs()
+    {
+        showCustomInputs = !showCustomInputs;
+
+        if (showCustomInputs)
+        {
+            customStart = DateRangeService.CustomStart;
+            customEnd = DateRangeService.CustomEnd;
+        }
+    }
+
+    private void ApplyCustomRange()
+    {
+        DateRangeService.SetCustomRange(customStart, customEnd);
+        showCustomInputs = false;
+    }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+            ClosePanel();
+    }
+
+    private bool IsLoginRoute()
+    {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).TrimEnd('/');
+        return relative.Equals("login", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void HandleServiceChanged() => InvokeAsync(StateHasChanged);
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        DateRangeService.OnChange -= HandleServiceChanged;
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}

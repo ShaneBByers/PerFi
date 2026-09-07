@@ -91,6 +91,13 @@
                                 <strong class="@chip.GroupValueClass">@chip.GroupDisplay</strong>
                             </div>
                         }
+                        @if (chip.SecondaryDisplay is not null)
+                        {
+                            <div class="hero-chip-metric">
+                                <span class="hero-chip-metric-name">@chip.SecondaryLabel</span>
+                                <strong>@chip.SecondaryDisplay</strong>
+                            </div>
+                        }
                     </article>
                 }
             }
@@ -533,7 +540,7 @@
         [
             new ProjectionHeroChip($"Projected at Retirement (Age {retirementAge})", FormatCurrency(totalAtRetirement), string.Empty, FormatCurrency(groupAtRetirement), string.Empty),
             new ProjectionHeroChip("Total Projected Growth", FormatCurrency(totalGrowth), GetAmountClass(totalGrowth), FormatCurrency(groupGrowth), GetAmountClass(groupGrowth)),
-            new ProjectionHeroChip("Years to Retirement", yearsToRetirement.ToString(), string.Empty, null, null)
+            new ProjectionHeroChip("Years to Retirement", yearsToRetirement.ToString(), string.Empty, null, null, "Expected Retirement Age", retirementAge.ToString())
         ];
     }
 
@@ -639,5 +646,5 @@
 
     private sealed record AccuracyRow(int Year, decimal ExpectedFinal, decimal ActualFinal, decimal VarianceAmount, decimal VariancePercent);
 
-    private sealed record ProjectionHeroChip(string Label, string TotalDisplay, string TotalValueClass, string? GroupDisplay, string? GroupValueClass);
+    private sealed record ProjectionHeroChip(string Label, string TotalDisplay, string TotalValueClass, string? GroupDisplay, string? GroupValueClass, string? SecondaryLabel = null, string? SecondaryDisplay = null);
 }
