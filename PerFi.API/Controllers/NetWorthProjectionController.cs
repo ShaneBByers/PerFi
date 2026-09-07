@@ -29,6 +29,7 @@ public class NetWorthProjectionController(INetWorthProjectionService netWorthPro
         period.IsProjected,
         period.UserAgeAtStart,
         period.UserAgeAtEnd,
+        period.FractionalAge,
         period.SalaryAtStart,
         period.SalaryAtEnd,
         period.Groups.Select(ToResponse).ToList(),

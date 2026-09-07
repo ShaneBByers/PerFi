@@ -33,6 +33,7 @@ public sealed class NetWorthProjectionControllerTests
             false,
             35,
             36,
+            35.5m,
             90_000m,
             93_000m,
             [accountGroup],

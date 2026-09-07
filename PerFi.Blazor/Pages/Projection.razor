@@ -151,7 +151,7 @@
                                                 <span class="expand-toggle @(IsExpanded(row.Annual.CalendarYear) ? "expanded" : null)" aria-hidden="true">&#9656;</span>
                                             </td>
                                             <td>@row.Annual.CalendarYear</td>
-                                            <td>@row.Annual.UserAgeAtStart&ndash;@row.Annual.UserAgeAtEnd</td>
+                                            <td>@row.Annual.UserAgeAtStart</td>
                                             <td class="text-end">@FormatCurrency(row.Annual.SalaryAtEnd)</td>
                                             <td class="text-end">@FormatCurrency(annualAmounts.StartingAmount)</td>
                                             <td class="text-end">@FormatCurrency(annualAmounts.ContributedAmount)</td>
@@ -168,7 +168,7 @@
                                                 <tr class="quarter-row">
                                                     <td></td>
                                                     <td>Q@(quarter.Quarter)</td>
-                                                    <td>@quarter.UserAgeAtStart&ndash;@quarter.UserAgeAtEnd</td>
+                                                    <td>@FormatAge(quarter.FractionalAge)</td>
                                                     <td class="text-end">@FormatCurrency(quarter.SalaryAtEnd)</td>
                                                     <td class="text-end">@FormatCurrency(quarterAmounts.StartingAmount)</td>
                                                     <td class="text-end">@FormatCurrency(quarterAmounts.ContributedAmount)</td>
@@ -497,6 +497,20 @@
     private bool IsExpanded(int year) => expandedYears.Contains(year);
 
     private static string FormatCurrency(decimal value) => value.ToString("C");
+
+    private static string FormatAge(decimal fractionalAge)
+    {
+        var wholeYears = decimal.ToInt32(Math.Floor(fractionalAge));
+        var quarters = decimal.ToInt32(Math.Round((fractionalAge - wholeYears) * 4, MidpointRounding.AwayFromZero));
+
+        return quarters switch
+        {
+            1 => $"{wholeYears} 1/4",
+            2 => $"{wholeYears} 1/2",
+            3 => $"{wholeYears} 3/4",
+            _ => $"{wholeYears}"
+        };
+    }
 
     private static string GetAmountClass(decimal value) => value switch
     {

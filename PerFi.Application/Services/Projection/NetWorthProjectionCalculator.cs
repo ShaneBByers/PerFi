@@ -289,6 +289,9 @@ internal static class NetWorthProjectionCalculator
                 ? Sum(groups.Where(group => group.ExpectedAmountsInTodaysDollars is not null).Select(group => group.ExpectedAmountsInTodaysDollars!))
                 : null);
 
+        var ageAtStart = CalculateAge(userConfiguration.BirthDate, periodStart);
+        var ageAtEnd = CalculateAge(userConfiguration.BirthDate, periodEnd);
+
         return new ProjectionPeriod(
             periodType,
             periodStart,
@@ -296,8 +299,9 @@ internal static class NetWorthProjectionCalculator
             periodEnd.Year,
             quarter,
             !isFullyHistorical,
-            CalculateAge(userConfiguration.BirthDate, periodStart),
-            CalculateAge(userConfiguration.BirthDate, periodEnd),
+            ageAtStart,
+            ageAtEnd,
+            CalculateFractionalAge(userConfiguration.BirthDate, periodStart, periodEnd, ageAtStart, ageAtEnd),
             SalaryLookup.GetSalaryAt(salaryProgressions, userConfiguration.ExpectedAnnualSalaryRaisePercentage, periodStart),
             SalaryLookup.GetSalaryAt(salaryProgressions, userConfiguration.ExpectedAnnualSalaryRaisePercentage, periodEnd),
             groups,
@@ -435,5 +439,39 @@ internal static class NetWorthProjectionCalculator
             age--;
 
         return age;
+    }
+
+    // Weighted average age across the period based on the real birthday date, rounded to the nearest quarter (e.g. 34.5) so the UI can show a single intuitive age instead of a start-end range.
+    private static decimal CalculateFractionalAge(DateOnly birthDate, DateOnly periodStart, DateOnly periodEnd, int ageAtStart, int ageAtEnd)
+    {
+        if (ageAtStart == ageAtEnd)
+            return ageAtStart;
+
+        var birthday = GetBirthdayOccurrence(birthDate, periodStart, periodEnd);
+        var totalDays = periodEnd.DayNumber - periodStart.DayNumber + 1;
+        var daysAtNewAge = periodEnd.DayNumber - birthday.DayNumber + 1;
+        var fraction = Math.Clamp((decimal)daysAtNewAge / totalDays, 0m, 1m);
+        var roundedQuarter = Math.Round(fraction * 4, MidpointRounding.AwayFromZero) / 4m;
+
+        return ageAtStart + roundedQuarter;
+    }
+
+    private static DateOnly GetBirthdayOccurrence(DateOnly birthDate, DateOnly periodStart, DateOnly periodEnd)
+    {
+        for (var year = periodStart.Year; year <= periodEnd.Year; year++)
+        {
+            var birthday = ToDateInYear(birthDate, year);
+            if (birthday >= periodStart && birthday <= periodEnd)
+                return birthday;
+        }
+
+        return periodStart;
+    }
+
+    private static DateOnly ToDateInYear(DateOnly birthDate, int year)
+    {
+        // Treat Feb 29 birthdays as Feb 28 in non-leap years.
+        var day = birthDate is { Month: 2, Day: 29 } && !DateTime.IsLeapYear(year) ? 28 : birthDate.Day;
+        return new DateOnly(year, birthDate.Month, day);
     }
 }

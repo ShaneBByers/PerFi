@@ -429,3 +429,49 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* Bulk contribution dates */
+
+.bulk-count-input {
+    width: 5rem;
+}
+
+.bulk-date-list {
+    border: 1px solid var(--pf-border-soft);
+    background: rgba(9, 14, 22, 0.35);
+    border-radius: 10px;
+    padding: 0.6rem;
+    max-height: 9rem;
+    overflow-y: auto;
+}
+
+.bulk-date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(9, 14, 22, 0.55);
+    border: 1px solid var(--pf-border-soft);
+    color: var(--pf-text-secondary);
+    font-weight: 500;
+    font-size: 0.78rem;
+    padding: 0.35rem 0.5rem;
+}
+
+.bulk-date-chip-remove {
+    border: none;
+    background: none;
+    color: inherit;
+    line-height: 1;
+    padding: 0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    opacity: 0.75;
+}
+
+.bulk-date-chip-remove:hover {
+    opacity: 1;
+}
+
+.bulk-date-count {
+    color: var(--pf-text-secondary);
+}

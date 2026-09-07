@@ -10,6 +10,7 @@ public sealed record ProjectionPeriod(
     bool IsProjected,
     int UserAgeAtStart,
     int UserAgeAtEnd,
+    decimal FractionalAge,
     decimal SalaryAtStart,
     decimal SalaryAtEnd,
     IReadOnlyList<ProjectionGroup> Groups,

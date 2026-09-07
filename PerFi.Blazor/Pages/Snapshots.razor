@@ -133,7 +133,14 @@
                                             {
                                                 <th class="text-end @(column.IsDraft ? "new-entry-column-header" : "matrix-column-clickable")"
                                                     @onclick="() => OnMatrixColumnHeaderClicked(column)">
-                                                    <span>@column.Date.ToString("MMM dd, yyyy")</span>
+                                                    @if (column.IsDraft)
+                                                    {
+                                                        <input type="date" class="form-control form-control-sm text-end" value="@pendingMatrixEntryDate.ToString("yyyy-MM-dd")" @onchange="eventArgs => OnPendingMatrixEntryDateChanged(eventArgs.Value?.ToString())" @onclick:stopPropagation="true" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@column.Date.ToString("MMM dd, yyyy")</span>
+                                                    }
                                                 </th>
                                             }
                                         </tr>
@@ -400,6 +407,7 @@
     private bool isMatrixEditMode;
     private bool showCustomRangeInputs;
     private bool shouldScrollLedgerToEnd;
+    private DateOnly pendingMatrixEntryDate = DateOnly.FromDateTime(DateTime.Today);
     private string activeSection = "grid";
     private string selectedHeroGroupName = string.Empty;
     private string selectedRangePreset = "ytd";
@@ -494,6 +502,7 @@
     {
         hasPendingMatrixEntry = true;
         isMatrixEditMode = true;
+        pendingMatrixEntryDate = DateOnly.FromDateTime(DateTime.Today);
         RemoveWhere(matrixCellValidationErrors, key => key.SnapshotId == PendingMatrixSnapshotId);
         RemoveWhere(matrixCellInputOverrides, key => key.SnapshotId == PendingMatrixSnapshotId);
         RemoveWhere(matrixCellEdits, key => key.SnapshotId == PendingMatrixSnapshotId);
@@ -1137,7 +1146,7 @@
             .ToList();
 
         if (hasPendingMatrixEntry)
-            columns.Add(new MatrixSnapshotColumn(PendingMatrixSnapshotId, DateOnly.FromDateTime(DateTime.Today), true));
+            columns.Add(new MatrixSnapshotColumn(PendingMatrixSnapshotId, pendingMatrixEntryDate, true));
 
         return columns;
     }
@@ -1351,6 +1360,12 @@
         matrixCellEdits[(snapshotId, accountId)] = parsed;
     }
 
+    private void OnPendingMatrixEntryDateChanged(string? rawValue)
+    {
+        if (DateOnly.TryParse(rawValue, out var parsed))
+            pendingMatrixEntryDate = parsed;
+    }
+
     private void DiscardMatrixEdits()
     {
         matrixCellEdits.Clear();
@@ -1383,7 +1398,7 @@
             }
 
             var createResult = await SnapshotsApiClient.CreateAsync(
-                DateOnly.FromDateTime(DateTime.Today),
+                pendingMatrixEntryDate,
                 matrixCellEdits
                     .Where(item => item.Key.SnapshotId == PendingMatrixSnapshotId)
                     .ToDictionary(item => item.Key.AccountId, item => item.Value));

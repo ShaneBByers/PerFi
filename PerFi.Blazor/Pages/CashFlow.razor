@@ -585,11 +585,18 @@
     {
         <EditForm Model="createContributionModel" OnValidSubmit="CreateContributionAsync">
             <DataAnnotationsValidator />
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="bulkAddToggle" checked="@isBulkAddMode" @onchange="ToggleBulkAddMode" />
+                <label class="form-check-label" for="bulkAddToggle">Add multiple dates (same amount, contributor, and account)</label>
+            </div>
             <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label" for="contributionDate">Date</label>
-                    <InputDate id="contributionDate" class="form-control" @bind-Value="createContributionModel.Date" />
-                </div>
+                @if (!isBulkAddMode)
+                {
+                    <div class="col-md-6">
+                        <label class="form-label" for="contributionDate">Date</label>
+                        <InputDate id="contributionDate" class="form-control" @bind-Value="createContributionModel.Date" />
+                    </div>
+                }
                 <div class="col-md-6">
                     <label class="form-label" for="contributionAmount">Amount</label>
                     <InputNumber id="contributionAmount" class="form-control" @bind-Value="createContributionModel.Amount" />
@@ -613,8 +620,62 @@
                         }
                     </InputSelect>
                 </div>
+
+                @if (isBulkAddMode)
+                {
+                    <div class="col-12">
+                        <hr class="my-1" />
+                        <label class="form-label mb-1">Dates</label>
+                        <div class="bulk-date-generator d-flex gap-2 flex-wrap align-items-end mb-2">
+                            <div>
+                                <label class="form-label small mb-1" for="bulkStartDate">Start date</label>
+                                <input type="date" id="bulkStartDate" class="form-control form-control-sm" @bind="bulkGenerateStartDate" />
+                            </div>
+                            <div>
+                                <label class="form-label small mb-1" for="bulkFrequency">Frequency</label>
+                                <select id="bulkFrequency" class="form-select form-select-sm" @bind="bulkGenerateFrequency">
+                                    <option value="weekly">Weekly</option>
+                                    <option value="biweekly">Every 2 weeks</option>
+                                    <option value="semimonthly">Twice a month</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label small mb-1" for="bulkCount">Count</label>
+                                <input type="number" id="bulkCount" class="form-control form-control-sm bulk-count-input" min="1" max="52" @bind="bulkGenerateCount" />
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" type="button" @onclick="GenerateBulkDates">Generate Dates</button>
+                        </div>
+
+                        <div class="bulk-date-add d-flex gap-2 align-items-end mb-2">
+                            <div class="flex-grow-1">
+                                <label class="form-label small mb-1" for="bulkSingleDate">Add a single date</label>
+                                <input type="date" id="bulkSingleDate" class="form-control form-control-sm" @bind="bulkSingleDate" />
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="AddBulkDate">+ Add Date</button>
+                        </div>
+
+                        <EmptyState IsVisible="@(bulkContributionDates.Count == 0)" Message="No dates added yet." />
+                        @if (bulkContributionDates.Count > 0)
+                        {
+                            <div class="bulk-date-list d-flex gap-2 flex-wrap">
+                                @foreach (var date in bulkContributionDates)
+                                {
+                                    <span class="badge bulk-date-chip">
+                                        @date.ToString("MMM dd, yyyy")
+                                        <button type="button" class="bulk-date-chip-remove" aria-label="Remove date" @onclick="() => RemoveBulkDate(date)">&times;</button>
+                                    </span>
+                                }
+                            </div>
+                            <p class="bulk-date-count small mt-1 mb-0">@bulkContributionDates.Count date(s) will be added.</p>
+                        }
+                    </div>
+                }
+
                 <div class="col-12 d-flex gap-2 flex-wrap">
-                    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">Save Contribution</button>
+                    <button class="btn btn-primary" type="submit" disabled="@(isSubmitting || (isBulkAddMode && bulkContributionDates.Count == 0))">
+                        @(isBulkAddMode ? $"Add {bulkContributionDates.Count} Contribution(s)" : "Save Contribution")
+                    </button>
                     <button class="btn btn-outline-secondary" type="button" @onclick="CloseContributionModal">Cancel</button>
                 </div>
             </div>
@@ -683,6 +744,12 @@
     private EditContributionModel? editContributionModel;
     private bool isCreatingTransaction;
     private bool isCreatingContribution;
+    private bool isBulkAddMode;
+    private readonly List<DateOnly> bulkContributionDates = [];
+    private DateOnly bulkGenerateStartDate = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly bulkSingleDate = DateOnly.FromDateTime(DateTime.Today);
+    private string bulkGenerateFrequency = "biweekly";
+    private int bulkGenerateCount = 1;
     private bool isLoading = true;
     private bool isSubmitting;
     private bool showRangePicker;
@@ -869,12 +936,86 @@
         editTransactionModel = null;
     }
 
-    private void OpenCreateContributionModal() => isCreatingContribution = true;
+    private void OpenCreateContributionModal()
+    {
+        isCreatingContribution = true;
+        isBulkAddMode = false;
+        bulkContributionDates.Clear();
+        bulkGenerateStartDate = DateOnly.FromDateTime(DateTime.Today);
+        bulkSingleDate = DateOnly.FromDateTime(DateTime.Today);
+        bulkGenerateCount = 1;
+    }
 
     private void CloseContributionModal()
     {
         isCreatingContribution = false;
         editContributionModel = null;
+        isBulkAddMode = false;
+        bulkContributionDates.Clear();
+    }
+
+    private void ToggleBulkAddMode(ChangeEventArgs e)
+    {
+        isBulkAddMode = e.Value is bool value && value;
+        if (!isBulkAddMode)
+            bulkContributionDates.Clear();
+    }
+
+    private void AddBulkDate()
+    {
+        if (bulkContributionDates.Contains(bulkSingleDate))
+            return;
+
+        bulkContributionDates.Add(bulkSingleDate);
+        bulkContributionDates.Sort();
+    }
+
+    private void RemoveBulkDate(DateOnly date) => bulkContributionDates.Remove(date);
+
+    private void GenerateBulkDates()
+    {
+        if (bulkGenerateCount < 1)
+            return;
+
+        IEnumerable<DateOnly> generated = bulkGenerateFrequency switch
+        {
+            "weekly" => Enumerable.Range(0, bulkGenerateCount).Select(i => bulkGenerateStartDate.AddDays(i * 7)),
+            "biweekly" => Enumerable.Range(0, bulkGenerateCount).Select(i => bulkGenerateStartDate.AddDays(i * 14)),
+            "monthly" => Enumerable.Range(0, bulkGenerateCount).Select(i => bulkGenerateStartDate.AddMonths(i)),
+            "semimonthly" => GenerateSemiMonthlyDates(bulkGenerateStartDate, bulkGenerateCount),
+            _ => []
+        };
+
+        foreach (var date in generated)
+        {
+            if (!bulkContributionDates.Contains(date))
+                bulkContributionDates.Add(date);
+        }
+
+        bulkContributionDates.Sort();
+    }
+
+    private static List<DateOnly> GenerateSemiMonthlyDates(DateOnly startDate, int count)
+    {
+        var dates = new List<DateOnly>();
+        var month = new DateOnly(startDate.Year, startDate.Month, 1);
+
+        while (dates.Count < count)
+        {
+            foreach (var day in new[] { 1, 15 })
+            {
+                if (dates.Count >= count)
+                    break;
+
+                var candidate = new DateOnly(month.Year, month.Month, day);
+                if (candidate >= startDate)
+                    dates.Add(candidate);
+            }
+
+            month = month.AddMonths(1);
+        }
+
+        return dates;
     }
 
     private void RebuildCashFlowView()
@@ -895,8 +1036,8 @@
             .DefaultIfEmpty(DateOnly.FromDateTime(DateTime.Today))
             .Max();
 
-        filteredTransactions.AddRange(FilterByRange(transactions, t => t.Date, latestDate).OrderByDescending(t => t.Date));
-        filteredContributions.AddRange(FilterByRange(contributions, c => c.Date, latestDate).OrderByDescending(c => c.Date));
+        filteredTransactions.AddRange(FilterByRange(transactions, t => t.Date, latestDate).OrderByDescending(t => t.Date).ThenByDescending(t => t.Amount));
+        filteredContributions.AddRange(FilterByRange(contributions, c => c.Date, latestDate).OrderByDescending(c => c.Date).ThenByDescending(c => c.Amount));
 
         totalTransactions = filteredTransactions.Sum(t => t.Amount);
         totalContributions = filteredContributions.Sum(c => c.Amount);
@@ -1195,6 +1336,18 @@
 
     private async Task CreateContributionAsync()
     {
+        if (createContributionModel.AccountId == 0)
+        {
+            ToastService.ShowError("Select an account before saving.");
+            return;
+        }
+
+        if (isBulkAddMode)
+        {
+            await CreateBulkContributionsAsync();
+            return;
+        }
+
         isSubmitting = true;
 
         var result = await ContributionsApiClient.CreateAsync(
@@ -1215,6 +1368,47 @@
         createContributionModel.AccountId = 0;
         CloseContributionModal();
         ToastService.ShowSuccess("Contribution saved.");
+        await LoadAllAsync();
+    }
+
+    private async Task CreateBulkContributionsAsync()
+    {
+        if (bulkContributionDates.Count == 0)
+        {
+            ToastService.ShowError("Add at least one date before saving.");
+            return;
+        }
+
+        isSubmitting = true;
+
+        var succeeded = 0;
+        var failures = new List<string>();
+
+        foreach (var date in bulkContributionDates)
+        {
+            var result = await ContributionsApiClient.CreateAsync(
+                date,
+                createContributionModel.Amount,
+                createContributionModel.Contributor,
+                createContributionModel.AccountId);
+
+            if (result.IsSuccess)
+                succeeded++;
+            else
+                failures.Add($"{date:MMM dd, yyyy}: {result.ErrorMessage}");
+        }
+
+        isSubmitting = false;
+
+        if (failures.Count > 0)
+            ToastService.ShowError($"Added {succeeded} of {bulkContributionDates.Count} contributions. Failures: {string.Join("; ", failures)}");
+        else
+            ToastService.ShowSuccess($"Added {succeeded} contribution(s).");
+
+        createContributionModel.Amount = 0m;
+        createContributionModel.Contributor = ContributionContributorType.Self;
+        createContributionModel.AccountId = 0;
+        CloseContributionModal();
         await LoadAllAsync();
     }
 

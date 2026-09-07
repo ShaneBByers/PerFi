@@ -100,6 +100,7 @@ public sealed record ProjectionPeriodResponse(
     bool IsProjected,
     int UserAgeAtStart,
     int UserAgeAtEnd,
+    decimal FractionalAge,
     decimal SalaryAtStart,
     decimal SalaryAtEnd,
     IReadOnlyList<ProjectionGroupResponse> Groups,
