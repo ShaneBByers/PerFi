@@ -151,13 +151,61 @@ public class NetWorthProjectionCalculatorTests
         var periods = NetWorthProjectionCalculator.Calculate(
             [account], snapshots, contributions, [], userConfiguration, [], today);
 
-        var q3 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2026 && p.Quarter == 3);
+        // The in-progress Q3 now splits into an actual (Jul 1 - Sep 7) and a projected (Sep 8 - Sep 30) period.
+        var q3Periods = periods.Where(p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2026 && p.Quarter == 3).ToList();
+        Assert.Equal(2, q3Periods.Count);
 
-        Assert.True(q3.IsProjected);
-        Assert.Equal(1000m, q3.Total.Amounts.StartingAmount);
-        Assert.Equal(500m, q3.Total.Amounts.ContributedAmount);
-        Assert.Equal(1500m, q3.Total.Amounts.FinalAmount);
-        Assert.Equal(0m, q3.Total.Amounts.GrowthAmount);
+        var actualQ3 = q3Periods.Single(p => !p.IsProjected);
+        Assert.Equal(new DateOnly(2026, 9, 7), actualQ3.PeriodEnd);
+        Assert.Equal(1000m, actualQ3.Total.Amounts.StartingAmount);
+        Assert.Equal(500m, actualQ3.Total.Amounts.ContributedAmount);
+        Assert.Equal(1500m, actualQ3.Total.Amounts.FinalAmount);
+        Assert.Equal(0m, actualQ3.Total.Amounts.GrowthAmount);
+
+        var projectedQ3 = q3Periods.Single(p => p.IsProjected);
+        Assert.Equal(new DateOnly(2026, 9, 8), projectedQ3.PeriodStart);
+        Assert.Equal(1500m, projectedQ3.Total.Amounts.StartingAmount);
+        Assert.Equal(0m, projectedQ3.Total.Amounts.ContributedAmount);
+        Assert.Equal(1500m, projectedQ3.Total.Amounts.FinalAmount);
+        Assert.Equal(0m, projectedQ3.Total.Amounts.GrowthAmount);
+    }
+
+    [Fact]
+    public void Calculate_InProgressQuarter_SplitsIntoActualAndProjectedWithoutDisturbingOtherQuarters()
+    {
+        var account = CreateAccount(expectedAnnualGrowthPercentage: 0m);
+        var today = new DateOnly(2026, 8, 15); // Mid Q3 2026 (quarter ends 2026-09-30).
+        var snapshots = new List<FinanceSnapshot>
+        {
+            CreateSnapshot(account, new DateOnly(2026, 1, 1), 1000m),
+            CreateSnapshot(account, today, 1200m)
+        };
+        var userConfiguration = CreateUserConfiguration();
+
+        var periods = NetWorthProjectionCalculator.Calculate(
+            [account], snapshots, [], [], userConfiguration, [], today);
+
+        // Q1 and Q2 (fully historical, before the in-progress quarter) are untouched, single entries each.
+        var q1 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2026 && p.Quarter == 1);
+        Assert.False(q1.IsProjected);
+        var q2 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2026 && p.Quarter == 2);
+        Assert.False(q2.IsProjected);
+
+        // Q3 splits into exactly 2 entries.
+        var q3Periods = periods.Where(p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2026 && p.Quarter == 3).ToList();
+        Assert.Equal(2, q3Periods.Count);
+        Assert.Contains(q3Periods, p => !p.IsProjected && p.PeriodEnd == today);
+        Assert.Contains(q3Periods, p => p.IsProjected && p.PeriodStart == today.AddDays(1) && p.PeriodEnd == new DateOnly(2026, 9, 30));
+
+        // Q4 (fully in the future) remains a single, fully-projected entry.
+        var q4 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Quarterly && p.CalendarYear == 2026 && p.Quarter == 4);
+        Assert.True(q4.IsProjected);
+
+        // The Annual period for 2026 still spans Jan 1 - Dec 31 and its Contributed/Growth reconcile across the split quarters.
+        var year2026 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Annual && p.CalendarYear == 2026);
+        Assert.Equal(new DateOnly(2026, 1, 1), year2026.PeriodStart);
+        Assert.Equal(new DateOnly(2026, 12, 31), year2026.PeriodEnd);
+        Assert.Equal(1000m, year2026.Total.Amounts.StartingAmount);
     }
 
     [Fact]

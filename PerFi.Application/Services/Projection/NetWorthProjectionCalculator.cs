@@ -37,6 +37,7 @@ internal static class NetWorthProjectionCalculator
             .ToDictionary(group => group.Key, group => (IReadOnlyList<Contribution>)group.ToList());
 
         var checkpoints = BuildQuarterEndCheckpoints(overallStart, cutoffDate);
+        InsertTodayCheckpointIfInProgress(checkpoints, today);
 
         var accountTimelines = accounts
             .Select(account => BuildAccountTimeline(
@@ -80,7 +81,7 @@ internal static class NetWorthProjectionCalculator
                 periods.Add(BuildPeriod(
                     ProjectionPeriodType.Annual,
                     checkpoints,
-                    Math.Max(0, index - 4),
+                    FindAnnualStartIndex(checkpoints, index),
                     index,
                     null,
                     accountTimelines,
@@ -127,6 +128,30 @@ internal static class NetWorthProjectionCalculator
     {
         if (quarterEnd > overallStart)
             checkpoints.Add(quarterEnd);
+    }
+
+    // If "today" falls strictly inside the in-progress quarter (not already a checkpoint), insert it so that quarter
+    // splits into an actual period ending today and a projected period starting the next day, instead of one period
+    // whose entire span is misleadingly marked Projected even though most of it already happened.
+    private static void InsertTodayCheckpointIfInProgress(List<DateOnly> checkpoints, DateOnly today)
+    {
+        if (checkpoints.Contains(today))
+            return;
+
+        var insertIndex = checkpoints.FindIndex(checkpoint => checkpoint > today);
+        if (insertIndex <= 0)
+            return;
+
+        checkpoints.Insert(insertIndex, today);
+    }
+
+    // Locates the checkpoint for Dec 31 of the prior year rather than assuming a fixed 4-checkpoint offset,
+    // since the in-progress year may have an extra "today" checkpoint inserted above.
+    private static int FindAnnualStartIndex(List<DateOnly> checkpoints, int yearEndIndex)
+    {
+        var priorYearEndBoundary = new DateOnly(checkpoints[yearEndIndex].Year - 1, 12, 31);
+        var index = checkpoints.IndexOf(priorYearEndBoundary);
+        return index < 0 ? 0 : index;
     }
 
     private static AccountTimeline BuildAccountTimeline(

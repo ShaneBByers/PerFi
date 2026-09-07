@@ -168,7 +168,10 @@
                                                 var quarterAmounts = GetAmounts(GetGroup(quarter, selectedGroupName));
                                                 <tr class="quarter-row">
                                                     <td></td>
-                                                    <td>Q@(quarter.Quarter)</td>
+                                                    <td>
+                                                        Q@(quarter.Quarter)
+                                                        <div class="period-range">@quarter.PeriodStart.ToString("MMM d") &ndash; @quarter.PeriodEnd.ToString("MMM d")</div>
+                                                    </td>
                                                     <td>@FormatAge(quarter.FractionalAge)</td>
                                                     <td class="text-end">@FormatCurrency(quarter.SalaryAtStart)</td>
                                                     <td class="text-end">@FormatCurrency(quarterAmounts.StartingAmount)</td>
