@@ -19,7 +19,7 @@ public sealed class UserConfigurationControllerTests
         };
 
     private static CreateUserConfigurationRequest CreateRequest()
-        => new(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m);
+        => new(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65);
 
     [Fact]
     public async Task Get_WhenMissing_ReturnsNotFound()
@@ -46,7 +46,17 @@ public sealed class UserConfigurationControllerTests
     {
         var controller = CreateController(new RecordingUserConfigurationService());
 
-        var result = await controller.Create(new CreateUserConfigurationRequest(default, PayCycleType.BiWeekly, default, 0m, 0m));
+        var result = await controller.Create(new CreateUserConfigurationRequest(default, PayCycleType.BiWeekly, default, 0m, 0m, 65));
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Create_WithOutOfRangeRetirementAge_ReturnsBadRequest()
+    {
+        var controller = CreateController(new RecordingUserConfigurationService());
+
+        var result = await controller.Create(new CreateUserConfigurationRequest(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 0));
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -56,7 +66,7 @@ public sealed class UserConfigurationControllerTests
     {
         var service = new RecordingUserConfigurationService
         {
-            CreateResult = Result<UserConfiguration>.Success(new UserConfiguration(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m))
+            CreateResult = Result<UserConfiguration>.Success(new UserConfiguration(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65))
         };
         var controller = CreateController(service);
 
@@ -71,7 +81,7 @@ public sealed class UserConfigurationControllerTests
         var service = new RecordingUserConfigurationService { UpdateResult = Result.Failure("User configuration with ID '1' not found.") };
         var controller = CreateController(service);
 
-        var result = await controller.Update(1, new UpdateUserConfigurationRequest(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m));
+        var result = await controller.Update(1, new UpdateUserConfigurationRequest(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65));
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -82,14 +92,14 @@ public sealed class UserConfigurationControllerTests
         var service = new RecordingUserConfigurationService { UpdateResult = Result.Success() };
         var controller = CreateController(service);
 
-        var result = await controller.Update(1, new UpdateUserConfigurationRequest(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m));
+        var result = await controller.Update(1, new UpdateUserConfigurationRequest(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65));
 
         Assert.IsType<NoContentResult>(result);
     }
 
     private sealed class RecordingUserConfigurationService : IUserConfigurationService
     {
-        public UserConfiguration? ConfigurationToReturn { get; set; } = new(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m);
+        public UserConfiguration? ConfigurationToReturn { get; set; } = new(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65);
         public Result<UserConfiguration> CreateResult { get; set; } = Result<UserConfiguration>.Failure("Not implemented in test.");
         public Result UpdateResult { get; set; } = Result.Failure("Not implemented in test.");
 

@@ -11,12 +11,12 @@ namespace PerFi.Tests.Application.Unit;
 public class UserConfigurationServiceTests
 {
     private static CreateUserConfigurationCommand CreateCommand()
-        => new(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m);
+        => new(new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65);
 
     [Fact]
     public async Task GetUserConfigurationAsync_DelegatesToRepository()
     {
-        var config = new UserConfiguration(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m);
+        var config = new UserConfiguration(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65);
         var repo = new Mock<IUserConfigurationRepository>();
         repo.Setup(r => r.GetUserConfigurationAsync(It.IsAny<CancellationToken>())).ReturnsAsync(config);
 
@@ -71,7 +71,7 @@ public class UserConfigurationServiceTests
 
         var service = new UserConfigurationService(repo.Object);
 
-        var result = await service.UpdateUserConfigurationAsync(new UpdateUserConfigurationCommand(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m));
+        var result = await service.UpdateUserConfigurationAsync(new UpdateUserConfigurationCommand(1, new DateOnly(1990, 1, 1), PayCycleType.BiWeekly, new DateOnly(2026, 1, 2), 0.03m, 0.025m, 65));
 
         Assert.True(result.IsSuccess);
     }

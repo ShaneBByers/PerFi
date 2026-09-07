@@ -34,14 +34,16 @@ public sealed record CreateUserConfigurationRequest(
     PayCycleType PayCycleType,
     DateOnly ReferencePayDate,
     decimal ExpectedAnnualSalaryRaisePercentage,
-    decimal ExpectedAnnualInflationPercentage);
+    decimal ExpectedAnnualInflationPercentage,
+    int RetirementAge);
 
 public sealed record UpdateUserConfigurationRequest(
     DateOnly BirthDate,
     PayCycleType PayCycleType,
     DateOnly ReferencePayDate,
     decimal ExpectedAnnualSalaryRaisePercentage,
-    decimal ExpectedAnnualInflationPercentage);
+    decimal ExpectedAnnualInflationPercentage,
+    int RetirementAge);
 
 public sealed record CreateAccountContributionPlanRequest(
     ContributionContributorType ContributorType,

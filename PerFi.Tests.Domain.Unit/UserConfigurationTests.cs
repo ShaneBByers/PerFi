@@ -16,13 +16,15 @@ public class UserConfigurationTests
             PayCycleType.BiWeekly,
             referencePayDate,
             expectedAnnualSalaryRaisePercentage: 0.03m,
-            expectedAnnualInflationPercentage: 0.025m);
+            expectedAnnualInflationPercentage: 0.025m,
+            retirementAge: 65);
 
         Assert.Equal(birthDate, config.BirthDate);
         Assert.Equal(PayCycleType.BiWeekly, config.PayCycleType);
         Assert.Equal(referencePayDate, config.ReferencePayDate);
         Assert.Equal(0.03m, config.ExpectedAnnualSalaryRaisePercentage);
         Assert.Equal(0.025m, config.ExpectedAnnualInflationPercentage);
+        Assert.Equal(65, config.RetirementAge);
     }
 
     [Fact]
@@ -37,7 +39,8 @@ public class UserConfigurationTests
             PayCycleType.Weekly,
             referencePayDate,
             expectedAnnualSalaryRaisePercentage: 0.04m,
-            expectedAnnualInflationPercentage: 0.03m);
+            expectedAnnualInflationPercentage: 0.03m,
+            retirementAge: 70);
 
         Assert.Equal(42, config.Id);
         Assert.Equal(birthDate, config.BirthDate);
@@ -45,5 +48,6 @@ public class UserConfigurationTests
         Assert.Equal(referencePayDate, config.ReferencePayDate);
         Assert.Equal(0.04m, config.ExpectedAnnualSalaryRaisePercentage);
         Assert.Equal(0.03m, config.ExpectedAnnualInflationPercentage);
+        Assert.Equal(70, config.RetirementAge);
     }
 }

@@ -27,7 +27,8 @@ public sealed record BackupUserConfiguration(
     string PayCycleType,
     DateOnly ReferencePayDate,
     decimal ExpectedAnnualSalaryRaisePercentage,
-    decimal ExpectedAnnualInflationPercentage);
+    decimal ExpectedAnnualInflationPercentage,
+    int RetirementAge = 65);
 
 public sealed record BackupSalaryProgression(DateOnly EffectiveDate, decimal AnnualSalary);
 

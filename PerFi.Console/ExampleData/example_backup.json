@@ -7,7 +7,8 @@
     "payCycleType": "BiWeekly",
     "referencePayDate": "2024-01-05",
     "expectedAnnualSalaryRaisePercentage": 3,
-    "expectedAnnualInflationPercentage": 2.5
+    "expectedAnnualInflationPercentage": 2.5,
+    "retirementAge": 65
   },
   "salaryProgressions": [
     {

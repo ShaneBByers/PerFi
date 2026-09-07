@@ -37,7 +37,8 @@ public class UserConfigurationController(IUserConfigurationService userConfigura
             request.PayCycleType,
             request.ReferencePayDate,
             request.ExpectedAnnualSalaryRaisePercentage,
-            request.ExpectedAnnualInflationPercentage);
+            request.ExpectedAnnualInflationPercentage,
+            request.RetirementAge);
 
         var result = await userConfigurationService.CreateUserConfigurationAsync(command, HttpContext.RequestAborted);
 
@@ -65,7 +66,8 @@ public class UserConfigurationController(IUserConfigurationService userConfigura
             request.PayCycleType,
             request.ReferencePayDate,
             request.ExpectedAnnualSalaryRaisePercentage,
-            request.ExpectedAnnualInflationPercentage);
+            request.ExpectedAnnualInflationPercentage,
+            request.RetirementAge);
 
         var result = await userConfigurationService.UpdateUserConfigurationAsync(command, HttpContext.RequestAborted);
 
@@ -83,7 +85,8 @@ public class UserConfigurationController(IUserConfigurationService userConfigura
         userConfiguration.PayCycleType,
         userConfiguration.ReferencePayDate,
         userConfiguration.ExpectedAnnualSalaryRaisePercentage,
-        userConfiguration.ExpectedAnnualInflationPercentage);
+        userConfiguration.ExpectedAnnualInflationPercentage,
+        userConfiguration.RetirementAge);
 
     private static bool IsNotFoundError(string? error)
         => !string.IsNullOrWhiteSpace(error) && error.Contains("not found", StringComparison.OrdinalIgnoreCase);

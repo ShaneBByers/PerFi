@@ -141,7 +141,8 @@ public static class RequestValidator
             request.PayCycleType,
             request.ReferencePayDate,
             request.ExpectedAnnualSalaryRaisePercentage,
-            request.ExpectedAnnualInflationPercentage);
+            request.ExpectedAnnualInflationPercentage,
+            request.RetirementAge);
     }
 
     public static IReadOnlyDictionary<string, string[]> ValidateUpdateUserConfigurationRequest(Requests.UpdateUserConfigurationRequest request)
@@ -151,7 +152,8 @@ public static class RequestValidator
             request.PayCycleType,
             request.ReferencePayDate,
             request.ExpectedAnnualSalaryRaisePercentage,
-            request.ExpectedAnnualInflationPercentage);
+            request.ExpectedAnnualInflationPercentage,
+            request.RetirementAge);
     }
 
     public static IReadOnlyDictionary<string, string[]> ValidateBulkUpdateFinanceSnapshotCellsRequest(IReadOnlyList<Requests.SnapshotCellUpdateRequest>? updates)
@@ -332,7 +334,8 @@ public static class RequestValidator
         PayCycleType payCycleType,
         DateOnly referencePayDate,
         decimal expectedAnnualSalaryRaisePercentage,
-        decimal expectedAnnualInflationPercentage)
+        decimal expectedAnnualInflationPercentage,
+        int retirementAge)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -350,6 +353,9 @@ public static class RequestValidator
 
         if (expectedAnnualInflationPercentage is < -50 or > 100)
             errors[nameof(expectedAnnualInflationPercentage)] = ["Expected annual inflation percentage must be between -50 and 100."];
+
+        if (retirementAge is < 1 or > 120)
+            errors[nameof(retirementAge)] = ["Retirement age must be between 1 and 120."];
 
         return errors;
     }

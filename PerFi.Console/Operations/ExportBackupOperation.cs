@@ -129,7 +129,8 @@ public sealed class ExportBackupOperation(
                 userConfiguration.PayCycleType.ToString(),
                 userConfiguration.ReferencePayDate,
                 userConfiguration.ExpectedAnnualSalaryRaisePercentage,
-                userConfiguration.ExpectedAnnualInflationPercentage);
+                userConfiguration.ExpectedAnnualInflationPercentage,
+                userConfiguration.RetirementAge);
 
     private static IReadOnlyList<BackupSalaryProgression> BuildSalaryProgressions(IReadOnlyList<SalaryProgression> salaryProgressions)
         => [.. salaryProgressions

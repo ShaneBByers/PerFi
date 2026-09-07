@@ -57,6 +57,7 @@ internal class UserConfigurationRepository(
         entity.ReferencePayDate = userConfiguration.ReferencePayDate;
         entity.ExpectedAnnualSalaryRaisePercentage = userConfiguration.ExpectedAnnualSalaryRaisePercentage;
         entity.ExpectedAnnualInflationPercentage = userConfiguration.ExpectedAnnualInflationPercentage;
+        entity.RetirementAge = userConfiguration.RetirementAge;
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Result.Success();
@@ -71,6 +72,7 @@ internal class UserConfigurationRepository(
             ReferencePayDate = userConfiguration.ReferencePayDate,
             ExpectedAnnualSalaryRaisePercentage = userConfiguration.ExpectedAnnualSalaryRaisePercentage,
             ExpectedAnnualInflationPercentage = userConfiguration.ExpectedAnnualInflationPercentage,
+            RetirementAge = userConfiguration.RetirementAge,
             UserId = currentUserService.UserId
         };
     }
@@ -83,6 +85,7 @@ internal class UserConfigurationRepository(
             entity.PayCycleType,
             entity.ReferencePayDate,
             entity.ExpectedAnnualSalaryRaisePercentage,
-            entity.ExpectedAnnualInflationPercentage);
+            entity.ExpectedAnnualInflationPercentage,
+            entity.RetirementAge);
     }
 }

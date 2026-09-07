@@ -20,8 +20,9 @@ public class NetWorthProjectionCalculatorTests
         PayCycleType payCycleType = PayCycleType.Monthly,
         DateOnly referencePayDate = default,
         decimal salaryRaisePercentage = 0m,
-        decimal inflationPercentage = 0m)
-        => new(new DateOnly(1990, 1, 1), payCycleType, referencePayDate == default ? new DateOnly(2026, 1, 1) : referencePayDate, salaryRaisePercentage, inflationPercentage);
+        decimal inflationPercentage = 0m,
+        int retirementAge = 65)
+        => new(new DateOnly(1990, 1, 1), payCycleType, referencePayDate == default ? new DateOnly(2026, 1, 1) : referencePayDate, salaryRaisePercentage, inflationPercentage, retirementAge);
 
     [Fact]
     public void Calculate_FutureYear_WithFlatDollarContributionPlanAndNoGrowth_MatchesHandComputedTotal()
@@ -274,5 +275,19 @@ public class NetWorthProjectionCalculatorTests
         // The 2024 annual period is scoped to only the available data (Apr-Dec), not a fabricated Jan-Dec range.
         var year2024 = Assert.Single(periods, p => p.PeriodType == ProjectionPeriodType.Annual && p.CalendarYear == 2024);
         Assert.Equal(new DateOnly(2024, 4, 1), year2024.PeriodStart);
+    }
+
+    [Fact]
+    public void Calculate_UsesConfiguredRetirementAge_AsTheProjectionCutoff()
+    {
+        var account = CreateAccount(expectedAnnualGrowthPercentage: 0m);
+        var today = new DateOnly(2026, 1, 1);
+        // Birth date is 1990-01-01 (fixed in CreateUserConfiguration), so retirement age 36 -> cutoff year 2026.
+        var userConfiguration = CreateUserConfiguration(retirementAge: 36);
+
+        var periods = NetWorthProjectionCalculator.Calculate(
+            [account], [], [], [], userConfiguration, [], today);
+
+        Assert.Equal(2026, periods.Max(p => p.CalendarYear));
     }
 }

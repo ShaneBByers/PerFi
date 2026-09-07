@@ -10,5 +10,6 @@ public class UserConfigurationEntity
     public DateOnly ReferencePayDate { get; set; }
     public decimal ExpectedAnnualSalaryRaisePercentage { get; set; }
     public decimal ExpectedAnnualInflationPercentage { get; set; }
+    public int RetirementAge { get; set; }
     public required string UserId { get; set; }
 }

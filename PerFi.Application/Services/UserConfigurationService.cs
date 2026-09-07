@@ -22,7 +22,8 @@ internal class UserConfigurationService(IUserConfigurationRepository userConfigu
             command.PayCycleType,
             command.ReferencePayDate,
             command.ExpectedAnnualSalaryRaisePercentage,
-            command.ExpectedAnnualInflationPercentage);
+            command.ExpectedAnnualInflationPercentage,
+            command.RetirementAge);
 
         var result = await userConfigurationRepository.AddUserConfigurationAsync(userConfiguration, cancellationToken);
 
@@ -44,7 +45,8 @@ internal class UserConfigurationService(IUserConfigurationRepository userConfigu
             command.PayCycleType,
             command.ReferencePayDate,
             command.ExpectedAnnualSalaryRaisePercentage,
-            command.ExpectedAnnualInflationPercentage);
+            command.ExpectedAnnualInflationPercentage,
+            command.RetirementAge);
 
         return await userConfigurationRepository.UpdateUserConfigurationAsync(userConfiguration, cancellationToken);
     }

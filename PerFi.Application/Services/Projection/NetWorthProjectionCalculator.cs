@@ -7,8 +7,6 @@ using PlansByAccountAndType = IReadOnlyDictionary<(int AccountId, ContributionCo
 
 internal static class NetWorthProjectionCalculator
 {
-    private const int RetirementAge = 65;
-
     public static IReadOnlyList<ProjectionPeriod> Calculate(
         IReadOnlyList<Account> accounts,
         IReadOnlyList<FinanceSnapshot> snapshots,
@@ -21,7 +19,7 @@ internal static class NetWorthProjectionCalculator
         if (accounts.Count == 0)
             return [];
 
-        var cutoffDate = new DateOnly(userConfiguration.BirthDate.AddYears(RetirementAge).Year, 12, 31);
+        var cutoffDate = new DateOnly(userConfiguration.BirthDate.AddYears(userConfiguration.RetirementAge).Year, 12, 31);
         var earliestSnapshotDate = snapshots.Count > 0 ? snapshots.Min(snapshot => snapshot.Date) : today;
         var overallStart = snapshots.Count > 0 ? GetQuarterStart(earliestSnapshotDate) : new DateOnly(earliestSnapshotDate.Year, 1, 1);
 

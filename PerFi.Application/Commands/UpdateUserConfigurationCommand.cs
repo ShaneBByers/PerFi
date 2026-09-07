@@ -8,4 +8,5 @@ public record UpdateUserConfigurationCommand(
     PayCycleType PayCycleType,
     DateOnly ReferencePayDate,
     decimal ExpectedAnnualSalaryRaisePercentage,
-    decimal ExpectedAnnualInflationPercentage);
+    decimal ExpectedAnnualInflationPercentage,
+    int RetirementAge);

@@ -37,7 +37,8 @@ public sealed class UserConfigurationRepositoryTests
             payCycleType: PayCycleType.BiWeekly,
             referencePayDate: new DateOnly(2026, 1, 2),
             expectedAnnualSalaryRaisePercentage: 0.03m,
-            expectedAnnualInflationPercentage: 0.025m);
+            expectedAnnualInflationPercentage: 0.025m,
+            retirementAge: 65);
     }
 
     [Fact]
@@ -72,6 +73,7 @@ public sealed class UserConfigurationRepositoryTests
         Assert.Equal(config.ReferencePayDate, retrieved.ReferencePayDate);
         Assert.Equal(config.ExpectedAnnualSalaryRaisePercentage, retrieved.ExpectedAnnualSalaryRaisePercentage);
         Assert.Equal(config.ExpectedAnnualInflationPercentage, retrieved.ExpectedAnnualInflationPercentage);
+        Assert.Equal(config.RetirementAge, retrieved.RetirementAge);
     }
 
     [Fact]
@@ -104,6 +106,7 @@ public sealed class UserConfigurationRepositoryTests
                 ReferencePayDate = new DateOnly(2026, 1, 2),
                 ExpectedAnnualSalaryRaisePercentage = 0.02m,
                 ExpectedAnnualInflationPercentage = 0.02m,
+                RetirementAge = 65,
                 UserId = otherUserId
             };
             setupContext.UserConfigurations.Add(otherConfig);
@@ -134,7 +137,8 @@ public sealed class UserConfigurationRepositoryTests
             payCycleType: PayCycleType.Monthly,
             referencePayDate: new DateOnly(2026, 2, 1),
             expectedAnnualSalaryRaisePercentage: 0.05m,
-            expectedAnnualInflationPercentage: 0.03m);
+            expectedAnnualInflationPercentage: 0.03m,
+            retirementAge: 70);
 
         var updateResult = await repository.UpdateUserConfigurationAsync(updated);
         Assert.True(updateResult.IsSuccess);
@@ -146,6 +150,7 @@ public sealed class UserConfigurationRepositoryTests
         Assert.Equal(new DateOnly(2026, 2, 1), retrieved.ReferencePayDate);
         Assert.Equal(0.05m, retrieved.ExpectedAnnualSalaryRaisePercentage);
         Assert.Equal(0.03m, retrieved.ExpectedAnnualInflationPercentage);
+        Assert.Equal(70, retrieved.RetirementAge);
     }
 
     [Fact]
@@ -161,7 +166,8 @@ public sealed class UserConfigurationRepositoryTests
             payCycleType: PayCycleType.BiWeekly,
             referencePayDate: new DateOnly(2026, 1, 2),
             expectedAnnualSalaryRaisePercentage: 0.03m,
-            expectedAnnualInflationPercentage: 0.025m);
+            expectedAnnualInflationPercentage: 0.025m,
+            retirementAge: 65);
 
         var result = await repository.UpdateUserConfigurationAsync(config);
         Assert.True(result.IsFailure);

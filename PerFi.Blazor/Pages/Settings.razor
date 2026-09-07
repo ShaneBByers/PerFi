@@ -72,6 +72,11 @@
                                     <label class="form-label" for="inflation">Expected Annual Inflation %</label>
                                     <InputNumber id="inflation" class="form-control" @bind-Value="userConfigurationModel.ExpectedAnnualInflationPercentage" />
                                 </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label" for="retirementAge">Retirement Age</label>
+                                    <InputNumber id="retirementAge" class="form-control" @bind-Value="userConfigurationModel.RetirementAge" />
+                                </div>
                             </div>
 
                             <div class="mt-3 d-flex gap-2 flex-wrap">
@@ -959,6 +964,7 @@
                 userConfigurationModel.ReferencePayDate = userConfiguration.ReferencePayDate;
                 userConfigurationModel.ExpectedAnnualSalaryRaisePercentage = userConfiguration.ExpectedAnnualSalaryRaisePercentage;
                 userConfigurationModel.ExpectedAnnualInflationPercentage = userConfiguration.ExpectedAnnualInflationPercentage;
+                userConfigurationModel.RetirementAge = userConfiguration.RetirementAge;
             }
 
             salaryProgressions.Clear();
@@ -1040,13 +1046,15 @@
                 userConfigurationModel.PayCycleType,
                 userConfigurationModel.ReferencePayDate,
                 userConfigurationModel.ExpectedAnnualSalaryRaisePercentage,
-                userConfigurationModel.ExpectedAnnualInflationPercentage))
+                userConfigurationModel.ExpectedAnnualInflationPercentage,
+                userConfigurationModel.RetirementAge))
             : await UserConfigurationApiClient.UpdateAsync(userConfiguration.Id, new UpdateUserConfigurationRequest(
                 userConfigurationModel.BirthDate,
                 userConfigurationModel.PayCycleType,
                 userConfigurationModel.ReferencePayDate,
                 userConfigurationModel.ExpectedAnnualSalaryRaisePercentage,
-                userConfigurationModel.ExpectedAnnualInflationPercentage));
+                userConfigurationModel.ExpectedAnnualInflationPercentage,
+                userConfigurationModel.RetirementAge));
 
         isSubmitting = false;
 
@@ -1840,6 +1848,7 @@
         public DateOnly ReferencePayDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
         public decimal ExpectedAnnualSalaryRaisePercentage { get; set; }
         public decimal ExpectedAnnualInflationPercentage { get; set; }
+        public int RetirementAge { get; set; } = 65;
     }
 
     private sealed class CreateSalaryProgressionModel

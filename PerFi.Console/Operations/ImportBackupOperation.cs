@@ -150,7 +150,8 @@ public sealed class ImportBackupOperation(
                 payCycleType,
                 userConfiguration.ReferencePayDate,
                 userConfiguration.ExpectedAnnualSalaryRaisePercentage,
-                userConfiguration.ExpectedAnnualInflationPercentage),
+                userConfiguration.ExpectedAnnualInflationPercentage,
+                userConfiguration.RetirementAge),
             cancellationToken);
 
         if (result.IsFailure)
