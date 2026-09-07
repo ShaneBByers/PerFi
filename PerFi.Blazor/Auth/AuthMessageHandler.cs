@@ -13,6 +13,12 @@ public sealed class AuthMessageHandler(
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
+            // A single page load can fire several concurrent API calls; once one of them has already
+            // logged the user out and redirected, skip repeating that for the rest to avoid a redundant
+            // navigation/re-render storm on top of whatever per-call error toast the caller shows.
+            if (!authStateProvider.IsAuthenticated)
+                return response;
+
             await authStateProvider.MarkUserLoggedOutAsync();
 
             var relativePath = navigationManager.ToBaseRelativePath(navigationManager.Uri);

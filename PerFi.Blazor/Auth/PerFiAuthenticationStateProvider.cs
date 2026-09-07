@@ -8,6 +8,8 @@ public sealed class PerFiAuthenticationStateProvider : AuthenticationStateProvid
     private static readonly ClaimsPrincipal Anonymous = new(new ClaimsIdentity());
     private ClaimsPrincipal _currentUser = Anonymous;
 
+    public bool IsAuthenticated => _currentUser.Identity?.IsAuthenticated ?? false;
+
     public override Task<AuthenticationState> GetAuthenticationStateAsync() =>
         Task.FromResult(new AuthenticationState(_currentUser));
 

@@ -20,6 +20,7 @@ public class PerFiDbContext(DbContextOptions<PerFiDbContext> options)
     public DbSet<UserConfigurationEntity> UserConfigurations { get; set; }
     public DbSet<SalaryProgressionEntity> SalaryProgressions { get; set; }
     public DbSet<AccountContributionPlanEntity> AccountContributionPlans { get; set; }
+    public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

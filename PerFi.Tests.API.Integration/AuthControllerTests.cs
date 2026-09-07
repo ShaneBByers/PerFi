@@ -6,6 +6,7 @@ using PerFi.API.Controllers;
 using PerFi.API.Infrastructure.Authentication;
 using PerFi.API.Requests;
 using PerFi.Infrastructure.Entities;
+using PerFi.Infrastructure.Services;
 using PerFi.Tests.Shared;
 using Xunit;
 
@@ -30,8 +31,11 @@ public sealed class AuthControllerTests : IDisposable
         return user;
     }
 
-    private static AuthController CreateController(UserManager<ApplicationUser> userManager, IJwtTokenService tokenService)
-        => new(userManager, tokenService)
+    private static AuthController CreateController(
+        UserManager<ApplicationUser> userManager,
+        IJwtTokenService tokenService,
+        IRefreshTokenService? refreshTokenService = null)
+        => new(userManager, tokenService, refreshTokenService ?? Mock.Of<IRefreshTokenService>())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };

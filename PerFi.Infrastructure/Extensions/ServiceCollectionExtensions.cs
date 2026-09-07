@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserConfigurationRepository, UserConfigurationRepository>();
         services.AddScoped<ISalaryProgressionRepository, SalaryProgressionRepository>();
         services.AddScoped<IAccountContributionPlanRepository, AccountContributionPlanRepository>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
         return services;
     }
