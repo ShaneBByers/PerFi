@@ -13,14 +13,27 @@
         <div class="hero-top">
             <div class="hero-headline">
                 <span class="hero-eyebrow">Projection</span>
-                <strong class="hero-figure">@FormatCurrency(currentTotalNetWorth)</strong>
-                @if (heroAsOfDate is not null)
+                @if (isLoading)
                 {
-                    <span class="hero-asof">as of @heroAsOfDate.Value.ToString("MMM d, yyyy")</span>
+                    <Skeleton Width="8rem" Height="2.1rem" />
+                }
+                else
+                {
+                    <strong class="hero-figure">@FormatCurrency(currentTotalNetWorth)</strong>
+                    @if (heroAsOfDate is not null)
+                    {
+                        <span class="hero-asof">as of @heroAsOfDate.Value.ToString("MMM d, yyyy")</span>
+                    }
                 }
             </div>
 
-            @if (groupNames.Count > 0)
+            @if (isLoading)
+            {
+                <div class="hero-second-metric">
+                    <Skeleton Width="6rem" Height="1.5rem" />
+                </div>
+            }
+            else if (groupNames.Count > 0)
             {
                 <div class="hero-second-metric">
                     <select class="form-select form-select-sm hero-group-select" @bind="selectedHeroGroupName" aria-label="Second projection metric">
@@ -34,7 +47,11 @@
             }
 
             <div class="hero-sparkline" aria-hidden="true">
-                @if (totalTrendPoints.Count > 1)
+                @if (isLoading)
+                {
+                    <Skeleton Width="100%" Height="64px" Radius="8px" />
+                }
+                else if (totalTrendPoints.Count > 1)
                 {
                     <ApexChart @key="useTodaysDollars" TItem="TrendPoint" Height="64" Options="@CreateSparklineChartOptions()">
                         <ApexPointSeries TItem="TrendPoint" Items="totalTrendPoints" Name="Actual" SeriesType="SeriesType.Line" XValue="point => point.Label" YValue="point => point.ActualFinal" />
@@ -45,22 +62,37 @@
         </div>
 
         <div class="hero-chips" aria-label="Projection highlights">
-            @foreach (var chip in GetHeroChips())
+            @if (isLoading)
             {
-                <article class="hero-chip">
-                    <span class="hero-chip-label">@chip.Label</span>
-                    <div class="hero-chip-metric">
-                        <span class="hero-chip-metric-name">Total</span>
-                        <strong class="@chip.TotalValueClass">@chip.TotalDisplay</strong>
-                    </div>
-                    @if (chip.GroupDisplay is not null)
-                    {
+                @for (var i = 0; i < 3; i++)
+                {
+                    <article class="hero-chip">
+                        <span class="hero-chip-label"><Skeleton Width="4rem" Height="0.7rem" /></span>
                         <div class="hero-chip-metric">
-                            <span class="hero-chip-metric-name">@selectedHeroGroupName</span>
-                            <strong class="@chip.GroupValueClass">@chip.GroupDisplay</strong>
+                            <Skeleton Width="5rem" Height="1.1rem" />
                         </div>
-                    }
-                </article>
+                    </article>
+                }
+            }
+            else
+            {
+                @foreach (var chip in GetHeroChips())
+                {
+                    <article class="hero-chip">
+                        <span class="hero-chip-label">@chip.Label</span>
+                        <div class="hero-chip-metric">
+                            <span class="hero-chip-metric-name">Total</span>
+                            <strong class="@chip.TotalValueClass">@chip.TotalDisplay</strong>
+                        </div>
+                        @if (chip.GroupDisplay is not null)
+                        {
+                            <div class="hero-chip-metric">
+                                <span class="hero-chip-metric-name">@selectedHeroGroupName</span>
+                                <strong class="@chip.GroupValueClass">@chip.GroupDisplay</strong>
+                            </div>
+                        }
+                    </article>
+                }
             }
         </div>
 
@@ -551,6 +583,7 @@
         {
             Toolbar = new Toolbar { Show = false },
             Stacked = true,
+            Animations = new Animations { Enabled = false },
             Zoom = new Zoom { Enabled = false },
             Selection = new Selection { Enabled = false }
         },
@@ -564,6 +597,7 @@
         Chart = new Chart
         {
             Toolbar = new Toolbar { Show = false },
+            Animations = new Animations { Enabled = false },
             Zoom = new Zoom { Enabled = false },
             Selection = new Selection { Enabled = false }
         },

@@ -17,7 +17,14 @@
         <div class="hero-top">
             <div class="hero-headline">
                 <span class="hero-eyebrow">Cash Flow</span>
-                <strong class="hero-figure @GetAmountClass(trailingNetTotal)">@FormatCurrency(trailingNetTotal)</strong>
+                @if (isLoading)
+                {
+                    <Skeleton Width="8rem" Height="2.1rem" />
+                }
+                else
+                {
+                    <strong class="hero-figure @GetAmountClass(trailingNetTotal)">@FormatCurrency(trailingNetTotal)</strong>
+                }
                 <span class="hero-asof">trailing 12 months</span>
             </div>
 
@@ -26,11 +33,22 @@
                     <option value="income">Income</option>
                     <option value="spending">Spending</option>
                 </select>
-                <strong class="hero-figure hero-figure-secondary">@FormatCurrency(GetHeroSecondMetricTotal())</strong>
+                @if (isLoading)
+                {
+                    <Skeleton Width="6rem" Height="1.5rem" />
+                }
+                else
+                {
+                    <strong class="hero-figure hero-figure-secondary">@FormatCurrency(GetHeroSecondMetricTotal())</strong>
+                }
             </div>
 
             <div class="hero-sparkline" aria-hidden="true" @key="chartVersion">
-                @if (allTimeMonthlyPoints.Count > 1)
+                @if (isLoading)
+                {
+                    <Skeleton Width="100%" Height="64px" Radius="8px" />
+                }
+                else if (allTimeMonthlyPoints.Count > 1)
                 {
                     <ApexChart TItem="CashFlowMonthPoint" Height="64" Options="@CreateSparklineChartOptions()">
                         <ApexPointSeries TItem="CashFlowMonthPoint"
@@ -45,22 +63,37 @@
         </div>
 
         <div class="hero-chips" aria-label="Cash Flow highlights">
-            @foreach (var chip in GetHeroChips())
+            @if (isLoading)
             {
-                <article class="hero-chip">
-                    <span class="hero-chip-label">@chip.Label</span>
-                    <div class="hero-chip-metric">
-                        @if (chip.Delta is not null)
-                        {
-                            <strong class="@GetAmountClass(chip.Delta.Amount)">@FormatDeltaCurrency(chip.Delta.Amount)</strong>
-                            <span class="hero-chip-percent @GetAmountClass(chip.Delta.Amount)">@FormatPercent(chip.Delta.Percent)</span>
-                        }
-                        else
-                        {
-                            <strong class="amount-muted">&mdash;</strong>
-                        }
-                    </div>
-                </article>
+                @for (var i = 0; i < 3; i++)
+                {
+                    <article class="hero-chip">
+                        <span class="hero-chip-label"><Skeleton Width="4rem" Height="0.7rem" /></span>
+                        <div class="hero-chip-metric">
+                            <Skeleton Width="5rem" Height="1.1rem" />
+                        </div>
+                    </article>
+                }
+            }
+            else
+            {
+                @foreach (var chip in GetHeroChips())
+                {
+                    <article class="hero-chip">
+                        <span class="hero-chip-label">@chip.Label</span>
+                        <div class="hero-chip-metric">
+                            @if (chip.Delta is not null)
+                            {
+                                <strong class="@GetAmountClass(chip.Delta.Amount)">@FormatDeltaCurrency(chip.Delta.Amount)</strong>
+                                <span class="hero-chip-percent @GetAmountClass(chip.Delta.Amount)">@FormatPercent(chip.Delta.Percent)</span>
+                            }
+                            else
+                            {
+                                <strong class="amount-muted">&mdash;</strong>
+                            }
+                        </div>
+                    </article>
+                }
             }
         </div>
 
@@ -1553,6 +1586,7 @@
     {
         Chart = new Chart
         {
+            Animations = new Animations { Enabled = false },
             Toolbar = new Toolbar { Show = false },
             Zoom = new Zoom { Enabled = false },
             Selection = new Selection { Enabled = false }
@@ -1579,6 +1613,7 @@
     {
         Chart = new Chart
         {
+            Animations = new Animations { Enabled = false },
             Toolbar = new Toolbar { Show = false },
             Zoom = new Zoom { Enabled = false },
             Selection = new Selection { Enabled = false }
@@ -1591,6 +1626,7 @@
         Chart = new Chart
         {
             Stacked = true,
+            Animations = new Animations { Enabled = false },
             Toolbar = new Toolbar { Show = false },
             Zoom = new Zoom { Enabled = false },
             Selection = new Selection { Enabled = false }

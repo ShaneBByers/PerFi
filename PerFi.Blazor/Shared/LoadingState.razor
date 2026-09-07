@@ -1,6 +1,9 @@
 @if (IsVisible)
 {
-    <p><em>@Message</em></p>
+    <div class="pf-loading-state" role="status" aria-live="polite">
+        <span class="pf-spinner" aria-hidden="true"></span>
+        <span class="pf-loading-message">@Message</span>
+    </div>
 }
 
 @code {

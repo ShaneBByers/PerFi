@@ -1,0 +1,34 @@
+.pf-loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 2.5rem 1rem;
+    color: var(--pf-text-secondary);
+}
+
+.pf-spinner {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: none;
+    border-radius: 50%;
+    border: 2px solid var(--pf-border);
+    border-top-color: var(--pf-accent);
+    animation: pf-spin 0.7s linear infinite;
+}
+
+.pf-loading-message {
+    font-size: 0.9rem;
+}
+
+@keyframes pf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-spinner {
+        animation-duration: 1.6s;
+    }
+}

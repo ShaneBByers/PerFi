@@ -14,25 +14,43 @@
         <div class="hero-top">
             <div class="hero-headline">
                 <span class="hero-eyebrow">Net Worth</span>
-                <strong class="hero-figure">@FormatCurrency(latestTotal)</strong>
-                @if (matrixSnapshots.Count > 0)
+                @if (isLoading)
                 {
-                    <span class="hero-asof">as of @matrixSnapshots[^1].Date.ToString("MMM d, yyyy")</span>
+                    <Skeleton Width="8rem" Height="2.1rem" />
+                }
+                else
+                {
+                    <strong class="hero-figure">@FormatCurrency(latestTotal)</strong>
+                    @if (matrixSnapshots.Count > 0)
+                    {
+                        <span class="hero-asof">as of @matrixSnapshots[^1].Date.ToString("MMM d, yyyy")</span>
+                    }
                 }
             </div>
 
             <div class="hero-second-metric">
-                <select class="form-select form-select-sm hero-group-select" @bind="selectedHeroGroupName" aria-label="Second net worth metric">
-                    @foreach (var group in matrixGroups)
-                    {
-                        <option value="@group.AccountTypeGroupName">@group.AccountTypeGroupName</option>
-                    }
-                </select>
-                <strong class="hero-figure hero-figure-secondary">@FormatCurrency(GetHeroSecondMetricTotal())</strong>
+                @if (isLoading)
+                {
+                    <Skeleton Width="6rem" Height="1.5rem" />
+                }
+                else
+                {
+                    <select class="form-select form-select-sm hero-group-select" @bind="selectedHeroGroupName" aria-label="Second net worth metric">
+                        @foreach (var group in matrixGroups)
+                        {
+                            <option value="@group.AccountTypeGroupName">@group.AccountTypeGroupName</option>
+                        }
+                    </select>
+                    <strong class="hero-figure hero-figure-secondary">@FormatCurrency(GetHeroSecondMetricTotal())</strong>
+                }
             </div>
 
             <div class="hero-sparkline" aria-hidden="true" @key="chartVersion">
-                @if (allTimeTrendPoints.Count > 1)
+                @if (isLoading)
+                {
+                    <Skeleton Width="100%" Height="64px" Radius="8px" />
+                }
+                else if (allTimeTrendPoints.Count > 1)
                 {
                     <ApexChart TItem="SnapshotTrendPoint" Height="64" Options="@CreateSparklineChartOptions()">
                         <ApexPointSeries TItem="SnapshotTrendPoint"
@@ -47,35 +65,53 @@
         </div>
 
         <div class="hero-chips" aria-label="Net Worth highlights">
-            @foreach (var chip in GetHeroChips())
+            @if (isLoading)
             {
-                <article class="hero-chip">
-                    <span class="hero-chip-label">@chip.Label</span>
-                    <div class="hero-chip-metric">
-                        <span class="hero-chip-metric-name">Net Worth</span>
-                        @if (chip.NetWorthDelta is not null)
-                        {
-                            <strong class="@GetAmountClass(chip.NetWorthDelta.Amount)">@FormatDeltaCurrency(chip.NetWorthDelta.Amount)</strong>
-                            <span class="hero-chip-percent @GetAmountClass(chip.NetWorthDelta.Amount)">@FormatPercent(chip.NetWorthDelta.Percent)</span>
-                        }
-                        else
-                        {
-                            <strong class="amount-muted">&mdash;</strong>
-                        }
-                    </div>
-                    <div class="hero-chip-metric">
-                        <span class="hero-chip-metric-name">@selectedHeroGroupName</span>
-                        @if (chip.GroupDelta is not null)
-                        {
-                            <strong class="@GetAmountClass(chip.GroupDelta.Amount)">@FormatDeltaCurrency(chip.GroupDelta.Amount)</strong>
-                            <span class="hero-chip-percent @GetAmountClass(chip.GroupDelta.Amount)">@FormatPercent(chip.GroupDelta.Percent)</span>
-                        }
-                        else
-                        {
-                            <strong class="amount-muted">&mdash;</strong>
-                        }
-                    </div>
-                </article>
+                @for (var i = 0; i < 3; i++)
+                {
+                    <article class="hero-chip">
+                        <span class="hero-chip-label"><Skeleton Width="4rem" Height="0.7rem" /></span>
+                        <div class="hero-chip-metric">
+                            <Skeleton Width="5rem" Height="1.1rem" />
+                        </div>
+                        <div class="hero-chip-metric">
+                            <Skeleton Width="5rem" Height="1.1rem" />
+                        </div>
+                    </article>
+                }
+            }
+            else
+            {
+                @foreach (var chip in GetHeroChips())
+                {
+                    <article class="hero-chip">
+                        <span class="hero-chip-label">@chip.Label</span>
+                        <div class="hero-chip-metric">
+                            <span class="hero-chip-metric-name">Net Worth</span>
+                            @if (chip.NetWorthDelta is not null)
+                            {
+                                <strong class="@GetAmountClass(chip.NetWorthDelta.Amount)">@FormatDeltaCurrency(chip.NetWorthDelta.Amount)</strong>
+                                <span class="hero-chip-percent @GetAmountClass(chip.NetWorthDelta.Amount)">@FormatPercent(chip.NetWorthDelta.Percent)</span>
+                            }
+                            else
+                            {
+                                <strong class="amount-muted">&mdash;</strong>
+                            }
+                        </div>
+                        <div class="hero-chip-metric">
+                            <span class="hero-chip-metric-name">@selectedHeroGroupName</span>
+                            @if (chip.GroupDelta is not null)
+                            {
+                                <strong class="@GetAmountClass(chip.GroupDelta.Amount)">@FormatDeltaCurrency(chip.GroupDelta.Amount)</strong>
+                                <span class="hero-chip-percent @GetAmountClass(chip.GroupDelta.Amount)">@FormatPercent(chip.GroupDelta.Percent)</span>
+                            }
+                            else
+                            {
+                                <strong class="amount-muted">&mdash;</strong>
+                            }
+                        </div>
+                    </article>
+                }
             }
         </div>
     </header>
