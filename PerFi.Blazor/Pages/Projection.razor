@@ -1,6 +1,8 @@
 @page "/projection/{Section?}"
 @attribute [Authorize]
 @inject INetWorthProjectionApiClient NetWorthProjectionApiClient
+@inject IAccountsApiClient AccountsApiClient
+@inject IAccountContributionPlansApiClient AccountContributionPlansApiClient
 @inject IToastService ToastService
 
 <PageTitle>Projection</PageTitle>
@@ -83,7 +85,7 @@
                             <h2>Composition Over Time (Annual)</h2>
                         </div>
                         <ApexChart TItem="CompositionPoint" Title="Net Worth Composition by Account Type" Height="320" Options="@CreateCompositionChartOptions()">
-                            @foreach (var groupName in groupNames)
+                            @foreach (var groupName in activeGroupNames)
                             {
                                 <ApexPointSeries TItem="CompositionPoint"
                                                  Items="compositionPoints"
@@ -101,11 +103,9 @@
                             <div class="section-header">
                                 <h2>@groupChart.GroupName Trend (Annual)</h2>
                             </div>
-                            <ApexChart TItem="TrendPoint" Title="@($"{groupChart.GroupName}: Contributions, Growth & Net Worth")" Height="320" Options="@CreateTrendChartOptions()">
+                            <ApexChart TItem="TrendPoint" Title="@($"{groupChart.GroupName}: Contributions & Growth")" Height="320" Options="@CreateTrendChartOptions()">
                                 <ApexPointSeries TItem="TrendPoint" Items="groupChart.Points" Name="Contributed" SeriesType="SeriesType.Bar" XValue="point => point.Label" YValue="point => point.Contributed" />
                                 <ApexPointSeries TItem="TrendPoint" Items="groupChart.Points" Name="Growth" SeriesType="SeriesType.Bar" XValue="point => point.Label" YValue="point => point.Growth" />
-                                <ApexPointSeries TItem="TrendPoint" Items="groupChart.Points" Name="Actual Net Worth" SeriesType="SeriesType.Line" XValue="point => point.Label" YValue="point => point.ActualFinal" />
-                                <ApexPointSeries TItem="TrendPoint" Items="groupChart.Points" Name="Projected Net Worth" SeriesType="SeriesType.Line" XValue="point => point.Label" YValue="point => point.ProjectedFinal" />
                             </ApexChart>
                         </section>
                     }
@@ -134,6 +134,7 @@
                                         <th></th>
                                         <th>Period</th>
                                         <th>Age</th>
+                                        <th class="text-end">Salary</th>
                                         <th class="text-end">Starting</th>
                                         <th class="text-end">Contributed</th>
                                         <th class="text-end">Growth</th>
@@ -151,6 +152,7 @@
                                             </td>
                                             <td>@row.Annual.CalendarYear</td>
                                             <td>@row.Annual.UserAgeAtStart&ndash;@row.Annual.UserAgeAtEnd</td>
+                                            <td class="text-end">@FormatCurrency(row.Annual.SalaryAtEnd)</td>
                                             <td class="text-end">@FormatCurrency(annualAmounts.StartingAmount)</td>
                                             <td class="text-end">@FormatCurrency(annualAmounts.ContributedAmount)</td>
                                             <td class="text-end @GetAmountClass(annualAmounts.GrowthAmount)">@FormatCurrency(annualAmounts.GrowthAmount)</td>
@@ -167,6 +169,7 @@
                                                     <td></td>
                                                     <td>Q@(quarter.Quarter)</td>
                                                     <td>@quarter.UserAgeAtStart&ndash;@quarter.UserAgeAtEnd</td>
+                                                    <td class="text-end">@FormatCurrency(quarter.SalaryAtEnd)</td>
                                                     <td class="text-end">@FormatCurrency(quarterAmounts.StartingAmount)</td>
                                                     <td class="text-end">@FormatCurrency(quarterAmounts.ContributedAmount)</td>
                                                     <td class="text-end @GetAmountClass(quarterAmounts.GrowthAmount)">@FormatCurrency(quarterAmounts.GrowthAmount)</td>
@@ -224,10 +227,12 @@
 @code {
     private readonly List<ProjectionPeriodResponse> allPeriods = [];
     private readonly List<string> groupNames = [];
+    private readonly List<string> activeGroupNames = [];
+    private readonly HashSet<string> qualifyingGroupNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<YearRow> yearRows = [];
     private readonly HashSet<int> expandedYears = [];
-    private readonly List<CompositionPoint> compositionPoints = [];
-    private readonly List<TrendPoint> totalTrendPoints = [];
+    private List<CompositionPoint> compositionPoints = [];
+    private List<TrendPoint> totalTrendPoints = [];
     private readonly List<GroupTrendChart> groupTrendCharts = [];
     private readonly List<AccuracyRow> accuracyRows = [];
     private string selectedGroupName = "Total";
@@ -258,8 +263,15 @@
 
         try
         {
+            var periodsTask = NetWorthProjectionApiClient.GetProjectionAsync();
+            var qualifyingGroupNamesTask = LoadQualifyingGroupNamesAsync();
+
             allPeriods.Clear();
-            allPeriods.AddRange(await NetWorthProjectionApiClient.GetProjectionAsync());
+            allPeriods.AddRange(await periodsTask);
+
+            qualifyingGroupNames.Clear();
+            qualifyingGroupNames.UnionWith(await qualifyingGroupNamesTask);
+
             RebuildDerivedData();
         }
         catch (Exception ex)
@@ -287,6 +299,9 @@
 
         if (string.IsNullOrEmpty(selectedHeroGroupName) || !groupNames.Contains(selectedHeroGroupName, StringComparer.OrdinalIgnoreCase))
             selectedHeroGroupName = groupNames.FirstOrDefault() ?? string.Empty;
+
+        activeGroupNames.Clear();
+        activeGroupNames.AddRange(groupNames.Where(qualifyingGroupNames.Contains));
 
         yearRows.Clear();
         foreach (var year in allPeriods.Select(period => period.CalendarYear).Distinct().OrderBy(year => year))
@@ -324,7 +339,7 @@
 
     private void RebuildCompositionPoints()
     {
-        compositionPoints.Clear();
+        var points = new List<CompositionPoint>();
 
         foreach (var row in yearRows)
         {
@@ -333,8 +348,11 @@
                 group => GetAmounts(group).FinalAmount,
                 StringComparer.OrdinalIgnoreCase);
 
-            compositionPoints.Add(new CompositionPoint(row.Annual.CalendarYear.ToString(), amountsByGroup));
+            points.Add(new CompositionPoint(row.Annual.CalendarYear.ToString(), amountsByGroup));
         }
+
+        // reassign (not mutate in place) so ApexCharts sees a new list reference and redraws
+        compositionPoints = points;
     }
 
     private List<TrendPoint> BuildTrendPoints(string groupName)
@@ -367,16 +385,31 @@
 
     private void RebuildTotalTrendPoints()
     {
-        totalTrendPoints.Clear();
-        totalTrendPoints.AddRange(BuildTrendPoints("Total"));
+        // reassign (not mutate in place) so ApexCharts sees a new list reference and redraws
+        totalTrendPoints = BuildTrendPoints("Total");
     }
 
     private void RebuildGroupTrendCharts()
     {
         groupTrendCharts.Clear();
 
-        foreach (var groupName in groupNames)
+        foreach (var groupName in activeGroupNames)
             groupTrendCharts.Add(new GroupTrendChart(groupName, BuildTrendPoints(groupName)));
+    }
+
+    // a group is only chart-worthy if it has at least 1 account with a nonzero growth % and/or an AccountContributionPlan defined
+    private async Task<HashSet<string>> LoadQualifyingGroupNamesAsync(CancellationToken cancellationToken = default)
+    {
+        var accounts = await AccountsApiClient.GetAllAsync(cancellationToken);
+
+        var accountsWithPlanCounts = await Task.WhenAll(accounts.Select(async account =>
+            (Account: account, PlanCount: (await AccountContributionPlansApiClient.GetAllByAccountIdAsync(account.Id, cancellationToken)).Count)));
+
+        // projection GroupName is the AccountType name, not the AccountTypeGroup name
+        return accountsWithPlanCounts
+            .Where(x => x.Account.ExpectedAnnualGrowthPercentage != 0m || x.PlanCount > 0)
+            .Select(x => x.Account.Type.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     private void RebuildAccuracyRows()

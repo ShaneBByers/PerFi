@@ -18,25 +18,33 @@ internal static class ContributionPlanCalculator
         // Always >= 0: the lookup guarantees applicablePlan.EffectiveDate <= payDate.
         var escalationYears = payDate.Year - applicablePlan.EffectiveDate.Year;
 
-        var perPayCycleDollar = applicablePlan.DollarAmountPerPayCycle
-            + (applicablePlan.DollarAmountPerPayCycleAnnualIncrease * escalationYears);
+        // *AnnualIncrease percentages compound the whole per-cycle/annual contribution year over year (a raise on last year's contribution), not the salary percentage rate itself.
+        var perPayCycleBase = applicablePlan.DollarAmountPerPayCycle
+            + (applicablePlan.DollarAmountPerPayCycleAnnualIncrease * escalationYears)
+            + (applicablePlan.PercentagePerPayCycle / 100m * salaryPerPayCycle);
 
-        var perPayCyclePercentage = applicablePlan.PercentagePerPayCycle
-            + (applicablePlan.PercentagePerPayCycleAnnualIncrease * escalationYears);
-
-        var contribution = perPayCycleDollar + (perPayCyclePercentage / 100m * salaryPerPayCycle);
+        var contribution = perPayCycleBase * CompoundMultiplier(applicablePlan.PercentagePerPayCycleAnnualIncrease, escalationYears);
 
         if (isAnnualLumpDate)
         {
-            var annualDollar = applicablePlan.DollarAmountAnnual
-                + (applicablePlan.DollarAmountAnnualIncrease * escalationYears);
+            var annualBase = applicablePlan.DollarAmountAnnual
+                + (applicablePlan.DollarAmountAnnualIncrease * escalationYears)
+                + (applicablePlan.PercentageAnnual / 100m * annualSalary);
 
-            var annualPercentage = applicablePlan.PercentageAnnual
-                + (applicablePlan.PercentageAnnualIncrease * escalationYears);
-
-            contribution += annualDollar + (annualPercentage / 100m * annualSalary);
+            contribution += annualBase * CompoundMultiplier(applicablePlan.PercentageAnnualIncrease, escalationYears);
         }
 
         return contribution;
+    }
+
+    private static decimal CompoundMultiplier(decimal annualIncreasePercentage, int escalationYears)
+    {
+        var rate = 1m + (annualIncreasePercentage / 100m);
+        var multiplier = 1m;
+
+        for (var i = 0; i < escalationYears; i++)
+            multiplier *= rate;
+
+        return multiplier;
     }
 }
