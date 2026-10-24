@@ -66,6 +66,12 @@ app.UseAuthorization();
 
 app.UseExceptionHandler();
 app.MapHealthChecks("/health").AllowAnonymous();
+app.MapGet("/health/live", () => TypedResults.Ok())
+    .AllowAnonymous()
+    .WithName("Liveness")
+    .WithSummary("Check whether the API process is running")
+    .WithDescription("Returns success without checking dependencies such as the database.")
+    .Produces(StatusCodes.Status200OK);
 app.MapControllers();
 
 app.Run();

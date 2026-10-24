@@ -1,0 +1,4 @@
+@baseUrl = http://localhost:5238
+
+### Liveness check (does not connect to dependencies)
+GET {{baseUrl}}/health/live
