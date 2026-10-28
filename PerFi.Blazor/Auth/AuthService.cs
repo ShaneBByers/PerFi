@@ -33,7 +33,20 @@ public sealed class AuthService(
     public async Task<ApiLoginResult> LoginAsync(string username, string password)
     {
         var client = httpClientFactory.CreateClient(HttpClientNames.AnonymousApiClient);
-        var response = await client.PostAsJsonAsync("login", new LoginRequest(username, password));
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.PostAsJsonAsync("login", new LoginRequest(username, password));
+        }
+        catch (HttpRequestException)
+        {
+            return ApiLoginResult.Failure("The authentication service is temporarily unavailable. Please try again.");
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiLoginResult.Failure("The authentication service did not respond in time. Please try again.");
+        }
 
         if (!response.IsSuccessStatusCode)
         {

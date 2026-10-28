@@ -163,25 +163,11 @@
                         @if (filteredSnapshots.Count > 0 || hasPendingMatrixEntry)
                         {
                             var visibleSnapshots = GetVisibleMatrixSnapshots();
-                            <div class="matrix-wrap" id="ledger-scroll">
-                                <table class="table table-sm snapshot-matrix">
+                            <div class="matrix-wrap">
+                                <table class="table table-sm matrix-account-table" id="matrix-account-table">
                                     <thead>
                                         <tr>
                                             <th>Account</th>
-                                            @foreach (var column in visibleSnapshots)
-                                            {
-                                                <th class="text-end @(column.IsDraft ? "new-entry-column-header" : "matrix-column-clickable")"
-                                                    @onclick="() => OnMatrixColumnHeaderClicked(column)">
-                                                    @if (column.IsDraft)
-                                                    {
-                                                        <input type="date" class="form-control form-control-sm text-end" value="@pendingMatrixEntryDate.ToString("yyyy-MM-dd")" @onchange="eventArgs => OnPendingMatrixEntryDateChanged(eventArgs.Value?.ToString())" @onclick:stopPropagation="true" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <span>@column.Date.ToString("MMM dd, yyyy")</span>
-                                                    }
-                                                </th>
-                                            }
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -189,17 +175,7 @@
                                         {
                                             <tr class="group-header-row">
                                                 <th>@group.AccountTypeGroupName</th>
-                                                @foreach (var column in visibleSnapshots)
-                                                {
-                                                    var groupTotal = GetGroupTotal(group, column.Id);
-                                                    var groupDeltaDisplay = GetGroupDeltaDisplay(group, column.Id);
-                                                    <th class="text-end @GetAmountClass(groupTotal)">
-                                                        <div>@FormatCurrency(groupTotal)</div>
-                                                        <div class="matrix-cell-delta @groupDeltaDisplay.CssClass">@groupDeltaDisplay.Text</div>
-                                                    </th>
-                                                }
                                             </tr>
-
                                             @foreach (var row in group.Rows)
                                             {
                                                 <tr>
@@ -207,35 +183,6 @@
                                                         <div class="account-name">@row.AccountName</div>
                                                         <div class="account-meta">@row.InstitutionName</div>
                                                     </th>
-                                                    @foreach (var column in visibleSnapshots)
-                                                    {
-                                                        <td class="@GetCellClass(column.Id, row.AccountId)">
-                                                            @if (isMatrixEditMode)
-                                                            {
-                                                                <input class="form-control form-control-sm text-end matrix-cell-input @GetCellInputClass(column.Id, row.AccountId)"
-                                                                       value="@GetCellInputValue(column.Id, row.AccountId)"
-                                                                       @onchange='eventArgs => OnMatrixCellChanged(column.Id, row.AccountId, eventArgs.Value?.ToString())' />
-                                                                @if (TryGetMatrixCellValidationError(column.Id, row.AccountId, out var validationError))
-                                                                {
-                                                                    <div class="matrix-cell-error">@validationError</div>
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                var displayedValue = GetDisplayedCellValue(column.Id, row.AccountId);
-                                                                @if (displayedValue.HasValue)
-                                                                {
-                                                                    var deltaDisplay = GetCellDeltaDisplay(column.Id, row.AccountId);
-                                                                    <div class="text-end @GetAmountClass(displayedValue.Value)">@FormatCurrency(displayedValue.Value)</div>
-                                                                    <div class="text-end matrix-cell-delta @deltaDisplay.CssClass">@deltaDisplay.Text</div>
-                                                                }
-                                                                else
-                                                                {
-                                                                    <div class="text-end amount-muted">-</div>
-                                                                }
-                                                            }
-                                                        </td>
-                                                    }
                                                 </tr>
                                             }
                                         }
@@ -243,14 +190,90 @@
                                     <tfoot>
                                         <tr>
                                             <th>Total</th>
-                                            @foreach (var column in visibleSnapshots)
-                                            {
-                                                var total = GetSnapshotTotal(column.Id);
-                                                <th class="text-end @GetAmountClass(total)">@FormatCurrency(total)</th>
-                                            }
                                         </tr>
                                     </tfoot>
                                 </table>
+                                <div class="matrix-values-wrap" id="ledger-scroll">
+                                    <table class="table table-sm snapshot-matrix">
+                                        <thead>
+                                            <tr>
+                                                @foreach (var column in visibleSnapshots)
+                                                {
+                                                    <th class="text-end @(column.IsDraft ? "new-entry-column-header" : "matrix-column-clickable")"
+                                                        @onclick="() => OnMatrixColumnHeaderClicked(column)">
+                                                        @if (column.IsDraft)
+                                                        {
+                                                            <input type="date" class="form-control form-control-sm text-end" value="@pendingMatrixEntryDate.ToString("yyyy-MM-dd")" @onchange="eventArgs => OnPendingMatrixEntryDateChanged(eventArgs.Value?.ToString())" @onclick:stopPropagation="true" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>@column.Date.ToString("MMM dd, yyyy")</span>
+                                                        }
+                                                    </th>
+                                                }
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var group in matrixGroups)
+                                            {
+                                                <tr class="group-header-row">
+                                                    @foreach (var column in visibleSnapshots)
+                                                    {
+                                                        var groupTotal = GetGroupTotal(group, column.Id);
+                                                        var groupDeltaDisplay = GetGroupDeltaDisplay(group, column.Id);
+                                                        <th class="text-end @GetAmountClass(groupTotal)">
+                                                            <div>@FormatCurrency(groupTotal)</div>
+                                                            <div class="matrix-cell-delta @groupDeltaDisplay.CssClass">@groupDeltaDisplay.Text</div>
+                                                        </th>
+                                                    }
+                                                </tr>
+                                                @foreach (var row in group.Rows)
+                                                {
+                                                    <tr>
+                                                        @foreach (var column in visibleSnapshots)
+                                                        {
+                                                            <td class="@GetCellClass(column.Id, row.AccountId)">
+                                                                @if (isMatrixEditMode)
+                                                                {
+                                                                    <input class="form-control form-control-sm text-end matrix-cell-input @GetCellInputClass(column.Id, row.AccountId)"
+                                                                           value="@GetCellInputValue(column.Id, row.AccountId)"
+                                                                           @onchange='eventArgs => OnMatrixCellChanged(column.Id, row.AccountId, eventArgs.Value?.ToString())' />
+                                                                    @if (TryGetMatrixCellValidationError(column.Id, row.AccountId, out var validationError))
+                                                                    {
+                                                                        <div class="matrix-cell-error">@validationError</div>
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    var displayedValue = GetDisplayedCellValue(column.Id, row.AccountId);
+                                                                    @if (displayedValue.HasValue)
+                                                                    {
+                                                                        var deltaDisplay = GetCellDeltaDisplay(column.Id, row.AccountId);
+                                                                        <div class="text-end @GetAmountClass(displayedValue.Value)">@FormatCurrency(displayedValue.Value)</div>
+                                                                        <div class="text-end matrix-cell-delta @deltaDisplay.CssClass">@deltaDisplay.Text</div>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <div class="text-end amount-muted">-</div>
+                                                                    }
+                                                                }
+                                                            </td>
+                                                        }
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                @foreach (var column in visibleSnapshots)
+                                                {
+                                                    var total = GetSnapshotTotal(column.Id);
+                                                    <th class="text-end @GetAmountClass(total)">@FormatCurrency(total)</th>
+                                                }
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
                         }
 
@@ -459,6 +482,11 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (activeSection == "grid")
+        {
+            await JSRuntime.InvokeVoidAsync("perfiNetWorth.syncLedgerRows", "matrix-account-table", "ledger-scroll");
+        }
+
         if (!shouldScrollLedgerToEnd)
             return;
 
